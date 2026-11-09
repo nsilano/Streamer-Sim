@@ -67,6 +67,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 9. **Phase 9 (done):** random events are rare (from week 12, 12-week gap, negatives only from week 24 once you have cash and subs), mild, and never a modal pop-up: `pendingEvent` is a red `AlertCard` on the Dashboard (plus tab badge), never blocks `advanceWeek`, and settles itself with `defaultChoice` after 6 weeks (`RandomEvents.resolveExpired`). Regulation no longer rolls randomly. License renewals (`Engine/Renewals.swift`: `renewalPrice` = 80% of per-year paid, higher if popularity jumped or the title is `sought`, `renewLicense`, 26-week window, news at 12 and 4 weeks, Content tab "Expiring soon" cards and badge), sought-after iconic titles (`Title.sought`, `ParodyLibrary.iconicNames`, 2.2x price, appeal x1.25, rivals bid 2x), and licensing-manager auto-renew (`Curator.autoRenew/renewMaxPrice/renewYears`). Save version is 15.
 
+10. **Phase 10 (done):** catalog depth. Buy rights forever (`buyOutRights`, 10x yearly price, `Engine/CatalogGrowth.swift`), license a title out to a rival for 13/26/52/104 weeks for an upfront fee (`licenseOut`, `GameState.loanedOut`, fee is `WeeklyFinancials.licenseOutRevenue`, already in cash so `SpendLedger.licenseIncome` is subtracted from the weekly cash update), per-title stats (`GameState.titleStats`: weekly/peak/total viewers, revenue credited by appeal share, fees, spend, net return; shown in the title sheet and a Content tab summary). Save version is 16.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

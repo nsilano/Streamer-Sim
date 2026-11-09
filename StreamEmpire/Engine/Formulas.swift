@@ -49,6 +49,14 @@ enum Formulas {
         return perYearPaid * Double(years) * factor * multiYear
     }
 
+    /// Buying a license outright is priced as this many years of what you paid per year.
+    static let buyoutYears = 10.0
+    /// Licensing a title out earns this share of what a one-year license would cost, per year out.
+    static let sublicenseShare = 0.55
+    static let sublicenseTerms = [13, 26, 52, 104]
+    /// Weekly "titles started" per subscriber that a catalog spreads across its shows.
+    static let viewingPerSubscriber = 3.0
+
     static func titleAppeal(_ title: Title, in country: Country) -> Double {
         let quality = Double(title.quality) / 100
         let popularity = 0.4 + 0.6 * Double(title.popularity) / 100

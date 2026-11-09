@@ -131,6 +131,31 @@ struct ContentTabView: View {
 
     // MARK: Catalog
 
+    private func footnote(_ title: Title, _ state: GameState) -> String {
+        let rights = title.weeksRemaining.map { "\($0) wks left" } ?? "Yours forever"
+        let viewers = state.stats(for: title).weeklyViewers
+        return viewers > 0 ? "\(rights) · \(Format.count(viewers)) watching" : rights
+    }
+
+    private func performanceSummary(_ state: GameState) -> some View {
+        let ranked = state.catalog.sorted { state.stats(for: $0).weeklyRevenue > state.stats(for: $1).weeklyRevenue }
+        let views = state.catalog.reduce(0) { $0 + state.stats(for: $1).weeklyViewers }
+        return VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Catalog performance", icon: "chart.bar.fill", tint: Theme.teal)
+            LabeledValue(label: "Viewers this week (all titles)", value: Format.count(views))
+            ForEach(Array(ranked.prefix(3).enumerated()), id: \.element.id) { index, title in
+                let s = state.stats(for: title)
+                LabeledValue(label: "#\(index + 1) \(title.name)",
+                             value: "\(Format.count(s.weeklyViewers)) · \(Format.money(s.weeklyRevenue))/wk")
+            }
+            if let worst = ranked.last, ranked.count > 3, state.stats(for: worst).weeksLive > 8 {
+                LabeledValue(label: "Weakest: \(worst.name)", value: "\(Format.money(state.stats(for: worst).weeklyRevenue))/wk",
+                             tint: Theme.danger)
+            }
+        }
+        .artCard(tint: Theme.teal)
+    }
+
     @ViewBuilder
     private func catalog(_ state: GameState) -> some View {
         if !state.expiringTitles.isEmpty {
@@ -140,6 +165,21 @@ struct ContentTabView: View {
                     RenewCard(title: title, state: state, onDone: nil)
                 }
             }
+        }
+        if !state.catalog.isEmpty { performanceSummary(state) }
+        if !state.loanedOut.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                SectionTitle(text: "Licensed out", icon: "arrow.up.right.square.fill", tint: Theme.amber)
+                ForEach(state.loanedOut, id: \.title.id) { loan in
+                    HStack {
+                        Text(loan.title.name).font(.subheadline.weight(.bold)).foregroundStyle(.white).lineLimit(1)
+                        Spacer()
+                        Text("\(loan.to) · \(loan.weeksLeft) wks · \(Format.money(loan.fee))")
+                            .font(.caption).foregroundStyle(Theme.text2)
+                    }
+                }
+            }
+            .artCard(tint: Theme.amber)
         }
         if state.catalog.isEmpty {
             VStack(spacing: 8) {
@@ -155,7 +195,7 @@ struct ContentTabView: View {
                 ForEach(state.catalog.sorted { $0.quality > $1.quality }) { title in
                     Button { detail = TitleRef(id: title.id) } label: {
                         TitleCell(title: title, state: state, priceText: nil,
-                                  footnote: title.weeksRemaining.map { "\($0) wks left" } ?? "Yours forever")
+                                  footnote: footnote(title, state))
                     }
                     .buttonStyle(.plain)
                 }
@@ -216,7 +256,9 @@ struct TitleDetailSheet: View {
                         }
                         bars(title, state)
                         topMarkets(title, state)
+                        if owned { statsCard(title, state) }
                         if owned { ownedCard(title) } else { licenseCard(title, state) }
+                        if owned { rightsCard(title, state) }
                     }
                     .padding(16)
                 }
@@ -283,6 +325,58 @@ struct TitleDetailSheet: View {
             .disabled(state.finances.cash < price)
         }
         .artCard(tint: Theme.teal)
+    }
+
+    private func statsCard(_ title: Title, _ state: GameState) -> some View {
+        let s = state.stats(for: title)
+        let net = state.netReturn(title)
+        return VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Performance", icon: "chart.bar.fill", tint: Theme.teal)
+            if s.weeksLive == 0 {
+                Text("Stats start after its first week on your service.").font(.footnote).foregroundStyle(Theme.text2)
+            } else {
+                LabeledValue(label: "Watching this week", value: Format.count(s.weeklyViewers))
+                LabeledValue(label: "Peak weekly viewers", value: Format.count(s.peakViewers))
+                LabeledValue(label: "Total views", value: Format.count(s.totalViews))
+                LabeledValue(label: "Revenue this week", value: Format.money(s.weeklyRevenue))
+                LabeledValue(label: "Lifetime revenue", value: Format.money(s.lifetimeRevenue))
+                if s.licenseIncome > 0 { LabeledValue(label: "Licensing fees earned", value: Format.money(s.licenseIncome)) }
+                LabeledValue(label: "Spent on it", value: Format.money(title.invested))
+                LabeledValue(label: "Net return", value: Format.money(net), tint: net >= 0 ? Theme.good : Theme.danger)
+                LabeledValue(label: "Weeks on your service", value: "\(s.weeksLive)")
+                if let top = CountryData.country(s.topMarket) {
+                    LabeledValue(label: "Most watched in", value: "\(top.flag) \(top.name)")
+                }
+            }
+        }
+        .artCard(tint: Theme.teal)
+    }
+
+    private func rightsCard(_ title: Title, _ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "Rights", icon: "signature", tint: Theme.amber)
+            if title.license != nil, title.weeksRemaining != nil {
+                let price = state.buyoutPrice(title)
+                Text("Own it forever: no expiry, no renewals.").font(.caption).foregroundStyle(Theme.text2)
+                Button("Buy rights forever · \(Format.money(price))") {
+                    store.perform { try $0.buyOutRights(titleID: title.id) }
+                }
+                .buttonStyle(GlowButtonStyle(tint: Theme.good))
+                .disabled(state.finances.cash < price)
+            }
+            Text("Or take it off your service and license it to another streamer for a fee.")
+                .font(.caption).foregroundStyle(Theme.text2)
+            ForEach(Formulas.sublicenseTerms, id: \.self) { weeks in
+                let allowed = (title.weeksRemaining ?? .max) > weeks
+                Button("License out \(weeks) weeks · +\(Format.money(state.sublicenseFee(title, weeks: weeks)))") {
+                    store.perform { try $0.licenseOut(titleID: title.id, weeks: weeks) }
+                    dismiss()
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.amber))
+                .disabled(!allowed)
+            }
+        }
+        .artCard(tint: Theme.amber)
     }
 
     private func renewCard(_ title: Title, _ state: GameState) -> some View {

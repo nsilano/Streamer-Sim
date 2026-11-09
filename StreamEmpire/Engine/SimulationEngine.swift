@@ -45,13 +45,17 @@ enum SimulationEngine {
         fin.localization = s.finances.ledger.localization
         fin.other = s.finances.ledger.other
         fin.promotions = s.finances.ledger.promotions
+        fin.licenseOutRevenue = s.finances.ledger.licenseIncome
+        let prepaidIncome = s.finances.ledger.licenseIncome
         let prepaid = s.finances.ledger.total
         s.finances.ledger = SpendLedger()
 
         // The licensing manager shops the listings you can see now, before the weekly refresh.
         runCurator(&s, events: &events)
 
+        progressLoans(&s, events: &events)
         ageCatalog(&s, events: &events)
+        s.resetWeeklyTitleStats()
         refreshLicenseMarket(&s, events: &events)
         produceOriginals(&s, fin: &fin, events: &events)
         let recession = s.recessionWeeksLeft > 0
@@ -169,6 +173,8 @@ enum SimulationEngine {
                 awareness: market.awareness, spend: marketingSpend,
                 households: country.households, penetration: penetration) + policy.awareness + promo.awareness, 0, 1)
             s.markets[code] = market
+            s.recordTitleViews(code: code, titles: titles, country: country, subs: ownSubs,
+                               revenue: subRevenue + adRevenue)
 
             // Local-content quota: a catalog short on local-language titles draws regulatory fines.
             let localCount = titles.filter { $0.language == country.language || $0.dubs.contains(country.language) }.count
@@ -200,6 +206,8 @@ enum SimulationEngine {
             marketReports.append(MarketReport(id: code, newSubs: adds, churned: ownSubs * churn,
                                               subs: newSubs.total, revenue: subRevenue + adRevenue, costs: marketCosts))
         }
+
+        s.finalizeTitleStats()
 
         // Overloaded servers can crash: subscribers leave and the region limps for two weeks.
         for region in Region.allCases {
@@ -271,7 +279,7 @@ enum SimulationEngine {
         NewsEngine.update(&s)
 
         // Cash: prepaid items were already deducted when paid; principal repayments aren't P&L.
-        s.finances.cash += fin.profit + prepaid - principalPaid
+        s.finances.cash += fin.profit + prepaid - principalPaid - prepaidIncome
         s.finances.lastWeek = fin
         s.finances.history.append(fin)
         if s.finances.history.count > 26 { s.finances.history.removeFirst() }
@@ -360,6 +368,7 @@ enum SimulationEngine {
         let expired = s.catalog.filter { ($0.weeksRemaining ?? 1) <= 0 }
         s.catalog.removeAll { ($0.weeksRemaining ?? 1) <= 0 }
         for title in expired {
+            s.titleStats[title.id] = nil
             events.append(s.makeEvent(.licenseExpired, "License expired",
                                       "\"\(title.name)\" has left your catalog."))
         }
@@ -445,7 +454,7 @@ enum SimulationEngine {
             let title = Title(id: s.takeID(), name: project.name, kind: project.kind, genre: project.genre,
                               language: project.language, quality: quality, popularity: popularity,
                               ageWeeks: 0, isOriginal: true, license: nil, weeksRemaining: nil,
-                              listingWeeksLeft: 0)
+                              listingWeeksLeft: 0, invested: project.budget)
             s.catalog.append(title)
             if quality >= 80, let region = s.busiestRegion { s.surges[region.rawValue] = max(s.surges[region.rawValue] ?? 0, 1) }
             let verdict = breakout ? "A runaway hit!" : quality >= 75 ? "Critics love it." : quality <= 40 ? "A flop." : "A solid addition."
@@ -502,7 +511,7 @@ enum SimulationEngine {
         var added = 0
         while s.licenseMarket.count < GameState.targetListings && added < 4 {
             let id = s.takeID()
-            let taken = Set(s.licenseMarket.map(\.name) + s.catalog.map(\.name) + s.projects.map(\.name))
+            let taken = Set(s.licenseMarket.map(\.name) + s.catalog.map(\.name) + s.projects.map(\.name) + s.loanedOut.map(\.title.name))
             let title = TitleGenerator.generate(id: id, rng: &s.rng, avoiding: taken)
             s.licenseMarket.append(title)
             added += 1

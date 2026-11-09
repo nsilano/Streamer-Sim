@@ -53,6 +53,7 @@ extension GameState {
         title.weeksRemaining = license.weeks
         title.listingWeeksLeft = 0
         title.paidPrice = price
+        title.invested = price
         title.popularityAtPurchase = title.popularity
         finances.cash -= price
         finances.ledger.licensing += price

@@ -36,6 +36,7 @@ extension GameState {
         catalog[index].weeksRemaining = left + years * 52
         catalog[index].license?.years = years
         catalog[index].paidPrice = price
+        catalog[index].invested += price
         catalog[index].popularityAtPurchase = catalog[index].popularity
         addNews(.you, "\(companyName) renews \"\(catalog[index].name)\"",
                 "Kept for \(years) more year\(years == 1 ? "" : "s") at \(Format.money(price)).")
