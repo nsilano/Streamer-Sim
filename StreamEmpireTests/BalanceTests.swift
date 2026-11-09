@@ -106,7 +106,17 @@ final class BalanceTests: XCTestCase {
             }
             let last = snapshots.last!
             XCTAssertNotEqual(last.outcome, .lost, "\(home): a sensible player shouldn't go bankrupt in 3 years")
-            XCTAssertGreaterThan(last.subs, 10_000, "\(home): should have real subscribers by year 3")
+            // Pacing bands for a simple autopilot (observed: ~130-250K at year 1, 0.5-1.5M at year 2, 1.4-5M at year 3).
+            let bands: [Int: ClosedRange<Double>] = [52: 60_000...1_500_000,
+                                                      104: 250_000...6_000_000,
+                                                      156: 800_000...15_000_000]
+            for snap in snapshots {
+                if let band = bands[snap.week] {
+                    XCTAssertTrue(band.contains(snap.subs), "\(home) week \(snap.week): \(Int(snap.subs)) subs outside \(band)")
+                }
+                XCTAssertLessThan(snap.rank, 7)
+                XCTAssertLessThan(snap.subs, snap.topRival, "\(home) week \(snap.week): #1 should take longer than 3 years for a basic player")
+            }
         }
     }
 
