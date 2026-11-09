@@ -79,10 +79,10 @@ struct PolicyOption: Identifiable, Equatable {
     var title: String
     var detail: String
     var effects: PolicyEffects
-    var pros: [String]
-    var cons: [String]
     var cost = 0.0                      // one-time cost to enact
     var minSubscribers = 0.0            // audience needed before you can try this
+    var pros: [String]
+    var cons: [String]
     var badChance = 0.0                 // risk of a bad reaction (lower with high brand trust)
     var good: PolicyOutcome?
     var bad: PolicyOutcome?
