@@ -19,6 +19,7 @@ struct CountrySheet: View {
                         case .live:
                             hereCard(country, market)
                             plansCard(country, market, state)
+                            competitorPricesCard(country, market, state)
                             marketingCard(country, market)
                         }
                         marketCard(country)
@@ -182,8 +183,14 @@ struct CountrySheet: View {
             }
             Text(Formulas.tierBlurb(tier)).font(.caption).foregroundStyle(Theme.text2)
             if isLive {
-                Stepper(value: priceBinding(tier, market), in: 0...100, step: 0.5) {
-                    LabeledValue(label: "Monthly price", value: String(format: "$%.2f", market.prices[tier]))
+                HStack {
+                    Text("Monthly price").font(.subheadline).foregroundStyle(Theme.text2)
+                    Spacer()
+                    PriceField(value: market.prices[tier]) { newValue in
+                        var prices = market.prices
+                        prices[tier] = newValue
+                        store.perform { try $0.setPrices(code: code, prices: prices) }
+                    }
                 }
             } else if build == nil {
                 Button("Launch \(tier.displayName) · \(Format.money(cost)) · \(Formulas.tierLaunchWeeks(tier)) weeks") {
@@ -204,14 +211,53 @@ struct CountrySheet: View {
         return "Standard is near the fair price (\(fair))."
     }
 
-    private func priceBinding(_ tier: Tier, _ market: MarketState) -> Binding<Double> {
-        Binding(
-            get: { market.prices[tier] },
-            set: { newValue in
-                var prices = market.prices
-                prices[tier] = newValue
-                store.perform { try $0.setPrices(code: code, prices: prices) }
-            })
+    private func competitorPricesCard(_ country: Country, _ market: MarketState, _ state: GameState) -> some View {
+        let rows = state.rivals.compactMap { rival -> (Rival, TierSet)? in
+            guard let prices = state.rivalPrices(rival, in: code) else { return nil }
+            return (rival, prices)
+        }.sorted { ($0.0.subs[code] ?? 0) > ($1.0.subs[code] ?? 0) }
+        let standards = rows.map { $0.1.standard }
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "What rivals charge here", icon: "tag.fill", tint: Theme.danger)
+            HStack {
+                priceChip("You", market.prices.standard, Theme.magenta)
+                priceChip("Fair", country.priceTolerance, Theme.teal)
+                if let low = standards.min() { priceChip("Cheapest", low, Theme.good) }
+                if let high = standards.max() { priceChip("Dearest", high, Theme.amber) }
+            }
+            Text("Standard plan, per month, in dollars.").font(.caption2).foregroundStyle(Theme.text2)
+            ForEach(Array(rows.prefix(8)), id: \.0.id) { rival, prices in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        RivalBadge(name: rival.name, id: rival.id, size: 28)
+                        Text(rival.name).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                        if rival.priceLevel < 0.95 { Pill(text: "Promo", tint: Theme.danger) }
+                        Spacer()
+                        Text(String(format: "$%.2f", prices.standard)).font(Theme.number(16)).foregroundStyle(.white)
+                    }
+                    Text(String(format: "Ads $%.2f · Standard $%.2f · Premium $%.2f", prices.ad, prices.standard, prices.premium))
+                        .font(.caption2).foregroundStyle(Theme.text2)
+                    HStack {
+                        Button("Match") { store.perform { try $0.matchRival(id: rival.id, in: code) } }
+                            .buttonStyle(SoftButtonStyle(tint: Theme.violet))
+                        Button("Undercut by $1") { store.perform { try $0.matchRival(id: rival.id, in: code, undercutBy: 1) } }
+                            .buttonStyle(SoftButtonStyle(tint: Theme.good))
+                    }
+                }
+            }
+            if rows.isEmpty { Text("No rivals here yet.").font(.footnote).foregroundStyle(Theme.text2) }
+        }
+        .artCard(tint: Theme.danger)
+    }
+
+    private func priceChip(_ title: String, _ value: Double, _ color: Color) -> some View {
+        VStack(spacing: 2) {
+            Text(title.uppercased()).font(.system(size: 8, weight: .heavy)).tracking(0.8).foregroundStyle(Theme.text2)
+            Text(String(format: "$%.2f", value)).font(Theme.number(14)).foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.14)))
     }
 
     private func marketingCard(_ country: Country, _ market: MarketState) -> some View {

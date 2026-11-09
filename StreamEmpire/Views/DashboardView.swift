@@ -52,6 +52,12 @@ struct DashboardView: View {
                 Pill(text: "\(fin.lastWeek.profit >= 0 ? "+" : "")\(Format.money(fin.lastWeek.profit)) / wk",
                      tint: fin.lastWeek.profit.profitColor, icon: "chart.line.uptrend.xyaxis")
             }
+            NavigationLink {
+                FinanceView()
+            } label: {
+                Label("See where the money goes", systemImage: "magnifyingglass").font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.magenta)
+            }
             if fin.cash < 0 {
                 let used = min(1, -fin.cash / state.overdraftLimit)
                 StatBar(label: "Credit limit used (bankrupt at 100%)", value: used, text: Format.percent(used),

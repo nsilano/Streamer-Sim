@@ -94,9 +94,17 @@ struct ContentTabView: View {
                     Pill(text: curator.enabled ? "Active" : "Paused", tint: curator.enabled ? Theme.good : Theme.amber)
                     Text("\(Format.money(Curator.weeklySalary))/wk salary").font(.caption).foregroundStyle(Theme.text2)
                 }
-                Text("Buys up to \(Format.money(curator.weeklyBudget)) a week of titles with quality \(curator.minQuality)+ until your catalog reaches \(curator.targetCatalogSize), keeping \(Format.money(curator.cashReserve)) in the bank.")
+                Text("Adds \(Format.money(curator.weeklyBudget)) a week to their allowance (unspent money carries over, up to 3 weeks) for titles with quality \(curator.minQuality)+, until your catalog reaches \(curator.targetCatalogSize), keeping \(Format.money(curator.cashReserve)) in the bank.")
                     .font(.footnote).foregroundStyle(Theme.text2)
+                LabeledValue(label: "Allowance available now", value: Format.money(curator.weeklyBudget + curator.carryBudget))
+                if let status = state.curatorStatus {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "text.bubble.fill").font(.caption).foregroundStyle(Theme.teal)
+                        Text(status).font(.caption).foregroundStyle(.white.opacity(0.85))
+                    }
+                }
                 HStack {
+                    Button("Shop now") { store.perform { try $0.shopNow() } }.buttonStyle(SoftButtonStyle(tint: Theme.good))
                     Button("Edit rules") { showCurator = true }.buttonStyle(SoftButtonStyle(tint: Theme.teal))
                     Button(curator.enabled ? "Pause" : "Resume") {
                         var updated = curator
@@ -288,6 +296,9 @@ struct CuratorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Right now") {
+                    preview
+                }
                 Section {
                     Toggle("Manager is active", isOn: $draft.enabled).tint(Theme.magenta)
                 } footer: {
@@ -356,6 +367,36 @@ struct CuratorSheet: View {
                 if !loaded, let current = store.state?.curator { draft = current; loaded = true }
             }
         }
+    }
+
+    /// How many of today's listings pass the draft rules, and what they'd cost.
+    @ViewBuilder
+    private var preview: some View {
+        if let state = store.state {
+            let languages = servedLanguages(state)
+            let passing = state.licenseMarket.filter { draft.allows($0, languages: languages) }
+            let prices = passing.map { state.licensePrice($0) }
+            let affordable = prices.filter { $0 <= draft.maxPricePerTitle && $0 <= draft.weeklyBudget + draft.carryBudget }
+            LabeledValue(label: "Listings on the market", value: "\(state.licenseMarket.count)")
+            LabeledValue(label: "Pass your quality, genre and language rules", value: "\(passing.count)")
+            LabeledValue(label: "Also within budget and max price", value: "\(affordable.count)",
+                         tint: affordable.isEmpty ? Theme.danger : Theme.good)
+            if let cheapest = prices.min() {
+                LabeledValue(label: "Cheapest that passes", value: Format.money(cheapest))
+            }
+            if affordable.isEmpty {
+                Text("Nothing would be bought this week. Raise the budget or max price, lower the minimum quality, or allow more genres.")
+                    .font(.caption).foregroundStyle(Theme.amber)
+            }
+        }
+    }
+
+    private func servedLanguages(_ state: GameState) -> Set<Language> {
+        var set: Set<Language> = [.english]
+        for code in state.markets.keys.sorted() where state.markets[code]?.status != .notLaunched {
+            if let language = CountryData.country(code)?.language { set.insert(language) }
+        }
+        return set
     }
 }
 

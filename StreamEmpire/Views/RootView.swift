@@ -15,6 +15,7 @@ struct RootView: View {
                         .tabItem { Label("Content", systemImage: "film.stack") }
                     RivalsView()
                         .tabItem { Label("Rivals", systemImage: "trophy.fill") }
+                        .badge(state.unreadNewsCount)
                     CompanyView()
                         .tabItem { Label("Company", systemImage: "building.2.fill") }
                 }

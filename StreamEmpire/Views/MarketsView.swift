@@ -186,37 +186,65 @@ struct MarketsView: View {
     }
 }
 
-/// Set every market's prices in one go.
+/// Set every market's prices in one go: exact dollars, or scaled to each country's fair price.
 struct PriceToolSheet: View {
     @EnvironmentObject var store: GameStore
     @Environment(\.dismiss) private var dismiss
+    @State private var prices = TierSet(ad: 4.99, standard: 10.99, premium: 16.99)
     @State private var level = 1.0
+    @State private var loaded = false
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Every country has a \"fair price\" people will happily pay. Move everything up or down at once; you can still fine-tune each country on its own page.")
-                    .font(.footnote).foregroundStyle(Theme.text2)
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("\(Format.percent(level)) of fair price").font(Theme.number(30)).foregroundStyle(.white)
-                    Slider(value: $level, in: 0.4...2.0, step: 0.05).tint(Theme.magenta)
-                    Text(hint).font(.caption).foregroundStyle(Theme.text2)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        SectionTitle(text: "Exact dollar prices", icon: "dollarsign.circle.fill", tint: Theme.amber)
+                        Text("Type any monthly price in dollars and apply it to every country you've launched. Check each country's page for its fair price and what rivals charge.")
+                            .font(.footnote).foregroundStyle(Theme.text2)
+                        ForEach(Tier.allCases) { tier in
+                            HStack {
+                                Text(tier.displayName).foregroundStyle(.white)
+                                Spacer()
+                                PriceField(value: prices[tier]) { prices[tier] = $0 }
+                            }
+                        }
+                        Button("Apply these prices to all my markets") {
+                            store.perform { try $0.applyPrices(prices) }
+                            dismiss()
+                        }
+                        .buttonStyle(GlowButtonStyle(tint: Theme.amber))
+                    }
+                    .artCard(tint: Theme.amber)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionTitle(text: "Or scale to each country", icon: "slider.horizontal.3", tint: Theme.teal)
+                        Text("A $10 plan is cheap in the US but dear in India. This sets every country to the same share of its own fair price.")
+                            .font(.footnote).foregroundStyle(Theme.text2)
+                        Text("\(Format.percent(level)) of fair price").font(Theme.number(24)).foregroundStyle(.white)
+                        Slider(value: $level, in: 0.4...2.0, step: 0.05).tint(Theme.teal)
+                        Text(hint).font(.caption).foregroundStyle(Theme.text2)
+                        Button("Apply scaled prices") {
+                            store.perform { try $0.applyPriceLevel(level) }
+                            dismiss()
+                        }
+                        .buttonStyle(SoftButtonStyle(tint: Theme.teal))
+                    }
+                    .artCard(tint: Theme.teal)
                 }
-                .artCard()
-                Button("Apply to all my markets") {
-                    store.perform { try $0.applyPriceLevel(level) }
-                    dismiss()
-                }
-                .buttonStyle(GlowButtonStyle())
-                Spacer()
+                .padding(16)
             }
-            .padding(16)
             .artScreen()
             .navigationTitle("Subscription prices")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { Button("Cancel") { dismiss() } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .onAppear {
+                if !loaded, let state = store.state, let code = state.liveMarketCodes.first, let market = state.markets[code] {
+                    prices = market.prices
+                    loaded = true
+                }
+            }
         }
-        .presentationDetents([.medium])
     }
 
     private var hint: String {

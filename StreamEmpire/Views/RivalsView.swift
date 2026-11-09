@@ -30,8 +30,14 @@ struct RivalBadge: View {
 }
 
 struct RivalsView: View {
+    enum Mode: String, CaseIterable, Identifiable {
+        case standings = "Standings", news = "News"
+        var id: String { rawValue }
+    }
+
     @EnvironmentObject var store: GameStore
     @State private var sheet: RivalRef?
+    @State private var mode: Mode = .standings
 
     var body: some View {
         NavigationStack {
@@ -42,6 +48,15 @@ struct RivalsView: View {
                     let leader = board.first?.subs ?? 0
                     VStack(alignment: .leading, spacing: 12) {
                         ScreenHeader(title: "Rivals", subtitle: "\(state.rivals.count) competitors · you are #\(state.rank)")
+                        Picker("View", selection: $mode) {
+                            ForEach(Mode.allCases) { m in
+                                Text(m == .news && state.unreadNewsCount > 0 ? "News (\(state.unreadNewsCount))" : m.rawValue).tag(m)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        if mode == .news {
+                            NewsFeedView(state: state)
+                        } else {
                         if let me = board.first(where: { $0.isPlayer }), me.subs < leader {
                             AdviceBanner(advice: Advice(id: "gap", icon: "flag.checkered", urgent: false,
                                                         title: "\(Format.count(leader - me.subs)) subscribers behind #1",
@@ -58,6 +73,7 @@ struct RivalsView: View {
                             } else {
                                 row(index + 1, entry, share: entry.subs / total, delta: delta, top: leader, rival: nil, threat: 0)
                             }
+                        }
                         }
                     }
                     .padding(.horizontal, 16)

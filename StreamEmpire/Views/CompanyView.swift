@@ -18,6 +18,21 @@ struct CompanyView: View {
                             }
                         }
                         cashCard(state)
+                        NavigationLink {
+                            FinanceView()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "magnifyingglass.circle.fill").font(.title2).foregroundStyle(Theme.magenta)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Where is my money going?").font(.headline).foregroundStyle(.white)
+                                    Text("Ranked spending, trends, country profit and why you're losing money")
+                                        .font(.caption).foregroundStyle(Theme.text2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
+                            }
+                            .artCard(tint: Theme.magenta)
+                        }
                         costsCard(state)
                         NavigationLink {
                             TechStaffView()
