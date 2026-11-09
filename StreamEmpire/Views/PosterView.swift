@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 /// Procedurally generated movie-poster cover art for a title. Every title gets its own artwork,
 /// styled by genre (see `PosterSpec`).
@@ -185,8 +186,10 @@ enum PosterArt {
             let a1 = a0 + Double.pi / 26
             var path = Path()
             path.move(to: center)
-            path.addLine(to: CGPoint(x: center.x + cos(a0) * reach, y: center.y + sin(a0) * reach))
-            path.addLine(to: CGPoint(x: center.x + cos(a1) * reach, y: center.y + sin(a1) * reach))
+            let cos0 = CGFloat(Foundation.cos(a0)), sin0 = CGFloat(Foundation.sin(a0))
+            let cos1 = CGFloat(Foundation.cos(a1)), sin1 = CGFloat(Foundation.sin(a1))
+            path.addLine(to: CGPoint(x: center.x + cos0 * reach, y: center.y + sin0 * reach))
+            path.addLine(to: CGPoint(x: center.x + cos1 * reach, y: center.y + sin1 * reach))
             path.closeSubpath()
             ctx.fill(path, with: .color(color(spec.palette[2], i % 2 == 0 ? 0.20 : 0.05)))
         }
