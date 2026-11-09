@@ -31,8 +31,12 @@ enum RandomEvents {
             let index = s.rng.nextInt(in: 0...(s.catalog.count - 1))
             s.catalog[index].popularity = min(100, s.catalog[index].popularity + 25)
             s.catalog[index].ageWeeks = 0
-            return s.makeEvent(.news, "\"\(s.catalog[index].name)\" goes viral!",
-                               "Social media can't stop talking about it. Popularity jumps and it counts as a fresh release again.")
+            var detail = "Social media can't stop talking about it. Popularity jumps and it counts as a fresh release again."
+            if let region = s.busiestRegion {
+                s.surges[region.rawValue] = 2
+                detail += " Traffic is surging in \(region.displayName) for two weeks: make sure your servers can take it."
+            }
+            return s.makeEvent(.news, "\"\(s.catalog[index].name)\" goes viral!", detail)
         case "merger":
             let index = s.rng.nextInt(in: 0...(s.rivals.count - 1))
             s.rivals[index].catalogStrength = min(100, s.rivals[index].catalogStrength + 8)

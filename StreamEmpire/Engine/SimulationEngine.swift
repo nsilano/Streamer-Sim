@@ -49,14 +49,23 @@ enum SimulationEngine {
         let recession = s.recessionWeeksLeft > 0
         progressPlatformBuilds(&s, events: &events)
 
-        // Infrastructure load per region (start-of-week subscribers vs CDN capacity).
+        progressDatacenters(&s, events: &events)
+
+        // Server strain per region (start-of-week subscribers, plus any traffic surge, vs capacity).
         var regionQuality: [Region: Double] = [:]
+        var regionLoad: [Region: Double] = [:]
         for region in Region.allCases {
-            let load = s.cdnLoad(region)
-            regionQuality[region] = Formulas.serviceQuality(load: load)
+            let load = s.effectiveLoad(region)
+            regionLoad[region] = load
+            var quality = Formulas.serviceQuality(load: load)
+            if (s.outages[region.rawValue] ?? 0) > 0 { quality *= Formulas.outageQualityMultiplier }
+            regionQuality[region] = quality
             if load > 1, s.week % 4 == 0 {
                 events.append(s.makeEvent(.warning, "Buffering in \(region.displayName)",
-                                          "Servers are at \(Format.percent(load)) of capacity. Subscribers are churning; expand the CDN in the Company tab."))
+                                          "Servers are at \(Format.percent(load)) of capacity. Viewers are cancelling, and a crash is possible. Add datacenters or rent cloud capacity."))
+            } else if load > 0.9, load <= 1, s.week % 4 == 0 {
+                events.append(s.makeEvent(.warning, "Lag in \(region.displayName)",
+                                          "Servers are at \(Format.percent(load)) of capacity. Add capacity before you grow further."))
             }
         }
         let marketingBoost = Formulas.marketingBoost(marketingLevel: s.staff.effectiveLevel(.marketing))
@@ -151,6 +160,29 @@ enum SimulationEngine {
                                               subs: newSubs.total, revenue: subRevenue + adRevenue))
         }
 
+        // Overloaded servers can crash: subscribers leave and the region limps for two weeks.
+        for region in Region.allCases {
+            guard let load = regionLoad[region], load > 1.05 else { continue }
+            let online = s.datacenters.filter { $0.region == region && $0.isOnline }.count
+            let chance = Formulas.crashChance(load: load, datacenters: online,
+                                              engineeringLevel: s.staff.effectiveLevel(.engineering))
+            guard chance > 0, s.rng.chance(chance) else { continue }
+            let before = s.subscribers(in: region)
+            let loss = Formulas.crashLoss(load: load)
+            for code in s.markets.keys.sorted() {
+                guard var market = s.markets[code], market.isLive,
+                      CountryData.country(code)?.region == region else { continue }
+                for tier in Tier.allCases { market.subs[tier] *= (1 - loss) }
+                market.awareness = Formulas.clamp(market.awareness - 0.04, 0, 1)
+                s.markets[code] = market
+            }
+            let lost = before - s.subscribers(in: region)
+            totalChurned += lost
+            s.outages[region.rawValue] = 3     // ticks down at week end, so service stays degraded for the next two weeks
+            events.append(s.makeEvent(.warning, "Servers crashed in \(region.displayName)",
+                                      "Overloaded servers went down. About \(Format.count(lost)) subscribers left and service will be shaky for two weeks. Add capacity so it doesn't happen again."))
+        }
+
         fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek
         fin.studios = s.weeklyStudioCost
         applyAttrition(&s, events: &events)
@@ -167,6 +199,15 @@ enum SimulationEngine {
             s.loans[i].balance -= pay
         }
         s.loans.removeAll { $0.balance <= 0.01 }
+
+        for key in s.outages.keys.sorted() {
+            let left = (s.outages[key] ?? 0) - 1
+            s.outages[key] = left > 0 ? left : nil
+        }
+        for key in s.surges.keys.sorted() {
+            let left = (s.surges[key] ?? 0) - 1
+            s.surges[key] = left > 0 ? left : nil
+        }
 
         if s.recessionWeeksLeft > 0 {
             s.recessionWeeksLeft -= 1
@@ -263,6 +304,17 @@ enum SimulationEngine {
         }
     }
 
+    private static func progressDatacenters(_ s: inout GameState, events: inout [GameEvent]) {
+        for i in s.datacenters.indices where s.datacenters[i].weeksToBuild > 0 {
+            s.datacenters[i].weeksToBuild -= 1
+            if s.datacenters[i].weeksToBuild == 0 {
+                let dc = s.datacenters[i]
+                events.append(s.makeEvent(.news, "\(dc.name) is online",
+                                          "+\(Format.count(Formulas.datacenterCapacity(level: dc.level))) viewers of capacity in \(dc.region.displayName)."))
+            }
+        }
+    }
+
     private static func progressPlatformBuilds(_ s: inout GameState, events: inout [GameEvent]) {
         var remaining: [PlatformBuild] = []
         for var build in s.builds {
@@ -306,6 +358,7 @@ enum SimulationEngine {
                               ageWeeks: 0, isOriginal: true, license: nil, weeksRemaining: nil,
                               listingWeeksLeft: 0)
             s.catalog.append(title)
+            if quality >= 80, let region = s.busiestRegion { s.surges[region.rawValue] = max(s.surges[region.rawValue] ?? 0, 1) }
             let verdict = breakout ? "A runaway hit!" : quality >= 75 ? "Critics love it." : quality <= 40 ? "A flop." : "A solid addition."
             var origin = ""
             if let si = studioIndex {

@@ -175,9 +175,9 @@ final class Phase6Tests: XCTestCase {
         s.markets["CA"]?.subs = TierSet(ad: 0, standard: 500_000, premium: 0)
         let first = s.advice().first!
         XCTAssertTrue(first.urgent)
-        XCTAssertTrue(s.advice().contains { $0.id == "cdn-northAmerica" && $0.urgent })
-        s.cdnSteps[Region.northAmerica.rawValue] = 4
-        XCTAssertFalse(s.advice().contains { $0.id.hasPrefix("cdn-") })
+        XCTAssertTrue(s.advice().contains { $0.id == "servers-northAmerica" && $0.urgent })
+        s.cloudUnits[Region.northAmerica.rawValue] = 10
+        XCTAssertFalse(s.advice().contains { $0.id.hasPrefix("servers-") })
     }
 
     func testAdviceNoticesLowPayAndRunway() throws {

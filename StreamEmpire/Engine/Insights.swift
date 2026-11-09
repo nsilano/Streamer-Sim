@@ -49,15 +49,15 @@ extension GameState {
         for region in Region.allCases {
             let subs = subscribers(in: region)
             guard subs > 0 else { continue }
-            let load = cdnLoad(region)
+            let load = serverLoad(region)
             if load > 1.0 {
-                items.append(Advice(id: "cdn-\(region.rawValue)", icon: "exclamationmark.triangle.fill", urgent: true,
+                items.append(Advice(id: "servers-\(region.rawValue)", icon: "exclamationmark.triangle.fill", urgent: true,
                                     title: "Servers overloaded in \(region.displayName)",
-                                    detail: "Viewers are buffering and cancelling. Add server capacity now."))
+                                    detail: "Viewers are buffering and the servers could crash. Rent cloud capacity now and build a datacenter."))
             } else if load > 0.85 {
-                items.append(Advice(id: "cdn-\(region.rawValue)", icon: "server.rack", urgent: false,
+                items.append(Advice(id: "servers-\(region.rawValue)", icon: "server.rack", urgent: false,
                                     title: "\(region.displayName) servers are \(Int(load * 100))% full",
-                                    detail: "Add capacity before you grow further, or viewers will start to buffer."))
+                                    detail: "Add capacity before you grow further, or viewers will start to lag. A viral hit can spike traffic."))
             }
         }
 

@@ -263,19 +263,49 @@ extension Formulas {
         return baseWebReach + bonus
     }
 
-    // CDN: every region starts with 200k subscribers of capacity; each expansion adds 250k.
-    static let baseCDNCapacity = 200_000.0
-    static let cdnStepCapacity = 250_000.0
-    static let cdnStepCost = 150_000.0
-    static let cdnStepUpkeepPerWeek = 600.0
-    static let maxCDNSteps = 40
+    // Servers: every region starts with 150k viewers of starter hosting. Datacenters and rented cloud add more.
+    static let baseServerCapacity = 150_000.0
+    static let datacenterCapacities: [Double] = [250_000, 500_000, 900_000, 1_500_000, 2_500_000]
+    static let datacenterUpkeeps: [Double] = [4_000, 8_000, 15_000, 26_000, 45_000]
+    static let datacenterUpgradeCosts: [Double] = [600_000, 1_200_000, 2_400_000, 4_500_000]   // from level 1...4
+    static let datacenterBuildCost = 500_000.0
+    static let datacenterBuildWeeks = 8
+    static let maxDatacentersPerRegion = 4
+    static let maxDatacenterLevel = 5
+    /// Cloud is instant but about 7x pricier per viewer than a datacenter.
+    static let cloudUnitCapacity = 100_000.0
+    static let cloudUnitCostPerWeek = 12_000.0
+    static let maxCloudUnits = 10
+    static let surgeLoadMultiplier = 1.3
+    static let outageQualityMultiplier = 0.6
 
-    static func cdnCapacity(steps: Int) -> Double { baseCDNCapacity + Double(steps) * cdnStepCapacity }
-
-    /// 1.0 while within capacity; buffering and outages degrade it once load passes 100%.
-    static func serviceQuality(load: Double) -> Double {
-        load <= 1 ? 1.0 : clamp(1 - (load - 1) * 1.2, 0.3, 1.0)
+    static func datacenterCapacity(level: Int) -> Double {
+        datacenterCapacities[min(max(level, 1), maxDatacenterLevel) - 1]
     }
+    static func datacenterUpkeep(level: Int) -> Double {
+        datacenterUpkeeps[min(max(level, 1), maxDatacenterLevel) - 1]
+    }
+    static func datacenterUpgradeCost(currentLevel: Int) -> Double {
+        datacenterUpgradeCosts[min(max(currentLevel, 1), maxDatacenterLevel - 1) - 1]
+    }
+
+    /// 1.0 up to 90% load; a little lag from 90-100%; buffering above 100% that gets worse fast.
+    static func serviceQuality(load: Double) -> Double {
+        if load <= 0.9 { return 1.0 }
+        if load <= 1.0 { return 1.0 - (load - 0.9) * 0.5 }
+        return clamp(0.95 - (load - 1.0) * 1.2, 0.3, 1.0)
+    }
+
+    /// Weekly chance servers crash in a region. Nothing until 105% load; two or more datacenters add redundancy.
+    static func crashChance(load: Double, datacenters: Int, engineeringLevel: Double) -> Double {
+        guard load > 1.05 else { return 0 }
+        let base = min(0.6, (load - 1.05) * 0.8)
+        let redundancy = datacenters >= 2 ? 0.7 : 1.0
+        return base * redundancy * max(0.5, 1.0 - 0.05 * engineeringLevel)
+    }
+
+    /// Share of a region's subscribers who leave when servers crash.
+    static func crashLoss(load: Double) -> Double { clamp(0.03 + (load - 1.0) * 0.1, 0.03, 0.12) }
 
     // Department effects (level 0...5)
     static func licenseDiscount(contentLevel: Double) -> Double { 0.02 * contentLevel }

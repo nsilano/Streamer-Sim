@@ -71,38 +71,27 @@ final class Phase4Tests: XCTestCase {
         XCTAssertGreaterThan(adds(Platform.allCases), adds([.web]))
     }
 
-    // MARK: CDN
+    // MARK: Servers
 
     func testServiceQualityDegradesPastCapacity() {
         XCTAssertEqual(Formulas.serviceQuality(load: 0.5), 1.0)
-        XCTAssertEqual(Formulas.serviceQuality(load: 1.0), 1.0)
+        XCTAssertEqual(Formulas.serviceQuality(load: 0.9), 1.0)
+        XCTAssertEqual(Formulas.serviceQuality(load: 1.0), 0.95, accuracy: 1e-9, "a little lag at full load")
         XCTAssertLessThan(Formulas.serviceQuality(load: 1.3), 1.0)
         XCTAssertLessThan(Formulas.serviceQuality(load: 1.6), Formulas.serviceQuality(load: 1.3))
         XCTAssertEqual(Formulas.serviceQuality(load: 50), 0.3, accuracy: 1e-9)
     }
 
-    func testExpandCDNAddsCapacityAndCost() throws {
-        var s = newState()
-        XCTAssertEqual(s.cdnCapacity(.europe), 200_000)
-        let cash = s.finances.cash
-        try s.expandCDN(region: .europe)
-        XCTAssertEqual(s.cdnCapacity(.europe), 450_000)
-        XCTAssertEqual(s.finances.cash, cash - Formulas.cdnStepCost, accuracy: 0.01)
-        XCTAssertEqual(s.cdnCapacity(.asiaPacific), 200_000, "other regions unaffected")
-        s.cdnSteps[Region.europe.rawValue] = Formulas.maxCDNSteps
-        XCTAssertThrowsError(try s.expandCDN(region: .europe))
-    }
-
     func testOverloadedServersCutSignupsAndRaiseChurn() {
-        func week(cdnSteps: Int) -> WeeklyReport {
+        func week(cloudBlocks: Int) -> WeeklyReport {
             var s = newState(country: "CA")
             s.catalog = titles(15)
             s.markets["CA"]?.awareness = 0.4
             s.markets["CA"]?.subs = TierSet(ad: 0, standard: 500_000, premium: 0)
-            s.cdnSteps[Region.northAmerica.rawValue] = cdnSteps
+            s.cloudUnits[Region.northAmerica.rawValue] = cloudBlocks
             return SimulationEngine.advanceWeek(s).lastReport!
         }
-        let overloaded = week(cdnSteps: 0), healthy = week(cdnSteps: 4)
+        let overloaded = week(cloudBlocks: 0), healthy = week(cloudBlocks: 10)
         XCTAssertLessThan(overloaded.newSubs, healthy.newSubs)
         XCTAssertGreaterThan(overloaded.churned, healthy.churned)
     }
@@ -115,15 +104,18 @@ final class Phase4Tests: XCTestCase {
         XCTAssertTrue(s.lastReport!.events.contains { $0.headline.contains("Buffering") })
     }
 
-    func testTechCostCombinesPlatformsAndCDN() {
+    func testTechCostCombinesPlatformsDatacentersAndCloud() {
         var s = newState()
         XCTAssertEqual(s.weeklyTechCost, 0)
         s.platforms = [.web, .ios]
-        s.cdnSteps = [Region.europe.rawValue: 2]
-        XCTAssertEqual(s.weeklyTechCost, 8_000 + 2 * Formulas.cdnStepUpkeepPerWeek, accuracy: 0.01)
+        s.datacenters = [Datacenter(id: 1, name: "Dublin DC", region: .europe, level: 2, weeksToBuild: 0),
+                         Datacenter(id: 2, name: "Frankfurt DC", region: .europe, level: 1, weeksToBuild: 5)]
+        s.cloudUnits = [Region.europe.rawValue: 2]
+        // iOS 8k + level-2 DC 8k (the one still under construction costs nothing yet) + 2 cloud blocks.
+        XCTAssertEqual(s.weeklyTechCost, 8_000 + 8_000 + 2 * Formulas.cloudUnitCostPerWeek, accuracy: 0.01)
         s.staff.engineering = 2
-        XCTAssertEqual(s.weeklyTechCost, 8_000 + 2 * Formulas.cdnStepUpkeepPerWeek * 0.9, accuracy: 0.01)
-        XCTAssertEqual(s.cdnStepPrice, Formulas.cdnStepCost * 0.9, accuracy: 0.01)
+        XCTAssertEqual(s.weeklyTechCost, 8_000 + (8_000 + 2 * Formulas.cloudUnitCostPerWeek) * 0.9, accuracy: 0.01)
+        XCTAssertEqual(s.datacenterBuildPrice, Formulas.datacenterBuildCost * 0.9, accuracy: 0.01)
     }
 
     // MARK: Staff
@@ -233,11 +225,13 @@ final class Phase4Tests: XCTestCase {
         var s = newState()
         s.finances.cash = 50_000_000
         try s.startPlatform(.android)
-        try s.expandCDN(region: .europe)
+        try s.buildDatacenter(region: .europe)
+        try s.rentCloud(region: .asiaPacific)
         try s.hire(.engineering)
         let loaded = try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(s))
         XCTAssertEqual(loaded, s)
-        XCTAssertEqual(loaded.cdnSteps[Region.europe.rawValue], 1)
+        XCTAssertEqual(loaded.datacenters.count, 1)
+        XCTAssertEqual(loaded.cloudUnits[Region.asiaPacific.rawValue], 1)
         XCTAssertEqual(loaded.staff.engineering, 1)
     }
 }

@@ -29,7 +29,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 5
+    static let currentVersion = 6
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -57,15 +57,21 @@ struct GameState: Codable, Equatable {
     // Tech & operations
     var platforms: [Platform] = [.web]
     var builds: [PlatformBuild] = []
-    var cdnSteps: [String: Int] = [:]          // Region.rawValue -> capacity expansions bought
+    var datacenters: [Datacenter] = []
+    var cloudUnits: [String: Int] = [:]        // Region.rawValue -> rented cloud blocks (100k viewers each)
+    var outages: [String: Int] = [:]           // Region.rawValue -> weeks of degraded service after a crash
+    var surges: [String: Int] = [:]            // Region.rawValue -> weeks of extra traffic (viral shows, premieres)
     var staff = Staff()
     var studios: [Studio] = []
 
     /// Reach multiplier from the platforms you ship on (web only = 0.70, everything = 1.0).
     var platformReach: Double { Formulas.platformReach(platforms) }
 
-    func cdnCapacity(_ region: Region) -> Double {
-        Formulas.cdnCapacity(steps: cdnSteps[region.rawValue] ?? 0)
+    /// How many viewers a region's servers can stream at once: starter hosting + datacenters + rented cloud.
+    func serverCapacity(_ region: Region) -> Double {
+        let owned = datacenters.filter { $0.region == region }.reduce(0.0) { $0 + $1.capacity }
+        let cloud = Double(cloudUnits[region.rawValue] ?? 0) * Formulas.cloudUnitCapacity
+        return Formulas.baseServerCapacity + owned + cloud
     }
 
     /// Player subscribers in a region.
@@ -77,7 +83,23 @@ struct GameState: Codable, Equatable {
         return total
     }
 
-    func cdnLoad(_ region: Region) -> Double { subscribers(in: region) / cdnCapacity(region) }
+    /// Subscribers / capacity. Above 90% viewers notice lag; above 100% they buffer; far above, servers crash.
+    func serverLoad(_ region: Region) -> Double { subscribers(in: region) / serverCapacity(region) }
+
+    /// Load including temporary traffic surges.
+    func effectiveLoad(_ region: Region) -> Double {
+        serverLoad(region) * ((surges[region.rawValue] ?? 0) > 0 ? Formulas.surgeLoadMultiplier : 1.0)
+    }
+
+    /// The region where you have the most subscribers (nil before you have any).
+    var busiestRegion: Region? {
+        var best: (Region, Double)?
+        for region in Region.allCases {
+            let subs = subscribers(in: region)
+            if subs > 0, subs > (best?.1 ?? 0) { best = (region, subs) }
+        }
+        return best?.0
+    }
 
     static let startingCash: Double = 25_000_000
     static let targetListings = 14

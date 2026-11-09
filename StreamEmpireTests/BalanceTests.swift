@@ -47,8 +47,17 @@ enum Bot {
         }
 
         // Add servers before a region fills up.
-        for region in Region.allCases where s.cdnLoad(region) > 0.8 && s.finances.cash > 1_000_000 {
-            try? s.expandCDN(region: region)
+        for region in Region.allCases where s.serverLoad(region) > 0.7 {
+            let building = s.datacenters.contains { $0.region == region && !$0.isOnline }
+            if !building, s.datacenters(in: region).count < 3, s.finances.cash > 3_000_000 {
+                try? s.buildDatacenter(region: region)
+            } else if s.serverLoad(region) > 0.85, s.finances.cash > 500_000 {
+                try? s.rentCloud(region: region)
+            }
+            if s.serverLoad(region) > 0.8, s.finances.cash > 6_000_000,
+               let dc = s.datacenters(in: region).first(where: { s.datacenterUpgradePrice($0) != nil }) {
+                try? s.upgradeDatacenter(id: dc.id)
+            }
         }
 
         // Expand every 13 weeks if affordable and profitable.
