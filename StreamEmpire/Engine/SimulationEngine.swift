@@ -32,6 +32,7 @@ enum SimulationEngine {
         // The game waits for the player to settle any pending decision.
         guard s.outcome == .playing, s.pendingEvent == nil else { return s }
 
+        NewsEngine.publishPlayerPrices(&s)
         var events: [GameEvent] = s.queuedEvents
         s.queuedEvents = []
         var fin = WeeklyFinancials()
@@ -91,6 +92,7 @@ enum SimulationEngine {
                     market.status = .live
                     events.append(s.makeEvent(.marketLive, "\(country.flag) \(country.name) is live!",
                                               "Subscribers can now sign up in \(country.name)."))
+                    s.addNews(.you, "\(s.companyName) goes live in \(country.name)", "\(country.flag) Subscribers can now sign up in \(country.name).")
                 } else {
                     market.status = .launching(weeksLeft: weeksLeft - 1)
                 }
@@ -112,6 +114,7 @@ enum SimulationEngine {
                     market.liveTiers.append(tier)
                     events.append(s.makeEvent(.news, "\(tier.displayName) tier live in \(country.name)",
                                               "\(country.flag) Customers in \(country.name) can now choose the \(tier.displayName) plan."))
+                    s.addNews(.you, "\(s.companyName) adds a \(tier.displayName) plan in \(country.name)", "\(country.flag) Customers there can now choose it.")
                 }
             }
 
@@ -213,6 +216,8 @@ enum SimulationEngine {
             }
             let lost = before - s.subscribers(in: region)
             totalChurned += lost
+            s.addNews(.you, "\(s.companyName)'s servers crash in \(region.displayName)",
+                      "About \(Format.count(lost)) subscribers left after overloaded servers went down.")
             s.outages[region.rawValue] = 3     // ticks down at week end, so service stays degraded for the next two weeks
             events.append(s.makeEvent(.warning, "Servers crashed in \(region.displayName)",
                                       "Overloaded servers went down. About \(Format.count(lost)) subscribers left and service will be shaky for two weeks. Add capacity so it doesn't happen again."))
@@ -374,6 +379,7 @@ enum SimulationEngine {
             s.datacenters[i].weeksToBuild -= 1
             if s.datacenters[i].weeksToBuild == 0 {
                 let dc = s.datacenters[i]
+                s.addNews(.you, "\(dc.name) comes online", "+\(Format.count(Formulas.datacenterCapacity(level: dc.level))) viewers of capacity in \(dc.region.displayName).")
                 events.append(s.makeEvent(.news, "\(dc.name) is online",
                                           "+\(Format.count(Formulas.datacenterCapacity(level: dc.level))) viewers of capacity in \(dc.region.displayName)."))
             }
@@ -388,6 +394,7 @@ enum SimulationEngine {
                 s.platforms.append(build.platform)
                 events.append(s.makeEvent(.news, "\(build.platform.displayName) launched",
                                           "Your reach just grew to \(Format.percent(s.platformReach))."))
+                s.addNews(.you, "\(s.companyName) launches its \(build.platform.displayName)", "Reach grows to \(Format.percent(s.platformReach)).")
             } else {
                 remaining.append(build)
             }
@@ -432,6 +439,8 @@ enum SimulationEngine {
             }
             events.append(s.makeEvent(.news, "\"\(project.name)\" premieres",
                                       "Your original\(origin) (quality \(quality), popularity \(popularity)) is live worldwide. \(verdict)"))
+            s.addNews(.you, "\"\(project.name)\" premieres on \(s.companyName)",
+                      "A \(project.genre.displayName.lowercased()) \(project.kind.displayName.lowercased())\(origin) with quality \(quality) and popularity \(popularity). \(verdict)")
         }
         s.projects = remaining
     }
@@ -568,15 +577,16 @@ enum SimulationEngine {
 
             let overlap = s.markets.contains { $0.value.isLive && (rival.subs[$0.key] ?? 0) > 0 }
             let priceMove = rival.priceLevel - previousLevel
+            let example = NewsEngine.priceExample(rival, before: previousLevel, after: rival.priceLevel)
             if warCut {
                 s.addNews(.pricing, "\(rival.name) declares a price war on \(s.companyName)",
-                          "Prices are down \(Int(-priceMove * 100))% in a bid to win back subscribers.", rival: rival.id)
+                          "Prices are down \(Int(-priceMove * 100))% in a bid to win back subscribers.\(example)", rival: rival.id)
             } else if priceMove <= -0.05 {
                 s.addNews(.pricing, "\(rival.name) cuts prices",
-                          "A promotion takes about \(Int(-priceMove * 100))% off its plans. Expect a fight for budget-conscious viewers.", rival: rival.id)
+                          "A promotion takes about \(Int(-priceMove * 100))% off its plans.\(example)", rival: rival.id)
             } else if priceMove >= 0.05 {
                 s.addNews(.pricing, "\(rival.name) raises prices",
-                          "Plans cost about \(Int(priceMove * 100))% more, which may push customers to cheaper services.", rival: rival.id)
+                          "Plans cost about \(Int(priceMove * 100))% more, which may push customers to cheaper services.\(example)", rival: rival.id)
             }
             if warCut, !announcedPriceWar, overlap {
                 announcedPriceWar = true

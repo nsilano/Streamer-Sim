@@ -179,5 +179,6 @@ enum RandomEvents {
 
         s.pendingEvent = nil
         s.queuedEvents.append(s.makeEvent(.news, headline, detail))
+        s.addNews(.you, headline, detail)
     }
 }

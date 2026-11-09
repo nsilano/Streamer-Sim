@@ -3,7 +3,7 @@ import SwiftUI
 /// The in-game news platform: what rivals (and the industry) are doing.
 struct NewsFeedView: View {
     enum Filter: String, CaseIterable, Identifiable {
-        case all = "All", rivals = "Rivals", you = "You", industry = "Industry"
+        case all = "All", rivals = "Rivals", you = "You", prices = "Prices", industry = "Industry"
         var id: String { rawValue }
     }
 
@@ -16,7 +16,8 @@ struct NewsFeedView: View {
             switch filter {
             case .all: return true
             case .rivals: return item.rivalID != nil
-            case .you: return item.kind == .you
+            case .you: return item.kind == .you || (item.rivalID == nil && item.kind != .industry)
+            case .prices: return item.kind == .pricing
             case .industry: return item.kind == .industry
             }
         }

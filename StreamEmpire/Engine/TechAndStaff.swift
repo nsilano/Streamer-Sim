@@ -15,6 +15,7 @@ extension GameState {
         }
         finances.cash -= price
         finances.ledger.other += price
+        addNews(.you, "\(companyName) starts building its \(platform.displayName)", "Ready in about \(Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: staff.effectiveLevel(.engineering))) weeks.")
         builds.append(PlatformBuild(
             platform: platform,
             weeksLeft: Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: staff.effectiveLevel(.engineering))))

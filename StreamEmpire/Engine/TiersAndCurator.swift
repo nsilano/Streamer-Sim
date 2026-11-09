@@ -22,6 +22,8 @@ extension GameState {
         finances.cash -= cost
         finances.ledger.launch += cost
         markets[code]?.tierBuilds.append(TierBuild(tier: tier, weeksLeft: Formulas.tierLaunchWeeks(tier)))
+        addNews(.you, "\(companyName) is launching a \(tier.displayName) plan in \(country.name)",
+                "Ready in \(Formulas.tierLaunchWeeks(tier)) weeks.")
     }
 
     // MARK: Licensing manager
@@ -34,6 +36,7 @@ extension GameState {
         finances.cash -= price
         finances.ledger.other += price
         curator = Curator()
+        addNews(.you, "\(companyName) hires a licensing manager", "They'll keep the library growing within the rules you set.")
     }
 
     mutating func fireCurator() { curator = nil }

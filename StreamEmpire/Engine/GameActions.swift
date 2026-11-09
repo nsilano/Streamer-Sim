@@ -55,6 +55,10 @@ extension GameState {
         finances.cash -= price
         finances.ledger.licensing += price
         catalog.append(title)
+        if price >= 1_000_000 || title.quality >= 85 {
+            addNews(.you, "\(companyName) licenses \"\(title.name)\"",
+                    "A \(title.quality)-quality \(title.genre.displayName.lowercased()) \(title.kind.displayName.lowercased()) for \(Format.money(price)), a \(license.years)-year deal.")
+        }
     }
 
     mutating func launchMarket(code: String) throws {
@@ -71,6 +75,8 @@ extension GameState {
         finances.cash -= price
         finances.ledger.launch += price
         markets[code]?.status = .launching(weeksLeft: 4)
+        addNews(.you, "\(companyName) begins launching in \(country.name)",
+                "\(country.flag) Setup takes 4 weeks and costs \(Format.money(price)). Subscribers can join once it's live.")
     }
 
     mutating func setPrices(code: String, prices: TierSet) throws {
@@ -78,7 +84,14 @@ extension GameState {
         for tier in Tier.allCases where prices[tier] < 0 || prices[tier] > 100 {
             throw ActionError.invalidPrice
         }
-        markets[code]?.prices = prices
+        changePrices(code: code, to: prices)
+    }
+
+    /// Changes a country's prices and remembers where they started this week, so the news can report the net change.
+    mutating func changePrices(code: String, to new: TierSet) {
+        guard let market = markets[code] else { return }
+        if market.prices != new, pendingPriceChanges[code] == nil { pendingPriceChanges[code] = market.prices }
+        markets[code]?.prices = new
     }
 
     mutating func setMarketing(code: String, weeklyBudget: Double) throws {

@@ -32,6 +32,8 @@ extension GameState {
         guard finances.cash >= weekly * 4 else { throw ActionError.insufficientFunds(needed: weekly * 4) }
         let id = takeID()
         let name = TitleGenerator.makeName(genre: genre, rng: &rng)
+        addNews(.you, "\(companyName) greenlights \"\(name)\"",
+                "A \(genre.displayName.lowercased()) \(kind.displayName.lowercased()) with a \(Format.money(budget)) budget, ready in \(weeks) weeks\(studioID == nil ? "" : " from your in-house studio").")
         projects.append(OriginalProject(id: id, name: name, kind: kind, genre: genre, language: language,
                                         budget: budget, weeksTotal: weeks, weeksLeft: weeks, weeklyCost: weekly,
                                         studioID: studioID))
@@ -105,6 +107,7 @@ extension GameState {
         loans.append(Loan(id: takeID(), principal: amount, balance: amount, annualRate: rate,
                           weeklyPrincipal: amount / Double(termWeeks)))
         finances.cash += amount
+        addNews(.you, "\(companyName) borrows \(Format.money(amount))", "A \(termWeeks / 52)-year loan at \(Format.percent(rate)) interest.")
     }
 
     mutating func repayLoan(id: Int, amount: Double) throws {
@@ -129,6 +132,8 @@ extension GameState {
         equity.ownership *= (1 - percent)
         equity.roundsRaised += 1
         equity.lastRoundWeek = week
+        addNews(.you, "\(companyName) raises \(Format.money(valuation * percent)) from investors",
+                "\(Format.percent(percent)) of the company sold at a \(Format.money(valuation)) valuation. Founders now own \(Format.percent(equity.ownership)).")
     }
 
     mutating func launchIPO() throws {
@@ -138,5 +143,6 @@ extension GameState {
         finances.cash += valuation * 1.4 * sold
         equity.ownership *= (1 - sold)
         equity.ipoDone = true
+        addNews(.you, "\(companyName) goes public", "A \(Format.money(valuation * 1.4)) IPO raises \(Format.money(valuation * 1.4 * sold)) for 15% of the company.")
     }
 }

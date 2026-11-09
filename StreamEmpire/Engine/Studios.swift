@@ -18,6 +18,7 @@ extension GameState {
         let id = takeID()
         let name = StudioNames.make(rng: &rng)
         studios.append(Studio(id: id, name: name, specialty: specialty, level: 1, experience: 0, foundedWeek: week))
+        addNews(.you, "\(companyName) founds \(name)", "A new \(specialty.displayName.lowercased()) studio for in-house productions.")
     }
 
     mutating func upgradeStudio(id: Int) throws {
@@ -32,6 +33,7 @@ extension GameState {
         finances.cash -= cost
         finances.ledger.other += cost
         studios[index].level = level + 1
+        addNews(.you, "\(studios[index].name) expands", "The studio reaches level \(level + 1) with more production slots.")
     }
 
     func activeProjects(at studioID: Int) -> Int { projects.filter { $0.studioID == studioID }.count }
@@ -69,7 +71,7 @@ extension GameState {
         for code in markets.keys.sorted() {
             guard let market = markets[code], market.status != .notLaunched,
                   let country = CountryData.country(code) else { continue }
-            markets[code]?.prices = Formulas.prices(for: country, level: level)
+            changePrices(code: code, to: Formulas.prices(for: country, level: level))
         }
     }
 
@@ -77,7 +79,7 @@ extension GameState {
     mutating func applyPrices(_ prices: TierSet) throws {
         for tier in Tier.allCases where prices[tier] < 0 || prices[tier] > 100 { throw ActionError.invalidPrice }
         for code in markets.keys.sorted() where markets[code]?.status != .notLaunched {
-            markets[code]?.prices = prices
+            changePrices(code: code, to: prices)
         }
     }
 

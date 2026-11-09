@@ -57,4 +57,53 @@ enum NewsEngine {
         }
         s.previousRanking = order
     }
+
+    // MARK: Your price changes
+
+    /// Publishes this week's net price changes: one story per country, or a summary if you changed many.
+    static func publishPlayerPrices(_ s: inout GameState) {
+        struct Change { var code: String; var old: TierSet; var new: TierSet }
+        var changes: [Change] = []
+        for code in s.pendingPriceChanges.keys.sorted() {
+            guard let old = s.pendingPriceChanges[code], let new = s.markets[code]?.prices else { continue }
+            if Tier.allCases.contains(where: { abs(old[$0] - new[$0]) > 0.005 }) { changes.append(Change(code: code, old: old, new: new)) }
+        }
+        s.pendingPriceChanges = [:]
+        guard !changes.isEmpty else { return }
+
+        func lines(_ c: Change) -> String {
+            Tier.allCases.filter { abs(c.old[$0] - c.new[$0]) > 0.005 }.map { tier in
+                let pct = c.old[tier] > 0 ? (c.new[tier] - c.old[tier]) / c.old[tier] * 100 : 0
+                return String(format: "%@ $%.2f → $%.2f (%@%.0f%%)", tier.displayName, c.old[tier], c.new[tier], pct >= 0 ? "+" : "", pct)
+            }.joined(separator: ", ")
+        }
+        func direction(_ c: Change) -> Int {
+            let delta = Tier.allCases.reduce(0.0) { $0 + (c.new[$1] - c.old[$1]) }
+            return delta > 0 ? 1 : (delta < 0 ? -1 : 0)
+        }
+
+        if changes.count <= 3 {
+            for change in changes {
+                let country = CountryData.country(change.code)
+                let verb = direction(change) > 0 ? "raises prices" : (direction(change) < 0 ? "cuts prices" : "reshuffles its plans")
+                s.addNews(.pricing, "\(s.companyName) \(verb) in \(country?.name ?? change.code)", lines(change))
+            }
+        } else {
+            let up = changes.filter { direction($0) > 0 }.count
+            let down = changes.filter { direction($0) < 0 }.count
+            s.addNews(.pricing, "\(s.companyName) changes prices in \(changes.count) markets",
+                      "\(up) increases and \(down) cuts, including \(changes.prefix(3).compactMap { CountryData.country($0.code)?.name }.joined(separator: ", ")).")
+        }
+    }
+
+    // MARK: Rival price example
+
+    /// "Standard in Ireland: $11.49 → $9.99" for the rival's biggest market.
+    static func priceExample(_ rival: Rival, before: Double, after: Double) -> String {
+        guard let code = rival.subs.keys.sorted().max(by: { (rival.subs[$0] ?? 0) < (rival.subs[$1] ?? 0) }),
+              let country = CountryData.country(code) else { return "" }
+        let from = Formulas.rivalPrice(country: country, priceFactor: rival.priceFactor, priceLevel: before, tier: .standard)
+        let to = Formulas.rivalPrice(country: country, priceFactor: rival.priceFactor, priceLevel: after, tier: .standard)
+        return String(format: " Standard in %@: $%.2f → $%.2f.", country.name, from, to)
+    }
 }

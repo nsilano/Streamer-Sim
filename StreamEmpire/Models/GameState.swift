@@ -31,7 +31,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 11
+    static let currentVersion = 12
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -79,6 +79,7 @@ struct GameState: Codable, Equatable {
     var policyLog: [PolicyReaction] = []       // newest first
     var brandTrust = 60.0                      // 0...100: customers' faith in you
     var regulatoryHeat = 0.0                   // 0...100: how closely regulators are watching
+    var pendingPriceChanges: [String: TierSet] = [:]   // country -> prices at the start of the week's edits
     var stakes: [String: Double] = [:]         // rival id -> share of the company you own (0...1)
     var stakeBasis: [String: Double] = [:]     // rival id -> what you paid for those shares
     var takeover: TakeoverBid?                 // hostile bid in progress (one at a time)
