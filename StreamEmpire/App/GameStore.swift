@@ -5,6 +5,7 @@ import SwiftUI
 final class GameStore: ObservableObject {
     @Published private(set) var state: GameState?
     @Published var showReport = false
+    @Published var showSettings = false
     @Published var errorMessage: String?
     @Published var autoSpeed: Double = 0.7        // seconds per week
     @Published var autoAdvance = false {
@@ -26,8 +27,19 @@ final class GameStore: ObservableObject {
         persist()
     }
 
+    /// Starts the same company over in the same country. `sameWorld` replays the exact same random world.
+    func restart(sameWorld: Bool) {
+        guard let current = state else { return }
+        autoAdvance = false
+        showReport = false
+        state = current.restarted(sameWorld: sameWorld, newSeed: UInt64.random(in: 1...UInt64.max))
+        persist()
+    }
+
     func resetGame() {
         autoAdvance = false
+        showSettings = false
+        showReport = false
         SaveManager.delete()
         state = nil
     }

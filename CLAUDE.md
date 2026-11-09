@@ -9,14 +9,14 @@ expanding into countries, building a catalog (licensed + originals) and winning 
 
 - **Start:** $25M seed cash, empty catalog, pick 1 starting country (Ireland, New Zealand, Netherlands, Canada are the starter picks).
 - **Win:** #1 in global subscribers, ahead of every rival (checked from week 52). Bonus goals: IPO, $10B annual revenue, all 30 markets.
-- **Lose:** cash below zero for 8 straight weeks with no funding available.
+- **Lose:** cash below the overdraft limit ($5M + 25% of annual revenue), or below zero for 8 straight weeks with no funding available (hard cap 26 weeks).
 
 ## Core loop
 1 turn = 1 week. Player decides -> "Next Week" -> `SimulationEngine.advanceWeek` -> weekly report
 (new subs, churn, revenue, costs, events). Auto-advance toggle on the dashboard.
 
 ## Key mechanics
-- **Countries (30 / 6 regions):** broadband households (subscriber ceiling = households x 55%), price tolerance, ad strength, genre taste weights, language, local quota, rival shares, launch cost, regulatory risk. Launch = pay cost, 4 weeks setup, then live. Big markets (USA, India, Japan) unlock at a global-subs OR catalog-size threshold.
+- **Countries (30 / 6 regions):** broadband households (subscription ceiling = households x subscriptions per household, ~1.8 to ~4.2 by income, shared by ALL services), price tolerance, ad strength, genre taste weights, language, local quota, rival shares, launch cost, regulatory risk. Launch = pay cost, 4 weeks setup, then live. Big markets (USA, India, Japan) unlock at a global-subs OR catalog-size threshold.
 - **Content:** licensing market (rotating, procedural fictional titles; rivals can snatch listings) and originals (6-52 weeks, budget raises quality but hits are never guaranteed, owned forever worldwide). Appeal per country = sum of title appeal x genre taste x language match x freshness x release boost, with diminishing returns. Subtitles/dubbing cost per title per language.
 - **Subscribers** tracked per country and per tier (Ad / Standard / Premium, each with own price). Adds depend on catalog appeal, marketing, price vs tolerance, awareness, word of mouth, rivals, platform reach. Churn depends on content freshness, price, rival releases, service quality.
 - **Finances:** revenue = subscriptions (price x 12 / 52 per week) + ads. Costs = licensing, originals, dubbing, streaming/CDN per sub, staff, marketing, country operating costs. Funding = loans (interest) and investor rounds (equity %). IPO at a revenue/subscriber threshold. Always show cash, weekly P/L and runway.
@@ -53,6 +53,8 @@ Dashboard - Markets - Content - Rivals - Company.
    **Balance pass:** the economy scales with success (audience-priced licenses via `licenseAudienceScale`, 4% overhead, per-sub streaming cost, country operating cost). `BalanceTests` runs a simple autopilot (`Bot`) for 3 starters-years and asserts subscriber pacing bands; it also prints `BALANCE ...` lines to the CI log. **When you change economy constants, read those lines in the CI log and adjust the bands deliberately.** Observed with the bot: ~130-250K subs at year 1, 0.5-1.5M at year 2, 1.4-5M at year 3, ~6M at year 5 (Canada); top rival ~80M, so winning needs a much stronger player than the bot.
 
 5. **Phase 5 (done):** employee pay (`Staff.pay`, `studioPay`, range 0.6-1.6 of market; scales salaries, effectiveness via `Formulas.payEffectiveness`, attrition below 90%), in-house studios (`Studio`, `Engine/Studios.swift`: found/upgrade, slots, cheaper in-house production, quality/popularity bonuses, experience, upkeep), global price tool (`applyPriceLevel`). Department effects use `staff.effectiveLevel(_:)` (level x pay effectiveness), not raw levels. Save version is 5.
+
+6. **Phase 6 (done): art + depth pass.** Dark cinematic theme (`Views/Theme.swift`), procedural poster covers (`Data/PosterSpec.swift` + `Views/PosterView.swift`), bars everywhere (`StatBar`), real world map (`Resources/world.json` from Natural Earth, public domain; `Views/WorldMapView.swift`) with a country sheet, all 30 countries selectable as the starting market, 12 rivals sized after real services (`Data/RivalData.swift`; world capacity = households x subscriptions per household, so Netflux starts near 325M), rivals retaliate against a dominant player (price wars + poaching, `Formulas.dominanceThreat`), datacenters + cloud + crashes + surges (`Engine/TechAndStaff.swift`, `Models/Datacenter.swift`), a hard bankruptcy overdraft limit (`Formulas.bankruptcyFloor`, `GameState.lossReason`), subscription tiers launched per market (`MarketState.liveTiers`), a hireable licensing manager (`Curator`) that auto-buys within rules, and Settings (restart / replay same seed / quit). Save version is 7.
 
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).

@@ -1,45 +1,6 @@
 import SwiftUI
 import Charts
 
-struct StatCard: View {
-    let title: String
-    let value: String
-    var subtitle: String? = nil
-    var tint: Color = .primary
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
-            Text(value).font(.title3.bold()).foregroundStyle(tint).minimumScaleFactor(0.6).lineLimit(1)
-            if let subtitle {
-                Text(subtitle).font(.caption2).foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-    }
-}
-
-struct LabeledValue: View {
-    let label: String
-    let value: String
-    var tint: Color = .primary
-
-    var body: some View {
-        HStack {
-            Text(label)
-            Spacer()
-            Text(value).foregroundStyle(tint).monospacedDigit()
-        }
-    }
-}
-
-extension Double {
-    var profitColor: Color { self >= 0 ? .green : .red }
-}
-
-
 /// Subscribers / profit / cash over the last weeks of reports.
 struct TrendCard: View {
     enum Metric: String, CaseIterable, Identifiable {
@@ -59,7 +20,7 @@ struct TrendCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Picker("Metric", selection: $metric) {
                 ForEach(Metric.allCases) { Text($0.rawValue).tag($0) }
             }
@@ -67,20 +28,58 @@ struct TrendCard: View {
             Chart(reports, id: \.week) { report in
                 LineMark(x: .value("Week", report.week), y: .value(metric.rawValue, value(report)))
                     .interpolationMethod(.monotone)
+                    .foregroundStyle(Theme.accentGradient)
+                AreaMark(x: .value("Week", report.week), y: .value(metric.rawValue, value(report)))
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(LinearGradient(colors: [Theme.magenta.opacity(0.30), Color.clear],
+                                                    startPoint: .top, endPoint: .bottom))
             }
             .chartYAxis {
                 AxisMarks { mark in
-                    AxisGridLine()
+                    AxisGridLine().foregroundStyle(Color.white.opacity(0.08))
                     AxisValueLabel {
                         if let v = mark.as(Double.self) {
                             Text(metric == .subs ? Format.count(v) : Format.money(v))
+                                .foregroundStyle(Theme.text2)
                         }
                     }
                 }
             }
-            .frame(height: 140)
+            .chartXAxis {
+                AxisMarks { _ in AxisValueLabel().foregroundStyle(Theme.text2) }
+            }
+            .frame(height: 150)
         }
-        .padding(12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .artCard()
+    }
+}
+
+
+/// A horizontal bar split into coloured segments (values are fractions that should sum to <= 1).
+struct StackedBar: View {
+    struct Segment: Identifiable {
+        let id: String
+        let value: Double
+        let color: Color
+    }
+
+    let segments: [Segment]
+    var height: CGFloat = 12
+
+    var body: some View {
+        GeometryReader { proxy in
+            HStack(spacing: 1) {
+                ForEach(segments) { segment in
+                    Rectangle()
+                        .fill(segment.color)
+                        .frame(width: max(0, proxy.size.width * CGFloat(min(max(segment.value, 0), 1))))
+                }
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white.opacity(0.10))
+            .clipShape(Capsule())
+        }
+        .frame(height: height)
     }
 }

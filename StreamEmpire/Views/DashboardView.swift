@@ -7,73 +7,108 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 if let state = store.state {
-                    VStack(spacing: 16) {
-                        let fin = state.finances
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            StatCard(title: "Cash", value: Format.money(fin.cash),
-                                     subtitle: runwayText(fin), tint: fin.cash >= 0 ? .primary : .red)
-                            StatCard(title: "Global subscribers", value: Format.count(state.totalSubscribers))
-                            StatCard(title: "Weekly revenue", value: Format.money(fin.lastWeek.revenue))
-                            StatCard(title: "Weekly profit", value: Format.money(fin.lastWeek.profit),
-                                     tint: fin.lastWeek.profit.profitColor)
-                            StatCard(title: "Global rank", value: "#\(state.rank)",
-                                     subtitle: "of \(state.rivals.count + 1) streamers")
-                            StatCard(title: "Week", value: "\(state.week)")
-                        }
-
-                        if state.catalog.isEmpty {
-                            Label("Your catalog is empty. License some titles in the Content tab to start attracting subscribers.",
-                                  systemImage: "lightbulb")
-                                .font(.footnote)
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(.yellow.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
-                        }
-
-                        controls
-                        if state.reportHistory.count > 1 {
-                            TrendCard(reports: state.reportHistory)
-                        }
-                        if let report = state.lastReport {
-                            ReportSummaryCard(report: report)
-                        }
+                    VStack(alignment: .leading, spacing: 16) {
+                        header(state)
+                        hero(state)
+                        statGrid(state)
+                        ForEach(Array(state.advice().prefix(2))) { AdviceBanner(advice: $0) }
+                        controls(state)
+                        if state.reportHistory.count > 1 { TrendCard(reports: state.reportHistory) }
+                        topFive(state)
+                        if let report = state.lastReport { ReportSummaryCard(report: report) }
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
                 }
             }
-            .navigationTitle(store.state?.companyName ?? "Dashboard")
+            .artScreen()
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $store.showReport) {
-                if let report = store.state?.lastReport {
-                    WeeklyReportView(report: report)
-                }
+                if let report = store.state?.lastReport { WeeklyReportView(report: report) }
             }
         }
     }
 
-    private var controls: some View {
-        VStack(spacing: 8) {
+    // MARK: Pieces
+
+    private func header(_ state: GameState) -> some View {
+        ScreenHeader(title: state.companyName, subtitle: "Week \(state.week) · Rank #\(state.rank) of \(state.rivals.count + 1)") {
+            Button { store.showSettings = true } label: {
+                Image(systemName: "gearshape.fill").font(.title3).foregroundStyle(.white.opacity(0.85))
+                    .padding(10).background(Circle().fill(Color.white.opacity(0.10)))
+            }
+        }
+    }
+
+    private func hero(_ state: GameState) -> some View {
+        let fin = state.finances
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("CASH ON HAND").font(.caption2.weight(.heavy)).tracking(1.4).foregroundStyle(Theme.text2)
+            Text(Format.money(fin.cash)).font(Theme.number(40)).foregroundStyle(fin.cash >= 0 ? .white : Theme.danger)
+                .minimumScaleFactor(0.5).lineLimit(1)
+            HStack(spacing: 8) {
+                Pill(text: runwayText(fin), tint: fin.cash < 0 ? Theme.danger : (fin.runwayWeeks == nil ? Theme.good : Theme.amber),
+                     icon: "clock")
+                Pill(text: "\(fin.lastWeek.profit >= 0 ? "+" : "")\(Format.money(fin.lastWeek.profit)) / wk",
+                     tint: fin.lastWeek.profit.profitColor, icon: "chart.line.uptrend.xyaxis")
+            }
+            if fin.cash < 0 {
+                let used = min(1, -fin.cash / state.overdraftLimit)
+                StatBar(label: "Credit limit used (bankrupt at 100%)", value: used, text: Format.percent(used),
+                        tint: Theme.danger)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .artCard(tint: Theme.magenta)
+    }
+
+    private func statGrid(_ state: GameState) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            BigStat(title: "Subscribers", value: Format.count(state.totalSubscribers), icon: "person.2.fill")
+            BigStat(title: "Weekly revenue", value: Format.money(state.finances.lastWeek.revenue), icon: "dollarsign.circle.fill")
+            BigStat(title: "Markets live", value: "\(state.liveMarketCodes.count) / \(CountryData.all.count)", icon: "globe")
+            BigStat(title: "Catalog", value: "\(state.catalog.count) titles", subtitle: "\(state.projects.count) in production",
+                    icon: "film.stack")
+        }
+    }
+
+    private func controls(_ state: GameState) -> some View {
+        VStack(spacing: 10) {
             Button {
                 store.nextWeek()
             } label: {
-                Label("Next Week", systemImage: "forward.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+                Label("Next week", systemImage: "forward.fill")
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(store.autoAdvance || store.state?.pendingEvent != nil)
+            .buttonStyle(GlowButtonStyle())
+            .disabled(store.autoAdvance || state.pendingEvent != nil)
 
-            if let event = store.state?.pendingEvent {
+            if let event = state.pendingEvent {
                 Label("Decision needed: \(event.headline)", systemImage: "exclamationmark.bubble.fill")
-                    .font(.footnote).foregroundStyle(.orange)
+                    .font(.footnote).foregroundStyle(Theme.amber)
             }
-
-            Toggle("Auto-advance", isOn: $store.autoAdvance)
-            Picker("Speed", selection: $store.autoSpeed) {
-                Text("Slow").tag(1.5); Text("Normal").tag(0.7); Text("Fast").tag(0.25)
-            }
-            .pickerStyle(.segmented)
+            Toggle("Auto-advance", isOn: $store.autoAdvance).tint(Theme.magenta)
         }
+        .artCard()
+    }
+
+    private func topFive(_ state: GameState) -> some View {
+        let board = state.leaderboard
+        let top = max(1, board.first?.subs ?? 1)
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "Global race", icon: "trophy.fill", tint: Theme.amber)
+            ForEach(Array(board.prefix(5).enumerated()), id: \.element.id) { index, entry in
+                HStack(spacing: 10) {
+                    Text("\(index + 1)").font(Theme.number(16)).foregroundStyle(Theme.text2).frame(width: 20)
+                    StatBar(label: entry.name, value: entry.subs / top, text: Format.count(entry.subs),
+                            tint: entry.isPlayer ? Theme.magenta : Theme.violet, compact: true)
+                }
+            }
+            if let me = board.firstIndex(where: { $0.isPlayer }), me >= 5 {
+                Text("You're #\(me + 1) with \(Format.count(board[me].subs)) subscribers.")
+                    .font(.caption).foregroundStyle(Theme.text2)
+            }
+        }
+        .artCard(tint: Theme.amber)
     }
 
     private func runwayText(_ fin: Finances) -> String {
@@ -88,20 +123,22 @@ struct ReportSummaryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Last week (week \(report.week))").font(.headline)
-            LabeledValue(label: "New subscribers", value: "+\(Format.count(report.newSubs))", tint: .green)
-            LabeledValue(label: "Churned", value: "-\(Format.count(report.churned))", tint: .red)
+            SectionTitle(text: "Last week (week \(report.week))", icon: "doc.text.fill", tint: Theme.teal)
+            LabeledValue(label: "New subscribers", value: "+\(Format.count(report.newSubs))", tint: Theme.good)
+            LabeledValue(label: "Churned", value: "-\(Format.count(report.churned))", tint: Theme.danger)
             LabeledValue(label: "Revenue", value: Format.money(report.financials.revenue))
             LabeledValue(label: "Costs", value: Format.money(report.financials.costs))
-            LabeledValue(label: "Profit", value: Format.money(report.financials.profit),
-                         tint: report.financials.profit.profitColor)
+            LabeledValue(label: "Profit", value: Format.money(report.financials.profit), tint: report.financials.profit.profitColor)
             ForEach(report.events) { event in
-                Text("• \(event.headline)").font(.footnote).foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: event.kind == .warning ? "exclamationmark.triangle.fill" : "sparkle")
+                        .font(.caption2).foregroundStyle(event.kind == .warning ? Theme.danger : Theme.amber)
+                    Text(event.headline).font(.footnote).foregroundStyle(Theme.text2)
+                }
             }
         }
-        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .artCard(tint: Theme.teal)
     }
 }
 
@@ -111,57 +148,76 @@ struct WeeklyReportView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("Subscribers") {
-                    LabeledValue(label: "New", value: "+\(Format.count(report.newSubs))", tint: .green)
-                    LabeledValue(label: "Churned", value: "-\(Format.count(report.churned))", tint: .red)
-                    LabeledValue(label: "Total", value: Format.count(report.totalSubs))
-                    LabeledValue(label: "Rank", value: "#\(report.rank)")
-                }
-                Section("Money") {
-                    let f = report.financials
-                    LabeledValue(label: "Subscription revenue", value: Format.money(f.subscriptionRevenue))
-                    LabeledValue(label: "Ad revenue", value: Format.money(f.adRevenue))
-                    LabeledValue(label: "Licensing", value: "-" + Format.money(f.licensing))
-                    LabeledValue(label: "Streaming / CDN", value: "-" + Format.money(f.streaming))
-                    LabeledValue(label: "Staff", value: "-" + Format.money(f.staff))
-                    LabeledValue(label: "Marketing", value: "-" + Format.money(f.marketing))
-                    LabeledValue(label: "Country operations", value: "-" + Format.money(f.operations))
-                    if f.launch > 0 {
-                        LabeledValue(label: "Market launches", value: "-" + Format.money(f.launch))
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 12) {
+                        BigStat(title: "New", value: "+\(Format.count(report.newSubs))", tint: Theme.good)
+                        BigStat(title: "Churned", value: "-\(Format.count(report.churned))", tint: Theme.danger)
                     }
-                    if f.originals > 0 { LabeledValue(label: "Originals", value: "-" + Format.money(f.originals)) }
-                    if f.localization > 0 { LabeledValue(label: "Dubbing & subtitles", value: "-" + Format.money(f.localization)) }
-                    if f.interest > 0 { LabeledValue(label: "Loan interest", value: "-" + Format.money(f.interest)) }
-                    if f.fines > 0 { LabeledValue(label: "Regulatory fines", value: "-" + Format.money(f.fines)) }
-                    if f.other > 0 { LabeledValue(label: "Hiring, tech builds & events", value: "-" + Format.money(f.other)) }
-                    if f.tech > 0 { LabeledValue(label: "Platform upkeep & CDN", value: "-" + Format.money(f.tech)) }
-                    if f.studios > 0 { LabeledValue(label: "Studio upkeep", value: "-" + Format.money(f.studios)) }
-                    LabeledValue(label: "Profit / loss", value: Format.money(f.profit), tint: f.profit.profitColor)
-                    LabeledValue(label: "Cash", value: Format.money(report.cashEnd))
-                }
-                if !report.markets.isEmpty {
-                    Section("By market") {
-                        ForEach(report.markets) { m in
-                            LabeledValue(label: "\(CountryData.country(m.id)?.flag ?? "") \(CountryData.country(m.id)?.name ?? m.id)",
-                                         value: "\(Format.count(m.subs)) (\(m.newSubs - m.churned >= 0 ? "+" : "")\(Format.count(m.newSubs - m.churned)))")
-                        }
+                    HStack(spacing: 12) {
+                        BigStat(title: "Subscribers", value: Format.count(report.totalSubs))
+                        BigStat(title: "Rank", value: "#\(report.rank)")
                     }
+                    moneyCard
+                    if !report.markets.isEmpty { marketsCard }
+                    if !report.events.isEmpty { eventsCard }
                 }
-                if !report.events.isEmpty {
-                    Section("Events") {
-                        ForEach(report.events) { e in
-                            VStack(alignment: .leading) {
-                                Text(e.headline).bold()
-                                Text(e.detail).font(.footnote).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
+                .padding(16)
             }
-            .navigationTitle("Week \(report.week) report")
+            .artScreen()
+            .navigationTitle("Week \(report.week)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
         }
+    }
+
+    private var moneyCard: some View {
+        let f = report.financials
+        let lines: [(String, Double)] = [
+            ("Licensing", f.licensing), ("Originals", f.originals), ("Dubbing & subtitles", f.localization),
+            ("Streaming", f.streaming), ("Staff", f.staff), ("Marketing", f.marketing),
+            ("Country operations", f.operations), ("Market & tier launches", f.launch),
+            ("Servers & apps", f.tech), ("Studios", f.studios), ("Loan interest", f.interest),
+            ("Regulatory fines", f.fines), ("Hiring & events", f.other),
+        ].filter { $0.1 > 0 }
+        return VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Money", icon: "banknote.fill", tint: Theme.amber)
+            LabeledValue(label: "Subscription revenue", value: Format.money(f.subscriptionRevenue), tint: Theme.good)
+            LabeledValue(label: "Ad revenue", value: Format.money(f.adRevenue), tint: Theme.good)
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                LabeledValue(label: line.0, value: "-" + Format.money(line.1))
+            }
+            Divider().overlay(Color.white.opacity(0.15))
+            LabeledValue(label: "Profit / loss", value: Format.money(f.profit), tint: f.profit.profitColor)
+            LabeledValue(label: "Cash", value: Format.money(report.cashEnd))
+        }
+        .artCard(tint: Theme.amber)
+    }
+
+    private var marketsCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "By market", icon: "globe", tint: Theme.teal)
+            ForEach(report.markets) { m in
+                let net = m.newSubs - m.churned
+                LabeledValue(label: "\(CountryData.country(m.id)?.flag ?? "") \(CountryData.country(m.id)?.name ?? m.id)",
+                             value: "\(Format.count(m.subs)) (\(net >= 0 ? "+" : "-")\(Format.count(abs(net))))",
+                             tint: net >= 0 ? .white : Theme.danger)
+            }
+        }
+        .artCard(tint: Theme.teal)
+    }
+
+    private var eventsCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "What happened", icon: "sparkles", tint: Theme.magenta)
+            ForEach(report.events) { e in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(e.headline).font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                    Text(e.detail).font(.caption).foregroundStyle(Theme.text2)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .artCard(tint: Theme.magenta)
     }
 }

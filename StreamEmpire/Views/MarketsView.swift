@@ -1,200 +1,229 @@
 import SwiftUI
 
+struct CountryRef: Identifiable, Equatable {
+    let id: String
+}
+
 struct MarketsView: View {
+    enum Mode: String, CaseIterable, Identifiable {
+        case map = "Map", list = "List"
+        var id: String { rawValue }
+    }
+
     @EnvironmentObject var store: GameStore
-    @State private var priceLevel = 1.0
+    @State private var mode: Mode = .map
+    @State private var selected: String?
+    @State private var sheet: CountryRef?
+    @State private var showPrices = false
 
     var body: some View {
         NavigationStack {
-            List {
+            VStack(spacing: 10) {
                 if let state = store.state {
-                    Section {
-                        Stepper(value: $priceLevel, in: 0.4...2.0, step: 0.1) {
-                            LabeledValue(label: "Price level", value: Format.percent(priceLevel) + " of fair")
-                        }
-                        Button("Apply to all my markets") {
-                            store.perform { try $0.applyPriceLevel(priceLevel) }
-                        }
-                    } header: {
-                        Text("Subscription prices")
-                    } footer: {
-                        Text("Sets every launched market to this multiple of its fair price for all three tiers. Fine-tune each country on its own page.")
+                    header(state)
+                    Picker("View", selection: $mode) {
+                        ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                     }
-                    Section {
-                        let live = state.liveMarketCodes.count
-                        LabeledValue(label: "Live markets", value: "\(live) / \(CountryData.all.count)")
-                        LabeledValue(label: "Global subscribers", value: Format.count(state.totalSubscribers))
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+
+                    if mode == .map {
+                        mapArea(state)
+                    } else {
+                        listArea(state)
                     }
-                    ForEach(Region.allCases) { region in
-                        let countries = CountryData.all.filter { $0.region == region }
-                        if !countries.isEmpty {
-                            Section(region.displayName) {
-                                ForEach(countries) { country in
-                                    NavigationLink(value: country.code) {
-                                        MarketRow(country: country, market: state.markets[country.code],
-                                                  locked: state.launchBlocker(code: country.code) != nil)
-                                    }
-                                }
+                }
+            }
+            .artScreen()
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(item: $sheet) { ref in CountrySheet(code: ref.id) }
+            .sheet(isPresented: $showPrices) { PriceToolSheet() }
+        }
+    }
+
+    // MARK: Header
+
+    private func header(_ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ScreenHeader(title: "World", subtitle: "\(state.liveMarketCodes.count) of \(CountryData.all.count) markets live") {
+                Button { showPrices = true } label: {
+                    Label("Prices", systemImage: "tag.fill")
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.amber))
+            }
+            HStack(spacing: 10) {
+                miniStat("Subscribers", Format.count(state.totalSubscribers))
+                miniStat("Rank", "#\(state.rank)")
+                miniStat("Reach", Format.percent(state.platformReach))
+            }
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private func miniStat(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title.uppercased()).font(.system(size: 9, weight: .heavy)).tracking(1).foregroundStyle(Theme.text2)
+            Text(value).font(Theme.number(17)).foregroundStyle(.white)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.07)))
+    }
+
+    // MARK: Map
+
+    private func mapArea(_ state: GameState) -> some View {
+        VStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(LinearGradient(colors: [Color(red: 0.05, green: 0.09, blue: 0.22), Color(red: 0.03, green: 0.05, blue: 0.14)],
+                                         startPoint: .top, endPoint: .bottom))
+                WorldMapView(state: state, selected: $selected)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            }
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 1))
+            .frame(maxHeight: 520)
+            .padding(.horizontal, 12)
+
+            legend
+
+            if let code = selected, let country = CountryData.country(code) {
+                selectionBar(country, state)
+            } else {
+                Text("Tap a country to see its stats. Pinch to zoom, drag to pan.")
+                    .font(.caption).foregroundStyle(Theme.text2).padding(.bottom, 8)
+            }
+        }
+    }
+
+    private var legend: some View {
+        HStack(spacing: 12) {
+            ForEach([MapStatus.live, .launching, .available, .locked], id: \.rawValue) { status in
+                HStack(spacing: 5) {
+                    Circle().fill(MapPalette.color(status)).frame(width: 9, height: 9)
+                    Text(MapPalette.name(status)).font(.caption2).foregroundStyle(Theme.text2)
+                }
+            }
+        }
+    }
+
+    private func selectionBar(_ country: Country, _ state: GameState) -> some View {
+        let status = state.mapStatus(country.code)
+        let market = state.markets[country.code]
+        return Button { sheet = CountryRef(id: country.code) } label: {
+            HStack(spacing: 12) {
+                Text(country.flag).font(.system(size: 34))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(country.name).font(.headline).foregroundStyle(.white)
+                    HStack(spacing: 6) {
+                        Pill(text: MapPalette.name(status), tint: MapPalette.color(status))
+                        if status == .live, let market {
+                            Text("\(Format.count(market.subs.total)) subs").font(.caption).foregroundStyle(Theme.text2)
+                        } else {
+                            Text("Launch \(Format.money(country.launchCost))").font(.caption).foregroundStyle(Theme.text2)
+                        }
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.up.circle.fill").font(.title2).foregroundStyle(Theme.magenta)
+            }
+            .artCard(tint: MapPalette.color(status))
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: List
+
+    private func listArea(_ state: GameState) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(Region.allCases) { region in
+                    let countries = CountryData.all.filter { $0.region == region }
+                    if !countries.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionTitle(text: region.displayName, tint: Theme.teal)
+                            ForEach(countries) { country in
+                                Button { sheet = CountryRef(id: country.code) } label: { row(country, state) }
+                                    .buttonStyle(.plain)
                             }
                         }
                     }
                 }
             }
-            .navigationTitle("Markets")
-            .navigationDestination(for: String.self) { code in
-                MarketDetailView(code: code)
-            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 20)
         }
     }
-}
 
-struct MarketRow: View {
-    let country: Country
-    let market: MarketState?
-    var locked = false
-
-    var body: some View {
-        HStack {
+    private func row(_ country: Country, _ state: GameState) -> some View {
+        let status = state.mapStatus(country.code)
+        let market = state.markets[country.code]
+        return HStack(spacing: 12) {
             Text(country.flag).font(.title)
-            VStack(alignment: .leading) {
-                Text(country.name)
-                Text(statusText).font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(country.name).font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                HStack(spacing: 6) {
+                    Pill(text: MapPalette.name(status), tint: MapPalette.color(status))
+                    if status == .locked {
+                        Image(systemName: "lock.fill").font(.caption2).foregroundStyle(Theme.text2)
+                    }
+                }
             }
             Spacer()
-            if let market, market.isLive {
+            if status == .live, let market {
                 let share = market.subs.total / country.subscriberCeiling
-                VStack(alignment: .trailing) {
-                    Text(Format.count(market.subs.total)).bold()
-                    Text("\(Format.percent(share)) of market").font(.caption).foregroundStyle(.secondary)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(Format.count(market.subs.total)).font(Theme.number(16)).foregroundStyle(.white)
+                    Text("\(Format.percent(share)) of market").font(.caption2).foregroundStyle(Theme.text2)
                 }
+            } else {
+                Text(Format.money(country.launchCost)).font(.caption).foregroundStyle(Theme.text2)
             }
         }
-    }
-
-    private var statusText: String {
-        switch market?.status ?? .notLaunched {
-        case .notLaunched:
-            return locked ? "🔒 Locked · \(Format.money(country.launchCost))"
-                          : "Not launched · \(Format.money(country.launchCost))"
-        case .launching(let weeks): return "Launching · \(weeks) wk left"
-        case .live: return "Live"
-        }
+        .artCard(tint: MapPalette.color(status))
     }
 }
 
-struct MarketDetailView: View {
+/// Set every market's prices in one go.
+struct PriceToolSheet: View {
     @EnvironmentObject var store: GameStore
-    let code: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var level = 1.0
 
     var body: some View {
-        if let state = store.state, let country = CountryData.country(code), let market = state.markets[code] {
-            List {
-                Section("\(country.flag) \(country.name)") {
-                    LabeledValue(label: "Region", value: country.region.displayName)
-                    LabeledValue(label: "Language", value: country.language.displayName)
-                    LabeledValue(label: "Broadband households", value: String(format: "%.1fM", country.households))
-                    LabeledValue(label: "Subscriber ceiling", value: Format.count(country.subscriberCeiling))
-                    LabeledValue(label: "Fair Standard price", value: String(format: "$%.2f", country.priceTolerance))
-                    LabeledValue(label: "Ad market", value: Format.percent(country.adStrength))
-                    LabeledValue(label: "Regulatory risk", value: Format.percent(country.regulatoryRisk))
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Every country has a \"fair price\" people will happily pay. Move everything up or down at once; you can still fine-tune each country on its own page.")
+                    .font(.footnote).foregroundStyle(Theme.text2)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("\(Format.percent(level)) of fair price").font(Theme.number(30)).foregroundStyle(.white)
+                    Slider(value: $level, in: 0.4...2.0, step: 0.05).tint(Theme.magenta)
+                    Text(hint).font(.caption).foregroundStyle(Theme.text2)
                 }
-
-                switch market.status {
-                case .notLaunched:
-                    Section("Launch") {
-                        LabeledValue(label: "Launch cost", value: Format.money(country.launchCost))
-                        if let reason = state.launchBlocker(code: code) {
-                            Label(reason, systemImage: "lock.fill").font(.footnote).foregroundStyle(.orange)
-                        }
-                        Text("Takes 4 weeks of setup before subscribers can join.")
-                            .font(.footnote).foregroundStyle(.secondary)
-                        Button("Launch in \(country.name)") {
-                            store.perform { try $0.launchMarket(code: code) }
-                        }
-                    }
-                case .launching(let weeks):
-                    Section("Launching") {
-                        Text("Going live in \(weeks) week\(weeks == 1 ? "" : "s").")
-                    }
-                case .live:
-                    liveSections(country: country, market: market)
+                .artCard()
+                Button("Apply to all my markets") {
+                    store.perform { try $0.applyPriceLevel(level) }
+                    dismiss()
                 }
-                rivalSection(country: country, state: state)
+                .buttonStyle(GlowButtonStyle())
+                Spacer()
             }
-            .navigationTitle(country.name)
+            .padding(16)
+            .artScreen()
+            .navigationTitle("Subscription prices")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Cancel") { dismiss() } }
         }
+        .presentationDetents([.medium])
     }
 
-    @ViewBuilder
-    private func liveSections(country: Country, market: MarketState) -> some View {
-        Section("Subscribers") {
-            LabeledValue(label: "Total", value: Format.count(market.subs.total))
-            ForEach(Tier.allCases) { tier in
-                LabeledValue(label: tier.displayName, value: Format.count(market.subs[tier]))
-            }
-            LabeledValue(label: "Brand awareness", value: Format.percent(market.awareness))
-        }
-        Section("Pricing (per month)") {
-            ForEach(Tier.allCases) { tier in
-                Stepper(value: priceBinding(tier: tier, market: market), in: 0...100, step: 0.5) {
-                    LabeledValue(label: tier.displayName, value: String(format: "$%.2f", market.prices[tier]))
-                }
-            }
-            let ratio = market.prices.standard / country.priceTolerance
-            Text(priceHint(ratio: ratio, fair: country.priceTolerance))
-                .font(.footnote).foregroundStyle(.secondary)
-            Button("Reset to suggested prices") {
-                let suggested = CountryData.defaultPrices(for: country)
-                store.perform { try $0.setPrices(code: code, prices: suggested) }
-            }
-        }
-        Section("Marketing") {
-            Stepper(value: marketingBinding(market: market), in: 0...1_000_000, step: 5_000) {
-                LabeledValue(label: "Weekly budget", value: Format.money(market.marketingBudget))
-            }
-        }
-    }
-
-    private func priceHint(ratio: Double, fair: Double) -> String {
-        let fairText = String(format: "$%.2f", fair)
-        if ratio > 1.3 { return "Standard is well above the fair price (\(fairText)): expect slow sign-ups and high churn." }
-        if ratio > 1.05 { return "Standard is above the fair price (\(fairText))." }
-        if ratio < 0.7 { return "Standard is far below the fair price (\(fairText)): fast sign-ups, thin margins." }
-        return "Standard is near the fair price (\(fairText))."
-    }
-
-    @ViewBuilder
-    private func rivalSection(country: Country, state: GameState) -> some View {
-        let ceiling = country.subscriberCeiling
-        let present = state.rivals.filter { ($0.subs[code] ?? 0) > 0 }
-            .sorted { ($0.subs[code] ?? 0) > ($1.subs[code] ?? 0) }
-        Section("Rivals here") {
-            if present.isEmpty {
-                Text("No rivals have launched here yet.").foregroundStyle(.secondary)
-            }
-            ForEach(present) { rival in
-                LabeledValue(label: rival.priceLevel < 0.95 ? "\(rival.name) (price cuts)" : rival.name,
-                             value: "\(Format.count(rival.subs[code] ?? 0)) · \(Format.percent((rival.subs[code] ?? 0) / ceiling))")
-            }
-        }
-    }
-
-    private func priceBinding(tier: Tier, market: MarketState) -> Binding<Double> {
-        Binding(
-            get: { market.prices[tier] },
-            set: { newValue in
-                var prices = market.prices
-                prices[tier] = newValue
-                store.perform { try $0.setPrices(code: code, prices: prices) }
-            })
-    }
-
-    private func marketingBinding(market: MarketState) -> Binding<Double> {
-        Binding(
-            get: { market.marketingBudget },
-            set: { newValue in
-                store.perform { try $0.setMarketing(code: code, weeklyBudget: newValue) }
-            })
+    private var hint: String {
+        if level > 1.3 { return "Well above fair: fat margins, but slow sign-ups and high churn." }
+        if level > 1.05 { return "A bit above fair: more profit per subscriber, fewer sign-ups." }
+        if level < 0.7 { return "Bargain pricing: fast growth, thin margins." }
+        if level < 0.95 { return "A bit below fair: faster growth, a little less money." }
+        return "At the fair price: balanced growth and income."
     }
 }

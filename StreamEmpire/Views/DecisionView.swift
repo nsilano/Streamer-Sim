@@ -6,24 +6,26 @@ struct DecisionView: View {
     let event: GameEvent
 
     var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(event.headline).font(.title2.bold())
-                Text(event.detail).foregroundStyle(.secondary)
-                Spacer(minLength: 8)
-                ForEach(event.choices) { choice in
-                    Button {
-                        store.perform { try $0.resolveEvent(choiceID: choice.id) }
-                    } label: {
-                        Text(choice.label).frame(maxWidth: .infinity).padding(.vertical, 6)
-                    }
-                    .buttonStyle(.borderedProminent)
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: event.kind == .warning ? "exclamationmark.triangle.fill" : "newspaper.fill")
+                .font(.largeTitle).foregroundStyle(event.kind == .warning ? Theme.danger : Theme.amber)
+                .padding(.top, 24)
+            Text(event.headline).font(Theme.display(28)).foregroundStyle(.white)
+            Text(event.detail).foregroundStyle(Theme.text2)
+            Spacer(minLength: 8)
+            ForEach(event.choices) { choice in
+                Button {
+                    store.perform { try $0.resolveEvent(choiceID: choice.id) }
+                } label: {
+                    Text(choice.label).multilineTextAlignment(.center)
                 }
-                Spacer()
+                .buttonStyle(GlowButtonStyle(tint: Theme.magenta))
             }
-            .padding()
-            .navigationTitle("Decision")
-            .navigationBarTitleDisplayMode(.inline)
+            Spacer()
         }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(ArtBackground())
+        .preferredColorScheme(.dark)
     }
 }
