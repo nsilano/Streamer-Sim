@@ -87,7 +87,7 @@ struct CountrySheet: View {
         let blocker = state.launchBlocker(code: code)
         return VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: "Launch here", icon: "paperplane.fill", tint: Theme.violet)
-            LabeledValue(label: "Launch cost", value: Format.money(country.launchCost))
+            LabeledValue(label: "Launch cost", value: Format.money(state.launchPrice(country)))
             LabeledValue(label: "Setup time", value: "4 weeks")
             if let blocker {
                 Label(blocker, systemImage: "lock.fill").font(.footnote).foregroundStyle(Theme.amber)
@@ -168,7 +168,7 @@ struct CountrySheet: View {
     private func tierRow(_ tier: Tier, _ country: Country, _ market: MarketState, _ state: GameState) -> some View {
         let isLive = market.liveTiers.contains(tier)
         let build = market.tierBuilds.first { $0.tier == tier }
-        let cost = Formulas.tierLaunchCost(tier, in: country)
+        let cost = state.scaled(Formulas.tierLaunchCost(tier, in: country))
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(tier.displayName).font(.headline).foregroundStyle(.white)

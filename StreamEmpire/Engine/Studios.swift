@@ -9,11 +9,12 @@ extension GameState {
         guard studios.count < Formulas.maxStudios else {
             throw ActionError.invalidProject("You can run at most \(Formulas.maxStudios) studios.")
         }
-        guard finances.cash >= Formulas.studioFoundingCost else {
-            throw ActionError.insufficientFunds(needed: Formulas.studioFoundingCost)
+        let price = studioFoundingPrice
+        guard finances.cash >= price else {
+            throw ActionError.insufficientFunds(needed: price)
         }
-        finances.cash -= Formulas.studioFoundingCost
-        finances.ledger.other += Formulas.studioFoundingCost
+        finances.cash -= price
+        finances.ledger.other += price
         let id = takeID()
         let name = StudioNames.make(rng: &rng)
         studios.append(Studio(id: id, name: name, specialty: specialty, level: 1, experience: 0, foundedWeek: week))
@@ -26,7 +27,7 @@ extension GameState {
         guard level < Formulas.maxStudioLevel else {
             throw ActionError.invalidProject("\(studios[index].name) is already at the top level.")
         }
-        let cost = Formulas.studioUpgradeCost(currentLevel: level)
+        let cost = studioUpgradePrice(studios[index])
         guard finances.cash >= cost else { throw ActionError.insufficientFunds(needed: cost) }
         finances.cash -= cost
         finances.ledger.other += cost
@@ -38,7 +39,7 @@ extension GameState {
     func freeSlots(at studio: Studio) -> Int { max(0, studio.slots - activeProjects(at: studio.id)) }
 
     var weeklyStudioCost: Double {
-        studios.reduce(0.0) { $0 + Formulas.studioUpkeep(level: $1.level) } * staff.studioPay
+        scaled(studios.reduce(0.0) { $0 + Formulas.studioUpkeep(level: $1.level) } * staff.studioPay)
     }
 
     /// Expected quality bonus (before luck) a project would get at this studio.

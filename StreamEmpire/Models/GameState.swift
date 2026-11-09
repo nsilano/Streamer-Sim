@@ -31,10 +31,11 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 10
+    static let currentVersion = 11
 
     var version: Int = GameState.currentVersion
     var companyName: String
+    var difficulty: Difficulty = .medium       // how costly everything is
     var startCountry = ""                     // for restarting the same playthrough
     var startSeedText = "1"                   // the seed as text (JSON-safe)
     var week: Int = 1
@@ -171,7 +172,8 @@ struct GameState: Codable, Equatable {
     }
 
     /// Fresh game: pick one starting country, $25M seed cash, empty catalog.
-    static func newGame(startCountry: String, companyName: String, seed: UInt64) -> GameState {
+    static func newGame(startCountry: String, companyName: String, seed: UInt64,
+                        difficulty: Difficulty = .medium) -> GameState {
         var markets: [String: MarketState] = [:]
         for country in CountryData.all {
             markets[country.code] = MarketState(prices: CountryData.defaultPrices(for: country))
@@ -185,6 +187,7 @@ struct GameState: Codable, Equatable {
             rivals: RivalData.initialRivals(),
             finances: Finances(cash: GameState.startingCash)
         )
+        state.difficulty = difficulty
         state.startCountry = startCountry
         state.startSeedText = String(seed)
         NewsEngine.seed(&state)

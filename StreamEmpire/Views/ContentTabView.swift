@@ -92,7 +92,7 @@ struct ContentTabView: View {
             if let curator = state.curator {
                 HStack {
                     Pill(text: curator.enabled ? "Active" : "Paused", tint: curator.enabled ? Theme.good : Theme.amber)
-                    Text("\(Format.money(Curator.weeklySalary))/wk salary").font(.caption).foregroundStyle(Theme.text2)
+                    Text("\(Format.money(state.curatorSalary))/wk salary").font(.caption).foregroundStyle(Theme.text2)
                 }
                 Text("Adds \(Format.money(curator.weeklyBudget)) a week to their allowance (unspent money carries over, up to 3 weeks) for titles with quality \(curator.minQuality)+, until your catalog reaches \(curator.targetCatalogSize), keeping \(Format.money(curator.cashReserve)) in the bank.")
                     .font(.footnote).foregroundStyle(Theme.text2)
@@ -118,12 +118,12 @@ struct ContentTabView: View {
             } else {
                 Text("Hire a manager to keep your library growing on autopilot. You set the budget, quality bar, genres and limits; they shop the market every week.")
                     .font(.footnote).foregroundStyle(Theme.text2)
-                Button("Hire · \(Format.money(Curator.hireCost)) + \(Format.money(Curator.weeklySalary))/wk") {
+                Button("Hire · \(Format.money(state.curatorHirePrice)) + \(Format.money(state.curatorSalary))/wk") {
                     store.perform { try $0.hireCurator() }
                     showCurator = true
                 }
                 .buttonStyle(GlowButtonStyle(tint: Theme.teal))
-                .disabled(state.finances.cash < Curator.hireCost)
+                .disabled(state.finances.cash < state.curatorHirePrice)
             }
         }
         .artCard(tint: Theme.teal)
@@ -417,10 +417,10 @@ struct LocalizeView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(language.displayName).font(.headline).foregroundStyle(.white)
                                 HStack {
-                                    action("Subtitles", Formulas.subtitleCost(title.kind), done: title.subtitles.contains(language)) {
+                                    action("Subtitles", state.localizationPrice(kind: title.kind, dub: false), done: title.subtitles.contains(language)) {
                                         store.perform { try $0.localizeTitle(titleID: titleID, language: language, dub: false) }
                                     }
-                                    action("Dub", Formulas.dubCost(title.kind), done: title.dubs.contains(language)) {
+                                    action("Dub", state.localizationPrice(kind: title.kind, dub: true), done: title.dubs.contains(language)) {
                                         store.perform { try $0.localizeTitle(titleID: titleID, language: language, dub: true) }
                                     }
                                 }

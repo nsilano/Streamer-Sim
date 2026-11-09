@@ -6,7 +6,7 @@ extension GameState {
 
     func tierLaunchPrice(_ tier: Tier, code: String) -> Double? {
         guard let country = CountryData.country(code) else { return nil }
-        return Formulas.tierLaunchCost(tier, in: country)
+        return scaled(Formulas.tierLaunchCost(tier, in: country))
     }
 
     mutating func launchTier(_ tier: Tier, code: String) throws {
@@ -17,7 +17,7 @@ extension GameState {
         guard !market.liveTiers.contains(tier), !market.tierBuilds.contains(where: { $0.tier == tier }) else {
             throw ActionError.invalidProject("\(tier.displayName) is already live or being set up in \(country.name).")
         }
-        let cost = Formulas.tierLaunchCost(tier, in: country)
+        let cost = scaled(Formulas.tierLaunchCost(tier, in: country))
         guard finances.cash >= cost else { throw ActionError.insufficientFunds(needed: cost) }
         finances.cash -= cost
         finances.ledger.launch += cost
@@ -29,9 +29,10 @@ extension GameState {
     mutating func hireCurator() throws {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard curator == nil else { throw ActionError.invalidProject("You already have a licensing manager.") }
-        guard finances.cash >= Curator.hireCost else { throw ActionError.insufficientFunds(needed: Curator.hireCost) }
-        finances.cash -= Curator.hireCost
-        finances.ledger.other += Curator.hireCost
+        let price = curatorHirePrice
+        guard finances.cash >= price else { throw ActionError.insufficientFunds(needed: price) }
+        finances.cash -= price
+        finances.ledger.other += price
         curator = Curator()
     }
 
@@ -53,6 +54,6 @@ extension GameState {
     /// A fresh game in the same country and company. `sameWorld` replays the exact same seed.
     func restarted(sameWorld: Bool, newSeed: UInt64) -> GameState {
         GameState.newGame(startCountry: startCountry.isEmpty ? (liveMarketCodes.first ?? "IE") : startCountry,
-                          companyName: companyName, seed: sameWorld ? startSeed : newSeed)
+                          companyName: companyName, seed: sameWorld ? startSeed : newSeed, difficulty: difficulty)
     }
 }

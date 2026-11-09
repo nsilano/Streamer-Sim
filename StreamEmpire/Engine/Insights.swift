@@ -89,7 +89,7 @@ extension GameState {
         if totalSubscribers > 20_000 {
             for platform in [Platform.ios, .android, .smartTV]
             where !platforms.contains(platform) && !builds.contains(where: { $0.platform == platform })
-                && finances.cash > platform.unlockCost * 3 {
+                && finances.cash > platformPrice(platform) * 3 {
                 items.append(Advice(id: "platform-\(platform.rawValue)", icon: "iphone.gen3", urgent: false,
                                     title: "Launch the \(platform.displayName)",
                                     detail: "+\(Int(platform.reachBonus * 100)) points of reach, so more people can find and watch you."))

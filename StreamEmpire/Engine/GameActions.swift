@@ -64,11 +64,12 @@ extension GameState {
         }
         guard market.status == .notLaunched else { throw ActionError.alreadyLaunched }
         if let reason = launchBlocker(code: code) { throw ActionError.locked(reason) }
-        guard finances.cash >= country.launchCost else {
-            throw ActionError.insufficientFunds(needed: country.launchCost)
+        let price = launchPrice(country)
+        guard finances.cash >= price else {
+            throw ActionError.insufficientFunds(needed: price)
         }
-        finances.cash -= country.launchCost
-        finances.ledger.launch += country.launchCost
+        finances.cash -= price
+        finances.ledger.launch += price
         markets[code]?.status = .launching(weeksLeft: 4)
     }
 

@@ -28,7 +28,7 @@ extension GameState {
         guard Formulas.productionWeeksRange.contains(weeks) else {
             throw ActionError.invalidProject("Production takes 6 to 52 weeks.")
         }
-        let weekly = budget * costFactor / Double(weeks)
+        let weekly = budget * costFactor * costScale / Double(weeks)
         guard finances.cash >= weekly * 4 else { throw ActionError.insufficientFunds(needed: weekly * 4) }
         let id = takeID()
         let name = TitleGenerator.makeName(genre: genre, rng: &rng)
@@ -49,7 +49,7 @@ extension GameState {
         if dub ? title.dubs.contains(language) : title.subtitles.contains(language) {
             throw ActionError.invalidProject("Already done.")
         }
-        let cost = dub ? Formulas.dubCost(title.kind) : Formulas.subtitleCost(title.kind)
+        let cost = localizationPrice(kind: title.kind, dub: dub)
         guard finances.cash >= cost else { throw ActionError.insufficientFunds(needed: cost) }
         finances.cash -= cost
         finances.ledger.localization += cost

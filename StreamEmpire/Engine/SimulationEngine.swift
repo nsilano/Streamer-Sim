@@ -184,11 +184,12 @@ enum SimulationEngine {
             fin.subscriptionRevenue += subRevenue
             fin.adRevenue += adRevenue
             fin.marketing += market.marketingBudget
-            fin.operations += Formulas.operatingCost(for: country)
+            fin.operations += Formulas.operatingCost(for: country) * s.costScale
             billedSubs += ownSubs
             totalNew += adds
             totalChurned += ownSubs * churn
-            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost + Formulas.operatingCost(for: country)
+            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost * s.costScale
+                + Formulas.operatingCost(for: country) * s.costScale
                 + market.marketingBudget + marketFine
             marketReports.append(MarketReport(id: code, newSubs: adds, churned: ownSubs * churn,
                                               subs: newSubs.total, revenue: subRevenue + adRevenue, costs: marketCosts))
@@ -217,11 +218,11 @@ enum SimulationEngine {
                                       "Overloaded servers went down. About \(Format.count(lost)) subscribers left and service will be shaky for two weeks. Add capacity so it doesn't happen again."))
         }
 
-        fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost
+        fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost * s.costScale
         fin.policies = policy.flatCost + policy.overhead * fin.revenue
         fin.studios = s.weeklyStudioCost
         applyAttrition(&s, events: &events)
-        fin.staff = Formulas.baseStaffCostPerWeek + s.weeklySalaries + Formulas.overheadRate * fin.revenue
+        fin.staff = Formulas.baseStaffCostPerWeek * s.costScale + s.weeklySalaries + Formulas.overheadRate * fin.revenue
         let mobileApps = [Platform.ios, .android].filter { s.platforms.contains($0) }.count
         fin.tech = s.weeklyTechCost + Double(mobileApps) * Formulas.appStoreFeeRate * fin.subscriptionRevenue
 
@@ -508,7 +509,7 @@ enum SimulationEngine {
                 for (j, other) in s.rivals.enumerated() where j != i { others += other.subs[code] ?? 0 }
                 let current = rival.subs[code] ?? 0
                 let room = max(0, country.subscriberCeiling * 0.95 - (own + others + current))
-                rival.subs[code] = current + min(current * rival.weeklyGrowth * noise, room)
+                rival.subs[code] = current + min(current * rival.weeklyGrowth * noise * s.difficulty.rivalGrowthMultiplier, room)
             }
 
             // Expansion into a new country.

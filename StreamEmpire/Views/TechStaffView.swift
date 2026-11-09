@@ -56,9 +56,9 @@ struct TechStaffView: View {
                     } else if let build = state.builds.first(where: { $0.platform == platform }) {
                         Pill(text: "\(build.weeksLeft) wks", tint: Theme.amber, icon: "hourglass")
                     } else {
-                        Button(Format.money(platform.unlockCost)) { store.perform { try $0.startPlatform(platform) } }
+                        Button(Format.money(state.platformPrice(platform))) { store.perform { try $0.startPlatform(platform) } }
                             .buttonStyle(SoftButtonStyle(tint: Theme.teal))
-                            .disabled(state.finances.cash < platform.unlockCost)
+                            .disabled(state.finances.cash < state.platformPrice(platform))
                     }
                 }
             }
@@ -129,7 +129,7 @@ struct TechStaffView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(dc.name).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                         if dc.isOnline {
-                            Text("\(Format.count(dc.capacity)) viewers · \(Format.money(Formulas.datacenterUpkeep(level: dc.level)))/wk")
+                            Text("\(Format.count(dc.capacity)) viewers · \(Format.money(state.datacenterUpkeepPrice(level: dc.level)))/wk")
                                 .font(.caption2).foregroundStyle(Theme.text2)
                         } else {
                             Text("Building: \(dc.weeksToBuild) weeks left").font(.caption2).foregroundStyle(Theme.amber)
@@ -158,7 +158,7 @@ struct TechStaffView: View {
                 Spacer()
                 Button("−") { store.perform { try $0.releaseCloud(region: region) } }
                     .buttonStyle(SoftButtonStyle(tint: Theme.text2)).disabled(cloud == 0)
-                Button("+ \(Format.money(Formulas.cloudUnitCostPerWeek))/wk") { store.perform { try $0.rentCloud(region: region) } }
+                Button("+ \(Format.money(state.cloudUnitPrice))/wk") { store.perform { try $0.rentCloud(region: region) } }
                     .buttonStyle(SoftButtonStyle(tint: Theme.amber)).disabled(cloud >= Formulas.maxCloudUnits)
             }
             Text("Cloud is instant but about 8× pricier per viewer. Use it to cover a rush, then release it.")
@@ -214,16 +214,16 @@ struct TechStaffView: View {
             }
             payPicker(pay: pay) { value in store.perform { try $0.setPay(department, scale: value) } }
             HStack {
-                Button("Hire +1 · \(Format.money(Formulas.hireCost(currentLevel: level)))") {
+                Button("Hire +1 · \(Format.money(state.hirePrice(department)))") {
                     store.perform { try $0.hire(department) }
                 }
                 .buttonStyle(SoftButtonStyle(tint: Theme.amber))
-                .disabled(level >= Formulas.maxDepartmentLevel || state.finances.cash < Formulas.hireCost(currentLevel: level))
+                .disabled(level >= Formulas.maxDepartmentLevel || state.finances.cash < state.hirePrice(department))
                 Button("Let one go") { store.perform { try $0.reduceStaff(department) } }
                     .buttonStyle(SoftButtonStyle(tint: Theme.danger)).disabled(level == 0)
             }
             if level > 0 {
-                Text("Salary: \(Format.money(Double(level) * Formulas.salaryPerLevelPerWeek * pay))/wk").font(.caption2).foregroundStyle(Theme.text2)
+                Text("Salary: \(Format.money(state.scaled(Double(level) * Formulas.salaryPerLevelPerWeek * pay)))/wk").font(.caption2).foregroundStyle(Theme.text2)
             }
         }
         .padding(12)

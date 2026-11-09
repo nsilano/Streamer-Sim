@@ -120,7 +120,7 @@ struct MarketsView: View {
                         if status == .live, let market {
                             Text("\(Format.count(market.subs.total)) subs").font(.caption).foregroundStyle(Theme.text2)
                         } else {
-                            Text("Launch \(Format.money(country.launchCost))").font(.caption).foregroundStyle(Theme.text2)
+                            Text("Launch \(Format.money(state.launchPrice(country)))").font(.caption).foregroundStyle(Theme.text2)
                         }
                     }
                 }
@@ -179,7 +179,7 @@ struct MarketsView: View {
                     Text("\(Format.percent(share)) of market").font(.caption2).foregroundStyle(Theme.text2)
                 }
             } else {
-                Text(Format.money(country.launchCost)).font(.caption).foregroundStyle(Theme.text2)
+                Text(Format.money(state.launchPrice(country))).font(.caption).foregroundStyle(Theme.text2)
             }
         }
         .artCard(tint: MapPalette.color(status))

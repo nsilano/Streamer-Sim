@@ -47,6 +47,7 @@ struct SettingsView: View {
                 let home = CountryData.country(state.startCountry)
                 Text("\(home?.flag ?? "") \(home?.name ?? "Unknown") · week \(state.week) · \(Format.count(state.totalSubscribers)) subscribers")
                     .font(.footnote).foregroundStyle(Theme.text2)
+                Pill(text: "\(state.difficulty.title) difficulty", tint: Theme.amber, icon: "speedometer")
             }
             Button { confirm = .restartNew } label: {
                 Label("Restart in \(CountryData.country(state.startCountry)?.name ?? "the same country")", systemImage: "arrow.counterclockwise")

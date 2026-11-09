@@ -37,7 +37,7 @@ extension GameState {
         let wait = weeksUntilPolicyCanChange(definition.id)
         if wait > 0 { return "You changed this recently. Wait \(wait) more week\(wait == 1 ? "" : "s")." }
         if totalSubscribers < option.minSubscribers { return "Needs \(Format.count(option.minSubscribers)) subscribers first." }
-        if finances.cash < option.cost { return "Needs \(Format.money(option.cost)) to set up." }
+        if finances.cash < policyPrice(option) { return "Needs \(Format.money(policyPrice(option))) to set up." }
         return nil
     }
 
@@ -53,8 +53,9 @@ extension GameState {
         if let reason = policyBlocker(definition, option) { throw ActionError.locked(reason) }
 
         if option.cost > 0 {
-            finances.cash -= option.cost
-            finances.ledger.other += option.cost
+            let price = policyPrice(option)
+            finances.cash -= price
+            finances.ledger.other += price
         }
         policies[policyID] = optionID
         policyChangedWeek[policyID] = week

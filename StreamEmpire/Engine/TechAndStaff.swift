@@ -9,11 +9,12 @@ extension GameState {
         guard !platforms.contains(platform), !builds.contains(where: { $0.platform == platform }) else {
             throw ActionError.invalidProject("\(platform.displayName) is already built or in development.")
         }
-        guard finances.cash >= platform.unlockCost else {
-            throw ActionError.insufficientFunds(needed: platform.unlockCost)
+        let price = platformPrice(platform)
+        guard finances.cash >= price else {
+            throw ActionError.insufficientFunds(needed: price)
         }
-        finances.cash -= platform.unlockCost
-        finances.ledger.other += platform.unlockCost
+        finances.cash -= price
+        finances.ledger.other += price
         builds.append(PlatformBuild(
             platform: platform,
             weeksLeft: Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: staff.effectiveLevel(.engineering))))
@@ -25,11 +26,11 @@ extension GameState {
         Formulas.cdnCostMultiplier(engineeringLevel: staff.effectiveLevel(.engineering))
     }
 
-    var datacenterBuildPrice: Double { Formulas.datacenterBuildCost * serverCostMultiplier }
+    var datacenterBuildPrice: Double { scaled(Formulas.datacenterBuildCost * serverCostMultiplier) }
 
     func datacenterUpgradePrice(_ datacenter: Datacenter) -> Double? {
         guard datacenter.isOnline, datacenter.level < Formulas.maxDatacenterLevel else { return nil }
-        return Formulas.datacenterUpgradeCost(currentLevel: datacenter.level) * serverCostMultiplier
+        return scaled(Formulas.datacenterUpgradeCost(currentLevel: datacenter.level) * serverCostMultiplier)
     }
 
     func datacenters(in region: Region) -> [Datacenter] { datacenters.filter { $0.region == region } }
@@ -83,7 +84,7 @@ extension GameState {
         let owned = datacenters.filter { $0.isOnline }.reduce(0.0) { $0 + Formulas.datacenterUpkeep(level: $1.level) }
         let cloud = cloudUnits.keys.sorted().reduce(0.0) { $0 + Double(cloudUnits[$1] ?? 0) } * Formulas.cloudUnitCostPerWeek
         let apps = platforms.reduce(0.0) { $0 + $1.weeklyUpkeep }
-        return (owned + cloud) * serverCostMultiplier + apps
+        return scaled((owned + cloud) * serverCostMultiplier + apps)
     }
 
     // MARK: Staff
@@ -94,7 +95,7 @@ extension GameState {
         guard level < Formulas.maxDepartmentLevel else {
             throw ActionError.invalidProject("\(department.displayName) is already fully staffed.")
         }
-        let cost = Formulas.hireCost(currentLevel: level)
+        let cost = hirePrice(department)
         guard finances.cash >= cost else { throw ActionError.insufficientFunds(needed: cost) }
         finances.cash -= cost
         finances.ledger.other += cost
@@ -106,7 +107,7 @@ extension GameState {
         staff[department] -= 1
     }
 
-    var weeklySalaries: Double { staff.weeklySalaries + (curator != nil ? Curator.weeklySalary : 0) }
+    var weeklySalaries: Double { scaled(staff.weeklySalaries + (curator != nil ? Curator.weeklySalary : 0)) }
 
     /// License price after the Content department's discount.
     func licensePrice(_ title: Title) -> Double {

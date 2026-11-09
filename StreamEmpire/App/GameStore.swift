@@ -18,12 +18,12 @@ final class GameStore: ObservableObject {
         state = SaveManager.load()
     }
 
-    func newGame(companyName: String, country: String) {
+    func newGame(companyName: String, country: String, difficulty: Difficulty = .medium) {
         let name = companyName.trimmingCharacters(in: .whitespaces)
         let seed = UInt64.random(in: 1...UInt64.max)
         state = GameState.newGame(startCountry: country,
                                   companyName: name.isEmpty ? "Stream Empire" : name,
-                                  seed: seed)
+                                  seed: seed, difficulty: difficulty)
         persist()
     }
 

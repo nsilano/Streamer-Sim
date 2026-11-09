@@ -212,7 +212,7 @@ struct PolicySheet: View {
             }
             HStack(spacing: 6) {
                 if let (text, color) = risk(option, state) { Pill(text: text, tint: color, icon: "exclamationmark.triangle.fill") }
-                if option.cost > 0 { Pill(text: "Setup \(Format.money(option.cost))", tint: Theme.amber) }
+                if option.cost > 0 { Pill(text: "Setup \(Format.money(state.policyPrice(option)))", tint: Theme.amber) }
                 if option.minSubscribers > 0 { Pill(text: "Needs \(Format.count(option.minSubscribers)) subs", tint: Theme.violet) }
             }
             if !isCurrent {

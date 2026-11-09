@@ -8,6 +8,7 @@ struct NewGameView: View {
     @State private var selected = "IE"
     @State private var search = ""
     @State private var showHelp = false
+    @State private var difficulty: Difficulty = .medium
 
     private struct RegionGroup: Identifiable {
         let region: Region
@@ -34,6 +35,26 @@ struct NewGameView: View {
                         TextField("Company name", text: $companyName)
                             .padding(12)
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.08)))
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionTitle(text: "Difficulty", icon: "speedometer", tint: Theme.amber)
+                        HStack(spacing: 8) {
+                            ForEach(Difficulty.allCases) { level in
+                                Button { difficulty = level } label: {
+                                    VStack(spacing: 4) {
+                                        Text(level.title).font(.subheadline.weight(.heavy)).foregroundStyle(.white)
+                                        Text(level == .medium ? "Standard costs" : "\(Int(abs(level.costMultiplier - 1) * 100))% \(level.costMultiplier < 1 ? "cheaper" : "costlier")")
+                                            .font(.caption2).foregroundStyle(Theme.text2)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(RoundedRectangle(cornerRadius: 14).fill(difficulty == level ? Theme.magenta.opacity(0.35) : Color.white.opacity(0.07)))
+                                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(difficulty == level ? Theme.magenta : Color.clear, lineWidth: 2))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        Text(difficulty.blurb).font(.caption).foregroundStyle(Theme.text2)
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         SectionTitle(text: "Choose your home market", icon: "globe.europe.africa.fill", tint: Theme.teal)
@@ -119,7 +140,7 @@ struct NewGameView: View {
                 }
             }
             Button("Found the company") {
-                store.newGame(companyName: companyName, country: selected)
+                store.newGame(companyName: companyName, country: selected, difficulty: difficulty)
             }
             .buttonStyle(GlowButtonStyle())
         }

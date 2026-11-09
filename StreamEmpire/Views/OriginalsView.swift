@@ -124,7 +124,7 @@ struct CommissionView: View {
                     Stepper(value: $weeks, in: Formulas.productionWeeksRange) {
                         LabeledValue(label: "Production", value: "\(weeks) weeks")
                     }
-                    LabeledValue(label: "Weekly cost", value: Format.money(budget * costFactor / Double(weeks)))
+                    LabeledValue(label: "Weekly cost", value: Format.money(budget * costFactor * (store.state?.costScale ?? 1) / Double(weeks)))
                     StatBar(label: "Expected quality (±22)", value: expected / 100, text: String(format: "~%.0f", expected),
                             tint: Theme.amber)
                     Text("Bigger budgets and longer schedules raise quality, but hits are never guaranteed.")
@@ -172,11 +172,11 @@ struct StudiosSection: View {
                         Spacer()
                         PipRow(level: studio.level, max: Formulas.maxStudioLevel, tint: Theme.violet)
                     }
-                    Text("\(studio.specialty.displayName) specialty · \(state.freeSlots(at: studio))/\(studio.slots) slots free · \(Format.money(Formulas.studioUpkeep(level: studio.level) * state.staff.studioPay))/wk")
+                    Text("\(studio.specialty.displayName) specialty · \(state.freeSlots(at: studio))/\(studio.slots) slots free · \(Format.money(state.studioUpkeepPrice(studio)))/wk")
                         .font(.caption).foregroundStyle(Theme.text2)
                     StatBar(label: "Experience", value: studio.experience / 100, text: "\(Int(studio.experience))/100", tint: Theme.violet, height: 5, compact: true)
                     if studio.level < Formulas.maxStudioLevel {
-                        let cost = Formulas.studioUpgradeCost(currentLevel: studio.level)
+                        let cost = state.studioUpgradePrice(studio)
                         Button("Upgrade · \(Format.money(cost))") { store.perform { try $0.upgradeStudio(id: studio.id) } }
                             .buttonStyle(SoftButtonStyle(tint: Theme.violet))
                             .disabled(state.finances.cash < cost)
@@ -188,11 +188,11 @@ struct StudiosSection: View {
                 HStack {
                     Picker("Specialty", selection: $specialty) { ForEach(Genre.allCases) { Text($0.displayName).tag($0) } }
                     Spacer()
-                    Button("Found · \(Format.money(Formulas.studioFoundingCost))") {
+                    Button("Found · \(Format.money(state.studioFoundingPrice))") {
                         store.perform { try $0.foundStudio(specialty: specialty) }
                     }
                     .buttonStyle(SoftButtonStyle(tint: Theme.violet))
-                    .disabled(state.finances.cash < Formulas.studioFoundingCost)
+                    .disabled(state.finances.cash < state.studioFoundingPrice)
                 }
             }
         }
