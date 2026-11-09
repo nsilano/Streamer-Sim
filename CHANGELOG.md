@@ -6,7 +6,7 @@ Save version is noted when it changes (older saves are ignored).
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
 ### TestFlight signing cleanup
-- The manual TestFlight workflow now revokes old "Created via API" signing certificates before archiving, so it doesn't hit Apple's certificate limit. Certificates you created yourself are never touched.
+- The manual TestFlight workflow now revokes old "Created via API" signing certificates before archiving, so it doesn't hit Apple's certificate limit. Certificates you created yourself are never touched. (Runs in a Python virtualenv; the runner blocks system pip.)
 
 ### Test fixes
 - Fixed two tests (title stats ranking, random-event firing) that CI caught; no gameplay change.
