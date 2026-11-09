@@ -18,6 +18,13 @@ struct RootView: View {
                     CompanyView()
                         .tabItem { Label("Company", systemImage: "building.2") }
                 }
+                .sheet(isPresented: Binding(get: { state.pendingEvent != nil && state.outcome == .playing },
+                                            set: { _ in })) {
+                    if let event = store.state?.pendingEvent {
+                        DecisionView(event: event)
+                            .interactiveDismissDisabled()
+                    }
+                }
                 .alert(item: outcomeBinding(state)) { outcome in
                     Alert(title: Text(outcome.title), message: Text(outcome.message),
                           dismissButton: .default(Text("New Game")) { store.resetGame() })

@@ -8,6 +8,11 @@ enum ActionError: Error, LocalizedError, Equatable {
     case alreadyLaunched
     case locked(String)
     case invalidPrice
+    case invalidAmount
+    case invalidProject(String)
+    case noPendingEvent
+    case unknownChoice
+    case decisionPending
 
     var errorDescription: String? {
         switch self {
@@ -18,6 +23,11 @@ enum ActionError: Error, LocalizedError, Equatable {
         case .alreadyLaunched: return "You have already launched in that country."
         case .locked(let reason): return reason
         case .invalidPrice: return "Prices must be between $0 and $100."
+        case .invalidAmount: return "That amount isn't allowed."
+        case .invalidProject(let reason): return reason
+        case .noPendingEvent: return "There is no decision to make."
+        case .unknownChoice: return "That isn't one of the options."
+        case .decisionPending: return "Make your decision first."
         }
     }
 }
@@ -72,5 +82,11 @@ extension GameState {
     mutating func setMarketing(code: String, weeklyBudget: Double) throws {
         guard markets[code] != nil else { throw ActionError.countryNotFound }
         markets[code]?.marketingBudget = max(0, weeklyBudget)
+    }
+}
+
+extension GameState {
+    mutating func resolveEvent(choiceID: String) throws {
+        try RandomEvents.resolve(&self, choiceID: choiceID)
     }
 }

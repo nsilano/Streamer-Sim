@@ -7,7 +7,9 @@ import XCTest
 
 final class Phase2Tests: XCTestCase {
     private func newState(seed: UInt64 = 42) -> GameState {
-        GameState.newGame(startCountry: "IE", companyName: "Test Co", seed: seed)
+        var s = GameState.newGame(startCountry: "IE", companyName: "Test Co", seed: seed)
+        s.eventsEnabled = false
+        return s
     }
 
     private func filler(_ n: Int) -> [Title] {

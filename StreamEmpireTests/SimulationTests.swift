@@ -9,7 +9,9 @@ final class SimulationTests: XCTestCase {
     // MARK: Helpers
 
     private func newState(seed: UInt64 = 42) -> GameState {
-        GameState.newGame(startCountry: "IE", companyName: "Test Co", seed: seed)
+        var s = GameState.newGame(startCountry: "IE", companyName: "Test Co", seed: seed)
+        s.eventsEnabled = false     // random events have their own tests
+        return s
     }
 
     private func title(quality: Int = 80, popularity: Int = 70, genre: Genre = .drama,

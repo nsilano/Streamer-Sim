@@ -8,6 +8,7 @@ struct ContentTabView: View {
 
     @EnvironmentObject var store: GameStore
     @State private var section: Section = .licensing
+    @State private var localizing: Int?
 
     var body: some View {
         NavigationStack {
@@ -22,10 +23,7 @@ struct ContentTabView: View {
                     switch section {
                     case .catalog: catalogList(state)
                     case .licensing: licensingList(state)
-                    case .originals:
-                        ContentUnavailableView("Originals arrive in Phase 3",
-                                               systemImage: "clapperboard",
-                                               description: Text("Commission your own shows and movies here."))
+                    case .originals: OriginalsView(state: state)
                     }
                 }
             }
@@ -40,7 +38,15 @@ struct ContentTabView: View {
                                    description: Text("License titles from the Licensing tab."))
         } else {
             List(state.catalog.sorted { $0.quality > $1.quality }) { title in
-                TitleRow(title: title, trailing: title.weeksRemaining.map { "\($0) wks left" } ?? "Owned")
+                Button {
+                    localizing = title.id
+                } label: {
+                    TitleRow(title: title, trailing: title.weeksRemaining.map { "\($0) wks left" } ?? "Owned")
+                }
+                .buttonStyle(.plain)
+            }
+            .sheet(item: Binding(get: { localizing.map(LocalizeTarget.init) }, set: { localizing = $0?.id })) {
+                LocalizeView(titleID: $0.id)
             }
         }
     }
@@ -78,13 +84,25 @@ struct TitleRow: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Text("Quality \(title.quality) · Popularity \(title.popularity) · \(ageText)")
                     .font(.caption2).foregroundStyle(.secondary)
+                if !title.subtitles.isEmpty || !title.dubs.isEmpty {
+                    Text(localizationText).font(.caption2).foregroundStyle(.tint)
+                }
             }
             Spacer()
             Text(trailing).font(.caption).foregroundStyle(.secondary)
         }
     }
 
+    private var localizationText: String {
+        var parts: [String] = []
+        if !title.dubs.isEmpty { parts.append("Dub: " + title.dubs.map(\.displayName).joined(separator: ", ")) }
+        if !title.subtitles.isEmpty { parts.append("Subs: " + title.subtitles.map(\.displayName).joined(separator: ", ")) }
+        return parts.joined(separator: " · ")
+    }
+
     private var ageText: String {
         title.ageWeeks < 4 ? "New release" : title.ageWeeks < 52 ? "\(title.ageWeeks) wks old" : "\(title.ageWeeks / 52) yr old"
     }
 }
+
+struct LocalizeTarget: Identifiable { let id: Int }

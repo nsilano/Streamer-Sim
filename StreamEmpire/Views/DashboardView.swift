@@ -58,7 +58,12 @@ struct DashboardView: View {
                     .padding(.vertical, 6)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(store.autoAdvance)
+            .disabled(store.autoAdvance || store.state?.pendingEvent != nil)
+
+            if let event = store.state?.pendingEvent {
+                Label("Decision needed: \(event.headline)", systemImage: "exclamationmark.bubble.fill")
+                    .font(.footnote).foregroundStyle(.orange)
+            }
 
             Toggle("Auto-advance", isOn: $store.autoAdvance)
         }
@@ -118,6 +123,11 @@ struct WeeklyReportView: View {
                     if f.launch > 0 {
                         LabeledValue(label: "Market launches", value: "-" + Format.money(f.launch))
                     }
+                    if f.originals > 0 { LabeledValue(label: "Originals", value: "-" + Format.money(f.originals)) }
+                    if f.localization > 0 { LabeledValue(label: "Dubbing & subtitles", value: "-" + Format.money(f.localization)) }
+                    if f.interest > 0 { LabeledValue(label: "Loan interest", value: "-" + Format.money(f.interest)) }
+                    if f.fines > 0 { LabeledValue(label: "Regulatory fines", value: "-" + Format.money(f.fines)) }
+                    if f.other > 0 { LabeledValue(label: "Event costs", value: "-" + Format.money(f.other)) }
                     LabeledValue(label: "Profit / loss", value: Format.money(f.profit), tint: f.profit.profitColor)
                     LabeledValue(label: "Cash", value: Format.money(report.cashEnd))
                 }

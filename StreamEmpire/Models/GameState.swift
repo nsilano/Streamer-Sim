@@ -29,7 +29,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 2
+    static let currentVersion = 3
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -44,6 +44,14 @@ struct GameState: Codable, Equatable {
     var finances: Finances
     var lastReport: WeeklyReport?
     var reportHistory: [WeeklyReport] = []     // last 26 weeks
+    var projects: [OriginalProject] = []       // originals in production
+    var loans: [Loan] = []
+    var equity = Equity()
+    var pendingEvent: GameEvent?               // a decision the player must make before advancing
+    var queuedEvents: [GameEvent] = []         // outcomes to show in the next report
+    var recessionWeeksLeft: Int = 0
+    var goals: [String] = []                   // bonus goals achieved: "ipo", "revenue10B", "allMarkets"
+    var eventsEnabled = true                   // tests switch random events off
     var previousSubs: [String: Double] = [:]   // leaderboard subs a week ago ("player" or rival id)
 
     // Placeholders until Phase 4 (tech & infrastructure).

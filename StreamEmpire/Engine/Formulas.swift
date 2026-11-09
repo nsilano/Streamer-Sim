@@ -17,6 +17,8 @@ enum Formulas {
 
     static func languageMatch(title: Title, country: Country) -> Double {
         if title.language == country.language { return 1.0 }
+        if title.dubs.contains(country.language) { return 0.95 }
+        if title.subtitles.contains(country.language) { return 0.8 }
         if title.language == .english { return 0.7 }
         return 0.35
     }
@@ -176,5 +178,67 @@ enum Formulas {
 
     static func operatingCost(for country: Country) -> Double {
         4_000 + country.households * 2_500
+    }
+
+    // MARK: Originals
+
+    static func idealProductionWeeks(_ kind: TitleKind) -> Int { kind == .movie ? 26 : 40 }
+    static func budgetReference(_ kind: TitleKind) -> Double { kind == .movie ? 8_000_000 : 30_000_000 }
+    static func budgetRange(_ kind: TitleKind) -> ClosedRange<Double> {
+        kind == .movie ? 500_000...40_000_000 : 2_000_000...120_000_000
+    }
+    static let productionWeeksRange = 6...52
+    static let maxConcurrentProjects = 6
+
+    /// Average quality an original of this budget and schedule will reach (before luck).
+    static func expectedOriginalQuality(kind: TitleKind, budget: Double, weeks: Int) -> Double {
+        let money = 30 + 45 * (1 - exp(-budget / budgetReference(kind)))
+        let ratio = min(1, Double(weeks) / Double(idealProductionWeeks(kind)))
+        return money * (0.85 + 0.15 * ratio)
+    }
+
+    /// Release-day quality: expected value plus luck (+/-22) and a rare breakout bonus.
+    static func rolledOriginalQuality(expected: Double, u1: Double, u2: Double, u3: Double, breakout: Bool) -> Int {
+        let luck = (u1 + u2 + u3 - 1.5) / 1.5 * 22
+        return Int(clamp(expected + luck + (breakout ? 20 : 0), 5, 100))
+    }
+
+    static func originalPopularity(quality: Int, u: Double) -> Int {
+        Int(clamp(0.55 * Double(quality) + u * 45, 5, 100))
+    }
+
+    // MARK: Localization & quotas
+
+    static func subtitleCost(_ kind: TitleKind) -> Double { kind == .movie ? 25_000 : 90_000 }
+    static func dubCost(_ kind: TitleKind) -> Double { kind == .movie ? 120_000 : 450_000 }
+
+    /// 1.0 = compliant. Needs at least 5 titles before quotas apply.
+    static func quotaCompliance(localCount: Int, total: Int, quota: Double) -> Double {
+        guard total >= 5, quota > 0 else { return 1.0 }
+        return min(1.0, (Double(localCount) / Double(total)) / quota)
+    }
+
+    static func quotaFine(revenue: Double, risk: Double, compliance: Double) -> Double {
+        revenue * risk * (1 - compliance) * 0.25
+    }
+
+    // MARK: Funding
+
+    static let ipoMinSubscribers = 5_000_000.0
+    static let ipoMinAnnualRevenue = 300_000_000.0
+    static let roundMinAnnualRevenue = 1_000_000.0
+    static let roundCooldownWeeks = 26
+    static let maxRounds = 4
+    static let minOwnership = 0.3
+
+    /// Lenders lend against revenue, plus half of any positive cash.
+    static func creditLimit(annualRevenue: Double, cash: Double) -> Double {
+        3 * annualRevenue + max(0, cash) * 0.5
+    }
+
+    static func loanRate(profitable: Bool) -> Double { profitable ? 0.08 : 0.14 }
+
+    static func valuation(annualRevenue: Double, subscribers: Double) -> Double {
+        20_000_000 + 5 * annualRevenue + 60 * subscribers
     }
 }

@@ -35,8 +35,9 @@ final class GameStore: ObservableObject {
         guard let current = state, current.outcome == .playing else { return }
         state = SimulationEngine.advanceWeek(current)
         persist()
-        if state?.outcome != .playing { autoAdvance = false }
-        if showReport { self.showReport = true }
+        // Stop auto-advance when the game ends or a decision is waiting.
+        if state?.outcome != .playing || state?.pendingEvent != nil { autoAdvance = false }
+        if showReport && state?.pendingEvent == nil { self.showReport = true }
     }
 
     /// Applies a player action; surfaces failures as an alert message.

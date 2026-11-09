@@ -17,4 +17,5 @@ struct GameEvent: Codable, Identifiable, Equatable {
     var headline: String
     var detail: String
     var choices: [EventChoice] = []
+    var key: String = ""          // identifies the event type for choice resolution
 }

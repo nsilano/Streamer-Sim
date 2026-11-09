@@ -21,6 +21,8 @@ struct Title: Codable, Identifiable, Equatable {
     var license: LicenseTerms?     // nil for originals
     var weeksRemaining: Int?       // owned licenses: weeks until expiry (nil = forever)
     var listingWeeksLeft: Int      // licensing market: weeks the offer stays open
+    var subtitles: [Language] = [] // languages with subtitles
+    var dubs: [Language] = []      // languages with dubbing
 
     func isAvailable(in countryCode: String) -> Bool {
         guard let license = license else { return true }

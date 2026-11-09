@@ -11,9 +11,17 @@ struct WeeklyFinancials: Codable, Equatable {
     var marketing: Double = 0
     var operations: Double = 0
     var launch: Double = 0
+    var originals: Double = 0
+    var localization: Double = 0
+    var interest: Double = 0
+    var fines: Double = 0
+    var other: Double = 0          // event-driven spending
 
     var revenue: Double { subscriptionRevenue + adRevenue }
-    var costs: Double { licensing + streaming + staff + marketing + operations + launch }
+    var costs: Double {
+        licensing + streaming + staff + marketing + operations + launch
+            + originals + localization + interest + fines + other
+    }
     var profit: Double { revenue - costs }
 }
 
@@ -21,6 +29,10 @@ struct WeeklyFinancials: Codable, Equatable {
 struct SpendLedger: Codable, Equatable {
     var licensing: Double = 0
     var launch: Double = 0
+    var localization: Double = 0
+    var other: Double = 0
+
+    var total: Double { licensing + launch + localization + other }
 }
 
 struct Finances: Codable, Equatable {

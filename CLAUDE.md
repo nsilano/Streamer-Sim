@@ -48,7 +48,7 @@ Dashboard - Markets - Content - Rivals - Company.
 ## Build phases
 1. **Phase 1 (done, CI green):** models, engine, 1 country playable, licensing, subscribers, finances, dashboard, save/load, tests.
 2. **Phase 2 (done):** all 30 countries, unlock rules (`GameState.launchBlocker`), per-country pricing UI hints, rival AI (expansion, price cuts/raises, personality-based license bidding, cash), rival pressure feeding sign-ups and churn (`Formulas.rivalPressure`), richer leaderboard. Save version is 2 (older saves are ignored).
-3. **Phase 3:** originals, dubbing/subtitles, events (incl. choices), loans, investor rounds, IPO.
+3. **Phase 3 (done):** originals (`GameState.projects`, weekly cost, quality rolled at release via `Formulas.rolledOriginalQuality`), dubbing/subtitles (`Title.dubs/subtitles`, affects `languageMatch` and local-content quota fines), random events (`Engine/RandomEvents.swift`; choice events set `pendingEvent` and block `advanceWeek` until `resolveEvent`), loans, investor rounds, IPO, bonus goals (`GameState.goals`). Funding rules live in `Engine/OriginalsAndFunding.swift`. The 8-week-debt loss only applies when `fundingAvailable` is false (hard cap 26 weeks). Save version is 3. Tests switch random events off with `eventsEnabled = false`.
 4. **Phase 4:** tech platforms, CDN infrastructure, staff departments, balancing pass, polish, app icon, TestFlight setup.
 
-Placeholders to replace later: `GameState.platformReach`, `GameState.serviceQuality` (Phase 4), `Country.localQuota` and `regulatoryRisk` (unused until Phase 3), Originals tab, funding/staff/tech sections of the Company tab.
+Placeholders to replace later: `GameState.platformReach`, `GameState.serviceQuality` (Phase 4), staff/tech sections of the Company tab. Legal staff (Phase 4) should reduce quota fines and event costs.
