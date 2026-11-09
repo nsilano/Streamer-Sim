@@ -1,0 +1,52 @@
+name: StreamEmpire
+options:
+  bundleIdPrefix: com.streamempire
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  StreamEmpire:
+    type: application
+    platform: iOS
+    sources:
+      - path: StreamEmpire
+    info:
+      path: StreamEmpire/Info.plist
+      properties:
+        CFBundleDisplayName: Stream Empire
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.streamempire.app
+        TARGETED_DEVICE_FAMILY: "1,2"
+  StreamEmpireTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: StreamEmpireTests
+    dependencies:
+      - target: StreamEmpire
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.streamempire.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  StreamEmpire:
+    build:
+      targets:
+        StreamEmpire: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - StreamEmpireTests

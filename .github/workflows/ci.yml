@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  core-tests:
+    name: Engine tests (swift test)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift test
+
+  ios-build:
+    name: iOS build + tests (xcodebuild)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Pick a simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS' in k for x in v if 'iPhone' in x['name']))")
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+      - run: xcodebuild test -project StreamEmpire.xcodeproj -scheme StreamEmpire -destination "id=$SIM_UDID" CODE_SIGNING_ALLOWED=NO
