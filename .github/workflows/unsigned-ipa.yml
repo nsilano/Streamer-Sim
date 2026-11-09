@@ -1,0 +1,30 @@
+# Builds an UNSIGNED .ipa you can download and sideload (AltStore / Sideloadly re-sign it with your own Apple ID).
+# Run it from the Actions tab: "Unsigned IPA" > Run workflow. See docs/PLAY_ON_PHONE.md.
+name: Unsigned IPA
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Archive (no signing)
+        run: |
+          xcodebuild archive \
+            -project StreamEmpire.xcodeproj -scheme StreamEmpire \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/StreamEmpire.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Package .ipa
+        run: |
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/StreamEmpire.xcarchive/Products/Applications/StreamEmpire.app" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$GITHUB_WORKSPACE/StreamEmpire-unsigned.ipa" Payload)
+          ls -lh StreamEmpire-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StreamEmpire-unsigned-ipa
+          path: StreamEmpire-unsigned.ipa

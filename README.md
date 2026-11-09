@@ -8,4 +8,4 @@ brew install xcodegen
 xcodegen generate
 open StreamEmpire.xcodeproj
 ```
-Engine tests without Xcode: `swift test`. TestFlight setup: `docs/TESTFLIGHT.md`.
+Engine tests without Xcode: `swift test`. Play on your phone: `docs/PLAY_ON_PHONE.md`. TestFlight setup: `docs/TESTFLIGHT.md`.
