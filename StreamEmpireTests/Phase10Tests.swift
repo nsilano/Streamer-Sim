@@ -51,7 +51,7 @@ final class Phase10Tests: XCTestCase {
         for _ in 0..<250 { s = SimulationEngine.advanceWeek(s) }
         XCTAssertTrue(s.news.contains { $0.kind == .expansion }, "rivals expand and the feed says so")
         XCTAssertTrue(s.news.contains { $0.kind == .licensing }, "big license wins are reported")
-        XCTAssertTrue(s.news.allSatisfy { $0.rivalID == nil || s.rivals.contains(where: { r in r.id == $0.rivalID }) })
+        XCTAssertTrue(s.news.allSatisfy { item in item.rivalID == nil || s.rivals.contains { $0.id == item.rivalID } })
     }
 
     func testPriceWarsMakeTheNews() {
