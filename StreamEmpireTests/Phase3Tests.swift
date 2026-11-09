@@ -152,6 +152,11 @@ final class Phase3Tests: XCTestCase {
     func testNoLoanWithoutRevenue() {
         var s = newState()
         XCTAssertEqual(s.finances.annualizedRevenue, 0)
+        // Lenders count half of positive cash, so a cash-rich start can borrow a little...
+        XCTAssertEqual(s.creditRoom, 12_500_000, accuracy: 1)
+        // ...but a broke company with no revenue can't borrow at all.
+        s.finances.cash = -1_000_000
+        XCTAssertEqual(s.creditRoom, 0)
         XCTAssertThrowsError(try s.takeLoan(amount: 1_000_000, termWeeks: 104)) { error in
             guard case ActionError.locked = error else { return XCTFail("\(error)") }
         }
