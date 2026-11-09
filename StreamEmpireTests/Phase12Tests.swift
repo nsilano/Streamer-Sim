@@ -179,7 +179,8 @@ final class Phase12Tests: XCTestCase {
     func testPasswordCrackdownRaisesRevenuePerSubscriber() throws {
         let base = try week().1.financials.subscriptionRevenue
         let household = try week(("sharing", "household")).1.financials.subscriptionRevenue
-        XCTAssertEqual(household / base, 1.10, accuracy: 1e-6)
+        // +10% per subscriber, and a good reaction converts 5% more sharers into subscribers right away.
+        XCTAssertEqual(household / base, 1.10 * 1.05, accuracy: 1e-6)
     }
 
     func testAdLoadAndPrivacyMoveAdRevenue() throws {

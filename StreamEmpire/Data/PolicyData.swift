@@ -2,7 +2,7 @@ import Foundation
 
 /// Every policy the player can set. The default option of each policy is neutral (all multipliers 1.0).
 enum PolicyData {
-    static let all: [PolicyDefinition] = accounts + pricing + content + ads + product + retention + partnerships
+    static let all: [PolicyDefinition] = accounts + pricing + content + ads + product + retention + partnerships + extras
 
     static func definition(_ id: String) -> PolicyDefinition? { all.first { $0.id == id } }
 
@@ -246,6 +246,33 @@ enum PolicyData {
                 PolicyOption(id: "maze", title: "Retention maze", detail: "Offers, hoops and a phone call to leave.", effects: PolicyEffects(churn: 0.82, trust: -0.3, heat: 0.5), pros: ["Much lower churn"], cons: ["Trust falls fast", "Regulators hate dark patterns"],
                              badChance: 0.35,
                              bad: PolicyOutcome(headline: "Regulator investigates your cancellation flow", detail: "Consumer groups call it a dark pattern.", subsPct: -0.015, trust: -8, heat: 12, shockWeeks: 4, shockChurn: 1.2)),
+            ]),
+    ]
+
+    // MARK: Refunds & creators (kept with their categories below)
+
+    private static let extras: [PolicyDefinition] = [
+        PolicyDefinition(
+            id: "refunds", category: .retention, title: "Refund policy", icon: "arrow.uturn.backward.circle.fill",
+            summary: "What happens when someone asks for their money back?",
+            defaultOption: "standard",
+            options: [
+                PolicyOption(id: "strict", title: "No refunds", detail: "All sales are final.", effects: PolicyEffects(adds: 0.98, arpu: 1.01, trust: -0.05, heat: 0.05),
+                             pros: ["Keeps every payment"], cons: ["Customers feel trapped", "Fewer sign-ups"]),
+                PolicyOption(id: "standard", title: "Standard", detail: "Refunds on request within a few days.", effects: .neutral, pros: [], cons: []),
+                PolicyOption(id: "generous", title: "No-questions refunds", detail: "Anyone can get their money back, no questions asked.",
+                             effects: PolicyEffects(adds: 1.03, arpu: 0.99, trust: 0.12, heat: -0.05), pros: ["Trust grows", "More sign-ups"], cons: ["A little revenue lost"]),
+            ]),
+        PolicyDefinition(
+            id: "creators", category: .content, title: "Creator support", icon: "person.crop.rectangle.stack.fill",
+            summary: "How do you treat the people who make your shows?",
+            defaultOption: "none",
+            options: [
+                PolicyOption(id: "none", title: "Standard contracts", detail: "Industry-standard deals.", effects: .neutral, pros: [], cons: []),
+                PolicyOption(id: "fund", title: "Creator fund", detail: "A weekly fund to back emerging talent.",
+                             effects: PolicyEffects(adds: 1.03, trust: 0.05, flatCost: 25_000), pros: ["Goodwill with creators", "Fresh buzz"], cons: ["Weekly cost"]),
+                PolicyOption(id: "exclusive", title: "Exclusive talent deals", detail: "Lock star creators in to first-look deals.",
+                             effects: PolicyEffects(adds: 1.05, awareness: 0.002, flatCost: 40_000), pros: ["Big names drive sign-ups"], cons: ["Expensive"]),
             ]),
     ]
 

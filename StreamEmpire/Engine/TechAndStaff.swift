@@ -113,7 +113,7 @@ extension GameState {
     func licensePrice(_ title: Title) -> Double {
         guard let license = title.license else { return 0 }
         return license.cost * (1 - Formulas.licenseDiscount(contentLevel: staff.effectiveLevel(.content)))
-            * Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers)
+            * Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers) * costScale
     }
 
     var loanRate: Double {

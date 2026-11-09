@@ -68,7 +68,7 @@ extension GameState {
         if option.good != nil || option.bad != nil {
             let chance = Formulas.clamp(option.badChance * (1.3 - brandTrust * 0.006), 0, 0.95)
             let isBad = forcedBad ?? (option.bad != nil && rng.chance(chance))
-            if let result = isBad ? option.bad : (option.good ?? option.bad) {
+            if let result = isBad ? option.bad : option.good {
                 apply(result, policyID: policyID)
                 tone = isBad ? .bad : .good
                 headline = result.headline

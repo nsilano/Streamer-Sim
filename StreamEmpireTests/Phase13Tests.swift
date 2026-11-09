@@ -99,7 +99,9 @@ final class Phase13Tests: XCTestCase {
         XCTAssertEqual(hard.operations / medium.operations, 1.4, accuracy: 1e-9)
         XCTAssertEqual(hard.streaming / medium.streaming, 1.4, accuracy: 1e-9)
         XCTAssertEqual(easy.streaming / medium.streaming, 0.75, accuracy: 1e-9)
-        XCTAssertEqual(hard.tech / medium.tech, 1.4, accuracy: 1e-6)
+        // Platform and datacenter costs scale; the app store's 6% cut of revenue is a percentage, so it doesn't.
+        let fee = Formulas.appStoreFeeRate * medium.subscriptionRevenue
+        XCTAssertEqual((hard.tech - fee) / (medium.tech - fee), 1.4, accuracy: 1e-6)
         let staffMedium = medium.staff - Formulas.overheadRate * medium.revenue
         let staffHard = hard.staff - Formulas.overheadRate * hard.revenue
         XCTAssertEqual(staffHard / staffMedium, 1.4, accuracy: 1e-6)
