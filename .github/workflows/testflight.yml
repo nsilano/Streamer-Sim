@@ -63,3 +63,13 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
             -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
             -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}"
+      - name: Show distribution logs on failure
+        if: failure()
+        run: |
+          for d in $(find /var/folders "$TMPDIR" -name "*.xcdistributionlogs" -maxdepth 6 2>/dev/null | head -3); do
+            echo "=== $d"
+            for f in "$d"/*.log; do
+              echo "--- $f"
+              grep -iE "error|fail|status|code|reason|denied|forbidden|agreement|not found|team|bundle|entit|permission|401|403|404" "$f" | cut -c1-600 | head -40
+            done
+          done
