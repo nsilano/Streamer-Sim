@@ -20,7 +20,7 @@ enum RandomEvents {
         if s.week >= Formulas.regulationEventMinWeek,
            s.finances.annualizedRevenue >= Formulas.regulationEventMinAnnualRevenue,
            s.week - s.lastRegulationWeek >= Formulas.regulationEventCooldownWeeks {
-            options.append(("regulation", 3))
+            options.append(("regulation", 3 + s.regulatoryHeat / 15))     // regulators target high-profile offenders
         }
         if !s.catalog.isEmpty { options.append(("viral", 10)) }
         if s.totalSubscribers > 1_000 { options += [("outage", 10), ("password", 8), ("piracy", 8)] }

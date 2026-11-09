@@ -52,6 +52,7 @@ enum SimulationEngine {
         refreshLicenseMarket(&s, events: &events)
         produceOriginals(&s, fin: &fin, events: &events)
         let recession = s.recessionWeeksLeft > 0
+        let policy = s.policyEffects()
         progressPlatformBuilds(&s, events: &events)
 
         progressDatacenters(&s, events: &events)
@@ -141,25 +142,26 @@ enum SimulationEngine {
                 wordOfMouth: Formulas.wordOfMouth(penetration: penetration),
                 rivalFactor: Formulas.rivalFactor(rivalShare: pressure.effectiveShare),
                 reach: s.platformReach * (recession ? 0.85 : 1.0) * quality, noise: noise)
-            let adds = min(gross, headroom)
-            let churn = (recession ? 1.1 : 1.0) * Formulas.churnRate(appeal: appeal, price: price,
-                                           tolerance: country.priceTolerance,
-                                           serviceQuality: quality,
-                                           rivalHeat: pressure.heat)
+            let adds = min(gross * policy.adds, headroom)
+            let baseChurn = Formulas.churnRate(appeal: appeal, price: price,
+                                               tolerance: country.priceTolerance,
+                                               serviceQuality: quality,
+                                               rivalHeat: pressure.heat)
+            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * baseChurn)
             let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 
             // Revenue is billed on subscribers at the start of the week.
-            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices)
-            let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength)
+            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu
+            let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength) * policy.adRevenue
 
             var newSubs = startSubs
             for tier in Tier.allCases {
                 newSubs[tier] = max(0, startSubs[tier] * (1 - churn) + adds * split[tier])
             }
             market.subs = newSubs
-            market.awareness = Formulas.nextAwareness(
+            market.awareness = Formulas.clamp(Formulas.nextAwareness(
                 awareness: market.awareness, spend: marketingSpend,
-                households: country.households, penetration: penetration)
+                households: country.households, penetration: penetration) + policy.awareness, 0, 1)
             s.markets[code] = market
 
             // Local-content quota: a catalog short on local-language titles draws regulatory fines.
@@ -169,7 +171,7 @@ enum SimulationEngine {
             if Formulas.quotaFinesApply(week: s.week, subscribers: ownSubs) {
                 let raw = Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
                                              compliance: compliance)
-                    * Formulas.fineMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
+                    * Formulas.fineMultiplier(legalLevel: s.staff.effectiveLevel(.legal)) * policy.fines
                 marketFine = min(raw, Formulas.maxFineShareOfRevenue * (subRevenue + adRevenue))
             } else if compliance < 1, titles.count >= 5, ownSubs > 0, !s.quotaWarned.contains(code),
                       s.week >= Formulas.quotaGraceWeeks - 12 {
@@ -186,7 +188,7 @@ enum SimulationEngine {
             billedSubs += ownSubs
             totalNew += adds
             totalChurned += ownSubs * churn
-            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek + Formulas.operatingCost(for: country)
+            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost + Formulas.operatingCost(for: country)
                 + market.marketingBudget + marketFine
             marketReports.append(MarketReport(id: code, newSubs: adds, churned: ownSubs * churn,
                                               subs: newSubs.total, revenue: subRevenue + adRevenue, costs: marketCosts))
@@ -215,7 +217,8 @@ enum SimulationEngine {
                                       "Overloaded servers went down. About \(Format.count(lost)) subscribers left and service will be shaky for two weeks. Add capacity so it doesn't happen again."))
         }
 
-        fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek
+        fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost
+        fin.policies = policy.flatCost + policy.overhead * fin.revenue
         fin.studios = s.weeklyStudioCost
         applyAttrition(&s, events: &events)
         fin.staff = Formulas.baseStaffCostPerWeek + s.weeklySalaries + Formulas.overheadRate * fin.revenue
@@ -248,6 +251,8 @@ enum SimulationEngine {
                 s.addNews(.industry, "The recession is over", "Streaming demand is recovering across the industry.")
             }
         }
+
+        s.advancePolicyState(effects: policy)
 
         let leaderboardBefore = Dictionary(uniqueKeysWithValues: input.leaderboard.map { ($0.id, $0.subs) })
         advanceRivals(&s, events: &events)
