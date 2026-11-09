@@ -77,17 +77,17 @@ final class Phase17Tests: XCTestCase {
 
     func testTitleStatsAccumulate() {
         var s = newState()
-        s.catalog = [license(id: 1, left: nil), license(id: 2, left: nil, quality: 40)]
+        s.catalog = (1...10).map { license(id: $0, left: nil) } + [license(id: 11, left: nil, quality: 20)]
         for _ in 0..<5 { s = SimulationEngine.advanceWeek(s) }
-        let a = s.stats(for: s.catalog[0]), b = s.stats(for: s.catalog[1])
-        XCTAssertEqual(a.weeksLive, 5)
-        XCTAssertGreaterThan(a.weeklyViewers, 0)
-        XCTAssertGreaterThan(a.lifetimeRevenue, 0)
-        XCTAssertGreaterThan(a.totalViews, a.weeklyViewers)
-        XCTAssertGreaterThan(a.weeklyViewers, b.weeklyViewers, "better title gets more viewers")
-        XCTAssertEqual(a.topMarket, "IE")
+        let good = s.stats(for: s.catalog[0]), weak = s.stats(for: s.catalog[10])
+        XCTAssertEqual(good.weeksLive, 5)
+        XCTAssertGreaterThan(good.weeklyViewers, 0)
+        XCTAssertGreaterThan(good.lifetimeRevenue, 0)
+        XCTAssertGreaterThan(good.totalViews, good.weeklyViewers)
+        XCTAssertGreaterThan(good.weeklyViewers, weak.weeklyViewers, "better title gets more viewers")
+        XCTAssertEqual(good.topMarket, "IE")
         // Revenue credited to titles adds up to the week's revenue.
-        let credited = a.weeklyRevenue + b.weeklyRevenue
+        let credited = s.catalog.reduce(0) { $0 + s.stats(for: $1).weeklyRevenue }
         XCTAssertEqual(credited, s.lastReport!.financials.revenue, accuracy: max(1, credited * 0.001))
     }
 

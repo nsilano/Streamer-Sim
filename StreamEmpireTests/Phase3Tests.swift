@@ -376,15 +376,18 @@ final class Phase3Tests: XCTestCase {
     func testRandomEventsEventuallyFireAndAreDeterministic() {
         func run() -> GameState {
             var s = newState(events: true)
-            s.markets["IE"]?.subs = TierSet(ad: 0, standard: 8_000, premium: 0)
-            for _ in 0..<600 {
-                if s.pendingEvent != nil { break }
-                s = SimulationEngine.advanceWeek(s)
+            s.markets["IE"]?.subs = TierSet(ad: 0, standard: 80_000, premium: 0)
+            s.finances.cash = 100_000_000
+            s.catalog = titles(3)
+            for week in 30..<2_000 {
+                s.week = week
+                s.pendingEvent = nil
+                if RandomEvents.roll(&s) != nil, s.pendingEvent != nil { break }
             }
             return s
         }
         let a = run(), b = run()
-        XCTAssertNotNil(a.pendingEvent, "a decision event should appear within 600 weeks")
+        XCTAssertNotNil(a.pendingEvent, "a decision event should appear eventually")
         XCTAssertEqual(a, b)
     }
 

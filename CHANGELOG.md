@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Test fixes
+- Fixed two tests (title stats ranking, random-event firing) that CI caught; no gameplay change.
+
 ### Catalog depth and title stats (save v16) - 06086cd
 - Buy the rights to a licensed title forever (about 10 years of its yearly price); no more expiry or renewals.
 - License a title out to another service for 13/26/52/104 weeks for an upfront fee; it returns when the term ends. New "Licensing fees" revenue line.
