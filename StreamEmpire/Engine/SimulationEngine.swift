@@ -152,8 +152,9 @@ enum SimulationEngine {
         }
 
         fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek
-        fin.staff = Formulas.baseStaffCostPerWeek + s.weeklySalaries
-        fin.tech = s.weeklyTechCost
+        fin.staff = Formulas.baseStaffCostPerWeek + s.weeklySalaries + Formulas.overheadRate * fin.revenue
+        let mobileApps = [Platform.ios, .android].filter { s.platforms.contains($0) }.count
+        fin.tech = s.weeklyTechCost + Double(mobileApps) * Formulas.appStoreFeeRate * fin.subscriptionRevenue
 
         // Loans: interest is a cost; scheduled principal is a cash outflow only.
         var principalPaid = 0.0

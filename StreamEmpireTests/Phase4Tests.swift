@@ -204,6 +204,29 @@ final class Phase4Tests: XCTestCase {
         XCTAssertGreaterThanOrEqual(s.loanRate, 0.04)
     }
 
+    // MARK: Economy scaling
+
+    func testLicensePricesScaleWithAudience() {
+        XCTAssertEqual(Formulas.licenseAudienceScale(totalSubscribers: 0), 1.0)
+        XCTAssertEqual(Formulas.licenseAudienceScale(totalSubscribers: 1_000_000), 3.0, accuracy: 1e-9)
+        XCTAssertEqual(Formulas.licenseAudienceScale(totalSubscribers: 1e12), 100)
+        var s = newState()
+        let title = s.licenseMarket[0]
+        let small = s.licensePrice(title)
+        s.markets["IE"]?.subs = TierSet(ad: 0, standard: 1_000_000, premium: 0)
+        XCTAssertEqual(s.licensePrice(title), small * 3.0, accuracy: 0.01)
+    }
+
+    func testOverheadAndAppStoreFeesGrowWithRevenue() {
+        var s = newState()
+        s.markets["IE"]?.subs = TierSet(ad: 0, standard: 10_000, premium: 0)
+        s.platforms = [.web, .ios, .android]
+        let fin = SimulationEngine.advanceWeek(s).lastReport!.financials
+        XCTAssertEqual(fin.staff, Formulas.baseStaffCostPerWeek + Formulas.overheadRate * fin.revenue, accuracy: 0.01)
+        let upkeep = Platform.ios.weeklyUpkeep + Platform.android.weeklyUpkeep
+        XCTAssertEqual(fin.tech, upkeep + 2 * Formulas.appStoreFeeRate * fin.subscriptionRevenue, accuracy: 0.01)
+    }
+
     // MARK: Persistence
 
     func testPhase4StateRoundTrips() throws {

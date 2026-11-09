@@ -3,13 +3,15 @@ import Foundation
 /// Pure simulation math. No state, no randomness (noise is passed in).
 enum Formulas {
     // Tunable constants (Phase 4 balancing pass).
-    static let baseAddRate = 0.025            // share of headroom that can join per week at appeal 1.0
-    static let baseChurn = 0.008              // weekly churn at neutral conditions
+    static let baseAddRate = 0.02            // share of headroom that can join per week at appeal 1.0
+    static let baseChurn = 0.009              // weekly churn at neutral conditions
     static let appealSaturation = 6.0         // summed title appeal at which catalog appeal ~63%
-    static let streamingCostPerSubWeek = 0.07
+    static let streamingCostPerSubWeek = 0.25
     static let baseStaffCostPerWeek = 20_000.0
     static let adARPUPerMonthAtFullStrength = 4.0
     static let weeksPerMonth = 52.0 / 12.0
+    static let overheadRate = 0.04            // G&A as a share of revenue
+    static let appStoreFeeRate = 0.06         // per mobile app (iOS, Android) as a share of subscription revenue
 
     static func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(hi, max(lo, v)) }
 
@@ -177,7 +179,7 @@ enum Formulas {
     }
 
     static func operatingCost(for country: Country) -> Double {
-        4_000 + country.households * 2_500
+        4_000 + country.households * 6_000
     }
 
     // MARK: Originals
@@ -208,6 +210,11 @@ enum Formulas {
     }
 
     // MARK: Localization & quotas
+
+    /// Rights holders charge more the bigger your audience: x1.0 at launch, x3 at 1M subs, x21 at 10M (cap x100).
+    static func licenseAudienceScale(totalSubscribers: Double) -> Double {
+        min(100, 1 + max(0, totalSubscribers) / 500_000)
+    }
 
     static func subtitleCost(_ kind: TitleKind) -> Double { kind == .movie ? 25_000 : 90_000 }
     static func dubCost(_ kind: TitleKind) -> Double { kind == .movie ? 120_000 : 450_000 }

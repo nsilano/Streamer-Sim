@@ -209,7 +209,7 @@ final class SimulationTests: XCTestCase {
         s = SimulationEngine.advanceWeek(s)
         let fin = s.lastReport!.financials
         XCTAssertEqual(fin.streaming, 2_000 * Formulas.streamingCostPerSubWeek, accuracy: 0.01)
-        XCTAssertEqual(fin.staff, Formulas.baseStaffCostPerWeek, accuracy: 0.01)
+        XCTAssertEqual(fin.staff, Formulas.baseStaffCostPerWeek + Formulas.overheadRate * fin.revenue, accuracy: 0.01)
         XCTAssertEqual(fin.marketing, 12_345, accuracy: 0.01)
         XCTAssertEqual(fin.operations, Formulas.operatingCost(for: ireland()), accuracy: 0.01)
     }
