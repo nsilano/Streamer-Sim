@@ -172,7 +172,7 @@ final class Phase6Tests: XCTestCase {
     func testAdviceFlagsOverloadedServersAndEmptyCatalog() {
         var s = newState(country: "CA")
         XCTAssertTrue(s.advice().contains { $0.id == "catalog" && $0.urgent })
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 500_000, premium: 0)
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 2_000_000, premium: 0)
         let first = s.advice().first!
         XCTAssertTrue(first.urgent)
         XCTAssertTrue(s.advice().contains { $0.id == "servers-northAmerica" && $0.urgent })

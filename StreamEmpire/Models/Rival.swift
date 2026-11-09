@@ -1,7 +1,7 @@
 import Foundation
 
 enum RivalPersonality: String, Codable {
-    case aggressiveBidder, priceCutter, originalsHeavy, globalExpander, balanced
+    case aggressiveBidder, priceCutter, originalsHeavy, globalExpander, balanced, regionalChampion, nicheSpecialist
 
     var displayName: String {
         switch self {
@@ -10,6 +10,8 @@ enum RivalPersonality: String, Codable {
         case .originalsHeavy: return "Originals-heavy"
         case .globalExpander: return "Global expander"
         case .balanced: return "Balanced"
+        case .regionalChampion: return "Regional champion"
+        case .nicheSpecialist: return "Niche specialist"
         }
     }
 }

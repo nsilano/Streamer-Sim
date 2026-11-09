@@ -87,7 +87,7 @@ final class Phase4Tests: XCTestCase {
             var s = newState(country: "CA")
             s.catalog = titles(15)
             s.markets["CA"]?.awareness = 0.4
-            s.markets["CA"]?.subs = TierSet(ad: 0, standard: 500_000, premium: 0)
+            s.markets["CA"]?.subs = TierSet(ad: 0, standard: 2_000_000, premium: 0)
             s.cloudUnits[Region.northAmerica.rawValue] = cloudBlocks
             return SimulationEngine.advanceWeek(s).lastReport!
         }
@@ -98,7 +98,7 @@ final class Phase4Tests: XCTestCase {
 
     func testBufferingWarningAppearsInOverloadedRegion() {
         var s = newState(country: "CA")
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 500_000, premium: 0)
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 2_000_000, premium: 0)
         s.week = 4
         s = SimulationEngine.advanceWeek(s)
         XCTAssertTrue(s.lastReport!.events.contains { $0.headline.contains("Buffering") })
@@ -111,10 +111,11 @@ final class Phase4Tests: XCTestCase {
         s.datacenters = [Datacenter(id: 1, name: "Dublin DC", region: .europe, level: 2, weeksToBuild: 0),
                          Datacenter(id: 2, name: "Frankfurt DC", region: .europe, level: 1, weeksToBuild: 5)]
         s.cloudUnits = [Region.europe.rawValue: 2]
-        // iOS 8k + level-2 DC 8k (the one still under construction costs nothing yet) + 2 cloud blocks.
-        XCTAssertEqual(s.weeklyTechCost, 8_000 + 8_000 + 2 * Formulas.cloudUnitCostPerWeek, accuracy: 0.01)
+        // iOS 8k + level-2 DC (the one still under construction costs nothing yet) + 2 cloud blocks.
+        let dc = Formulas.datacenterUpkeep(level: 2)
+        XCTAssertEqual(s.weeklyTechCost, 8_000 + dc + 2 * Formulas.cloudUnitCostPerWeek, accuracy: 0.01)
         s.staff.engineering = 2
-        XCTAssertEqual(s.weeklyTechCost, 8_000 + (8_000 + 2 * Formulas.cloudUnitCostPerWeek) * 0.9, accuracy: 0.01)
+        XCTAssertEqual(s.weeklyTechCost, 8_000 + (dc + 2 * Formulas.cloudUnitCostPerWeek) * 0.9, accuracy: 0.01)
         XCTAssertEqual(s.datacenterBuildPrice, Formulas.datacenterBuildCost * 0.9, accuracy: 0.01)
     }
 

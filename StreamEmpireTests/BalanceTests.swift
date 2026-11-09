@@ -123,7 +123,7 @@ final class BalanceTests: XCTestCase {
                 if let band = bands[snap.week] {
                     XCTAssertTrue(band.contains(snap.subs), "\(home) week \(snap.week): \(Int(snap.subs)) subs outside \(band)")
                 }
-                XCTAssertLessThan(snap.rank, 7)
+                XCTAssertLessThan(snap.rank, 14)
                 XCTAssertLessThan(snap.subs, snap.topRival, "\(home) week \(snap.week): #1 should take longer than 3 years for a basic player")
             }
         }

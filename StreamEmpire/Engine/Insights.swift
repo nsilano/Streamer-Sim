@@ -62,8 +62,10 @@ extension GameState {
         }
 
         if finances.cash < 0 {
-            items.append(Advice(id: "cash", icon: "banknote", urgent: true, title: "You're out of cash",
-                                detail: "Raise funding in the Company tab or cut costs before the debt clock runs out."))
+            let used = Int(-finances.cash / overdraftLimit * 100)
+            items.append(Advice(id: "cash", icon: "banknote", urgent: true,
+                                title: "In debt: \(used)% of your \(Format.money(overdraftLimit)) limit",
+                                detail: "Past the limit, or after 8 weeks with no funding left, you go bankrupt. Raise funding or cut costs now."))
         } else if let runway = finances.runwayWeeks, runway < 8 {
             items.append(Advice(id: "runway", icon: "banknote", urgent: true,
                                 title: "Only \(Int(runway)) weeks of cash left",

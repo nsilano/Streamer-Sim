@@ -56,7 +56,7 @@ final class SimulationTests: XCTestCase {
         XCTAssertTrue(s.catalog.isEmpty)
         XCTAssertEqual(s.liveMarketCodes, ["IE"])
         XCTAssertEqual(s.licenseMarket.count, GameState.targetListings)
-        XCTAssertEqual(s.rivals.count, 5)
+        XCTAssertEqual(s.rivals.count, 12)
         XCTAssertEqual(s.week, 1)
     }
 
@@ -165,10 +165,11 @@ final class SimulationTests: XCTestCase {
 
     func testSubscribersNeverExceedCeiling() {
         var s = newState()
-        s.markets["IE"]?.subs = TierSet(ad: 400_000, standard: 300_000, premium: 100_000)
+        let ceiling = ireland().subscriberCeiling
+        s.markets["IE"]?.subs = TierSet(ad: ceiling * 0.3, standard: ceiling * 0.2, premium: ceiling * 0.1)
         s.catalog = (0..<40).map { title(id: $0) }
         for _ in 0..<30 { s = SimulationEngine.advanceWeek(s) }
-        XCTAssertLessThanOrEqual(s.totalSubscribers, ireland().subscriberCeiling)
+        XCTAssertLessThanOrEqual(s.totalSubscribers, ceiling)
     }
 
     func testChurnWithEmptyCatalogShrinksBase() {
@@ -331,7 +332,7 @@ final class SimulationTests: XCTestCase {
 
     func testLeaderboardRanksPlayerLastAtStart() {
         let s = newState()
-        XCTAssertEqual(s.rank, 6)
-        XCTAssertEqual(s.leaderboard.count, 6)
+        XCTAssertEqual(s.rank, 13)
+        XCTAssertEqual(s.leaderboard.count, 13)
     }
 }

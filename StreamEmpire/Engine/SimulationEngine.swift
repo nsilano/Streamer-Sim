@@ -245,17 +245,25 @@ enum SimulationEngine {
         }
 
         let broke = s.finances.weeksInDebt >= debtWeeksToLose
-        if broke && (!s.fundingAvailable || s.finances.weeksInDebt >= hardDebtLimit) {
+        if s.finances.cash < -s.overdraftLimit {
+            // Debt can't grow forever: past the overdraft limit lenders pull the plug immediately.
+            let reason = "Your debts reached \(Format.money(-s.finances.cash)), past the \(Format.money(s.overdraftLimit)) that lenders would tolerate. Creditors have taken over."
             s.outcome = .lost
-            events.append(s.makeEvent(.warning, "Bankrupt",
-                                      "Cash has been below zero for \(s.finances.weeksInDebt) straight weeks with no funding left. Creditors have taken over."))
+            s.lossReason = reason
+            events.append(s.makeEvent(.warning, "Bankrupt", reason))
+        } else if broke && (!s.fundingAvailable || s.finances.weeksInDebt >= hardDebtLimit) {
+            let reason = "Cash has been below zero for \(s.finances.weeksInDebt) straight weeks with no funding left. Creditors have taken over."
+            s.outcome = .lost
+            s.lossReason = reason
+            events.append(s.makeEvent(.warning, "Bankrupt", reason))
         } else if s.week >= minWeeksToWin,
                   let topRival = s.rivals.map({ $0.totalSubs }).max(), totalAfter > topRival {
             s.outcome = .won
             events.append(s.makeEvent(.milestone, "You're #1!",
                                       "\(s.companyName) now has more subscribers than every rival."))
         } else if s.finances.cash < 0 {
-            events.append(s.makeEvent(.warning, "Cash is negative",
+            let used = Int(-s.finances.cash / s.overdraftLimit * 100)
+            events.append(s.makeEvent(.warning, "Cash is negative (\(used)% of your credit limit)",
                                       broke ? "Week \(s.finances.weeksInDebt) in debt. Raise funding now (Company tab) before lenders walk away."
                                             : "Week \(s.finances.weeksInDebt) of \(debtWeeksToLose) in debt. Cut costs or raise funding."))
         }
@@ -442,7 +450,14 @@ enum SimulationEngine {
             if s.rng.chance(Formulas.expansionChance(personality: rival.personality)) {
                 let absent = allCodes.filter { (rival.subs[$0] ?? 0) <= 0 }
                 if !absent.isEmpty {
-                    let choices = absent.map { ($0, CountryData.country($0)?.subscriberCeiling ?? 1) }
+                    // Regional champions expand into neighbouring countries first.
+                    let homeRegions = Set(rival.subs.keys.compactMap { CountryData.country($0)?.region })
+                    let choices = absent.map { code -> (String, Double) in
+                        let country = CountryData.country(code)
+                        let neighbour = rival.personality == .regionalChampion
+                            && country.map { homeRegions.contains($0.region) } == true
+                        return (code, (country?.subscriberCeiling ?? 1) * (neighbour ? 4 : 1))
+                    }
                     let code = s.rng.pickWeighted(choices)
                     if let country = CountryData.country(code), rival.cash >= country.launchCost * 0.5 {
                         rival.cash -= country.launchCost * 0.5

@@ -3,7 +3,7 @@ import Foundation
 /// Pure simulation math. No state, no randomness (noise is passed in).
 enum Formulas {
     // Tunable constants (Phase 4 balancing pass).
-    static let baseAddRate = 0.02            // share of headroom that can join per week at appeal 1.0
+    static let baseAddRate = 0.005            // share of headroom that can join per week at appeal 1.0
     static let baseChurn = 0.009              // weekly churn at neutral conditions
     static let appealSaturation = 6.0         // summed title appeal at which catalog appeal ~63%
     static let streamingCostPerSubWeek = 0.25
@@ -129,11 +129,13 @@ enum Formulas {
     static func bidChance(personality: RivalPersonality, quality: Int) -> Double {
         let base: Double
         switch personality {
-        case .aggressiveBidder: base = 0.025
-        case .globalExpander: base = 0.012
-        case .balanced: base = 0.012
-        case .originalsHeavy: base = 0.008
-        case .priceCutter: base = 0.008
+        case .aggressiveBidder: base = 0.0125
+        case .globalExpander: base = 0.006
+        case .balanced: base = 0.006
+        case .originalsHeavy: base = 0.004
+        case .priceCutter: base = 0.004
+        case .regionalChampion: base = 0.004
+        case .nicheSpecialist: base = 0.003
         }
         return base * (0.5 + Double(quality) / 100)
     }
@@ -144,7 +146,8 @@ enum Formulas {
         case .globalExpander: return 0.03
         case .aggressiveBidder: return 0.015
         case .originalsHeavy, .balanced: return 0.012
-        case .priceCutter: return 0.01
+        case .priceCutter, .nicheSpecialist: return 0.01
+        case .regionalChampion: return 0.006
         }
     }
 
@@ -264,17 +267,17 @@ extension Formulas {
     }
 
     // Servers: every region starts with 150k viewers of starter hosting. Datacenters and rented cloud add more.
-    static let baseServerCapacity = 150_000.0
-    static let datacenterCapacities: [Double] = [250_000, 500_000, 900_000, 1_500_000, 2_500_000]
-    static let datacenterUpkeeps: [Double] = [4_000, 8_000, 15_000, 26_000, 45_000]
-    static let datacenterUpgradeCosts: [Double] = [600_000, 1_200_000, 2_400_000, 4_500_000]   // from level 1...4
-    static let datacenterBuildCost = 500_000.0
+    static let baseServerCapacity = 500_000.0
+    static let datacenterCapacities: [Double] = [1_000_000, 3_000_000, 8_000_000, 20_000_000, 50_000_000]
+    static let datacenterUpkeeps: [Double] = [6_000, 15_000, 40_000, 90_000, 200_000]
+    static let datacenterUpgradeCosts: [Double] = [1_000_000, 3_000_000, 9_000_000, 25_000_000]   // from level 1...4
+    static let datacenterBuildCost = 750_000.0
     static let datacenterBuildWeeks = 8
     static let maxDatacentersPerRegion = 4
     static let maxDatacenterLevel = 5
-    /// Cloud is instant but about 7x pricier per viewer than a datacenter.
-    static let cloudUnitCapacity = 100_000.0
-    static let cloudUnitCostPerWeek = 12_000.0
+    /// Cloud is instant but about 8x pricier per viewer than a datacenter.
+    static let cloudUnitCapacity = 500_000.0
+    static let cloudUnitCostPerWeek = 25_000.0
     static let maxCloudUnits = 10
     static let surgeLoadMultiplier = 1.3
     static let outageQualityMultiplier = 0.6
@@ -391,5 +394,16 @@ extension Formulas {
     /// Fraction of your subscribers a discounting rival pulls away each week in a market you dominate.
     static func poachRate(priceLevel: Double, threat: Double) -> Double {
         threat * max(0, 0.95 - priceLevel) * 0.04
+    }
+}
+
+
+// MARK: - Bankruptcy
+
+extension Formulas {
+    /// Cash can't fall below this: lenders cut you off. $5M plus a quarter of annual revenue, so bigger
+    /// companies can carry more debt.
+    static func bankruptcyFloor(annualRevenue: Double) -> Double {
+        -(5_000_000 + 0.25 * max(0, annualRevenue))
     }
 }

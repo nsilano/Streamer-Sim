@@ -25,15 +25,17 @@ final class Phase7Tests: XCTestCase {
 
     func testCapacityComposesFromStarterDatacentersAndCloud() throws {
         var s = newState()
-        XCTAssertEqual(s.serverCapacity(.northAmerica), 150_000)
+        let base = Formulas.baseServerCapacity
+        XCTAssertEqual(s.serverCapacity(.northAmerica), base)
         try s.buildDatacenter(region: .northAmerica)
-        XCTAssertEqual(s.serverCapacity(.northAmerica), 150_000, "not online until built")
+        XCTAssertEqual(s.serverCapacity(.northAmerica), base, "not online until built")
         s.datacenters[0].weeksToBuild = 0
-        XCTAssertEqual(s.serverCapacity(.northAmerica), 400_000)
+        let withDC = base + Formulas.datacenterCapacity(level: 1)
+        XCTAssertEqual(s.serverCapacity(.northAmerica), withDC)
         try s.rentCloud(region: .northAmerica)
-        XCTAssertEqual(s.serverCapacity(.northAmerica), 500_000)
-        XCTAssertEqual(s.serverCapacity(.europe), 150_000, "other regions unaffected")
-        XCTAssertEqual(Formulas.datacenterCapacity(level: 5), 2_500_000)
+        XCTAssertEqual(s.serverCapacity(.northAmerica), withDC + Formulas.cloudUnitCapacity)
+        XCTAssertEqual(s.serverCapacity(.europe), base, "other regions unaffected")
+        XCTAssertEqual(Formulas.datacenterCapacity(level: 5), 50_000_000)
         XCTAssertGreaterThan(Formulas.datacenterCapacity(level: 3), Formulas.datacenterCapacity(level: 2))
     }
 
@@ -130,7 +132,7 @@ final class Phase7Tests: XCTestCase {
     func testOverloadedRegionEventuallyCrashesAndLosesSubscribers() {
         var s = newState()
         s.catalog = titles(15)
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 600_000, premium: 0)     // 4x capacity
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 2_000_000, premium: 0)   // 4x capacity
         var crashed = false
         for _ in 0..<40 {
             let before = s.subscribers(in: .northAmerica)
@@ -149,7 +151,7 @@ final class Phase7Tests: XCTestCase {
         var s = newState()
         s.catalog = titles(15)
         s.cloudUnits[Region.northAmerica.rawValue] = 10
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 300_000, premium: 0)    // ~26% load
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 300_000, premium: 0)    // ~5% load
         for _ in 0..<60 {
             s = SimulationEngine.advanceWeek(s)
             XCTAssertFalse(s.lastReport!.events.contains { $0.headline.contains("crashed") })
@@ -181,7 +183,7 @@ final class Phase7Tests: XCTestCase {
     func testTrafficSurgesRaiseLoad() {
         var s = newState()
         s.cloudUnits[Region.northAmerica.rawValue] = 0
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 120_000, premium: 0)     // 80% of 150k
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 400_000, premium: 0)     // 80% of 500k
         XCTAssertEqual(s.effectiveLoad(.northAmerica), 0.8, accuracy: 1e-9)
         s.surges[Region.northAmerica.rawValue] = 2
         XCTAssertEqual(s.effectiveLoad(.northAmerica), 0.8 * Formulas.surgeLoadMultiplier, accuracy: 1e-9)
@@ -202,7 +204,7 @@ final class Phase7Tests: XCTestCase {
 
     func testLagWarningAndAdvice() {
         var s = newState()
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 140_000, premium: 0)     // 93% load
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 460_000, premium: 0)     // 92% load
         s.week = 4
         s = SimulationEngine.advanceWeek(s)
         XCTAssertTrue(s.lastReport!.events.contains { $0.headline.contains("Lag") })
@@ -218,7 +220,7 @@ final class Phase7Tests: XCTestCase {
         // A player who builds ahead of demand stays below the lag zone.
         var s = newState()
         s.catalog = titles(15)
-        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 200_000, premium: 0)
+        s.markets["CA"]?.subs = TierSet(ad: 0, standard: 450_000, premium: 0)
         try s.buildDatacenter(region: .northAmerica)
         try s.buildDatacenter(region: .northAmerica)
         for _ in 0..<Formulas.datacenterBuildWeeks { s = SimulationEngine.advanceWeek(s) }

@@ -37,6 +37,7 @@ struct GameState: Codable, Equatable {
     var rng: SeededRNG
     var nextID: Int = 1
     var outcome: GameOutcome = .playing
+    var lossReason: String?                    // why the game ended in a loss (shown to the player)
     var markets: [String: MarketState]
     var catalog: [Title] = []
     var licenseMarket: [Title] = []
@@ -105,6 +106,9 @@ struct GameState: Codable, Equatable {
     static let targetListings = 14
 
     /// Summed in sorted key order so floating-point results don't depend on dictionary ordering.
+    /// How far into the red cash may go before lenders cut you off (a positive number).
+    var overdraftLimit: Double { -Formulas.bankruptcyFloor(annualRevenue: finances.annualizedRevenue) }
+
     var totalSubscribers: Double { markets.keys.sorted().reduce(0) { $0 + (markets[$1]?.subs.total ?? 0) } }
 
     var liveMarketCodes: [String] {

@@ -20,29 +20,6 @@ enum CountryData {
         }
     }
 
-    // MARK: Rival starting strength
-
-    /// Share of a country's subscriber ceiling each rival holds at game start, by region.
-    private static let regionalRivalShare: [String: [Region: Double]] = [
-        "netflux": [.northAmerica: 0.22, .latinAmerica: 0.25, .europe: 0.20, .asiaPacific: 0.15, .middleEast: 0.15, .africa: 0.08],
-        "disnay": [.northAmerica: 0.14, .latinAmerica: 0.10, .europe: 0.10, .asiaPacific: 0.08, .middleEast: 0.06, .africa: 0.03],
-        "primestream": [.northAmerica: 0.16, .latinAmerica: 0.06, .europe: 0.12, .asiaPacific: 0.06, .middleEast: 0.03, .africa: 0.02],
-        "maxstream": [.northAmerica: 0.08, .latinAmerica: 0.05, .europe: 0.06, .asiaPacific: 0.03, .middleEast: 0.02, .africa: 0.01],
-    ]
-    /// Hulo is a regional player.
-    private static let huloShare: [String: Double] = ["US": 0.10, "CA": 0.06, "JP": 0.08]
-
-    private static func rivalShares(code: String, region: Region, adStrength: Double) -> [String: Double] {
-        var shares: [String: Double] = [:]
-        for (rival, byRegion) in regionalRivalShare {
-            if let base = byRegion[region], base > 0 {
-                shares[rival] = base * (0.8 + 0.4 * adStrength)
-            }
-        }
-        if let hulo = huloShare[code] { shares["hulo"] = hulo }
-        return shares
-    }
-
     // MARK: Table
 
     private static func make(_ code: String, _ name: String, _ flag: String, _ region: Region,
@@ -54,14 +31,13 @@ enum CountryData {
                 households: households, priceTolerance: tolerance, adStrength: ads,
                 genreTaste: regionTaste(region).merging(taste) { _, override in override },
                 language: language, localQuota: quota,
-                rivalShares: rivalShares(code: code, region: region, adStrength: ads),
                 launchCost: launchMillions * 1_000_000, regulatoryRisk: risk,
                 unlock: unlock, isStarterPick: starter)
     }
 
     static let all: [Country] = [
         // North America
-        make("US", "United States", "🇺🇸", .northAmerica, households: 100, tolerance: 15, ads: 1.0,
+        make("US", "United States", "🇺🇸", .northAmerica, households: 115, tolerance: 15, ads: 1.0,
              language: .english, quota: 0.10, launchMillions: 30, risk: 0.10,
              unlock: UnlockRequirement(minGlobalSubs: 2_000_000, minCatalogSize: 40)),
         make("CA", "Canada", "🇨🇦", .northAmerica, households: 14, tolerance: 12, ads: 0.9,

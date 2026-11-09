@@ -38,7 +38,6 @@ final class Phase2Tests: XCTestCase {
             XCTAssertTrue((0...1).contains(c.adStrength), c.code)
             XCTAssertTrue((0...1).contains(c.regulatoryRisk), c.code)
             XCTAssertEqual(c.genreTaste.count, Genre.allCases.count, c.code)
-            XCTAssertLessThan(c.rivalShares.values.reduce(0, +), 0.9, c.code)
         }
     }
 
@@ -59,10 +58,10 @@ final class Phase2Tests: XCTestCase {
 
     func testRivalsStartWithPerCountrySubsOnly() {
         let rivals = RivalData.initialRivals()
-        XCTAssertEqual(rivals.count, 5)
+        XCTAssertEqual(rivals.count, 12)
         for r in rivals { XCTAssertGreaterThan(r.totalSubs, 0, r.id) }
         let hulo = rivals.first { $0.id == "hulo" }!
-        XCTAssertEqual(Set(hulo.subs.keys), ["US", "CA", "JP"])
+        XCTAssertEqual(Set(hulo.subs.keys), ["US", "JP"])
         let netflux = rivals.first { $0.id == "netflux" }!
         XCTAssertEqual(netflux.countryCount, 30)
     }

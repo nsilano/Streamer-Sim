@@ -18,7 +18,6 @@ struct Country: Codable, Identifiable, Equatable {
     let genreTaste: [Genre: Double]      // multipliers, ~1.0 average
     let language: Language
     let localQuota: Double               // share of catalog that should be local (used from Phase 3)
-    let rivalShares: [String: Double]    // rival id -> share of the subscriber ceiling at game start
     let launchCost: Double
     let regulatoryRisk: Double           // 0...1
     let unlock: UnlockRequirement?
@@ -26,11 +25,12 @@ struct Country: Codable, Identifiable, Equatable {
 
     var code: String { id }
 
-    /// Max share of broadband households that will ever subscribe to streaming.
-    static let maxPenetration = 0.55
+    /// Streaming subscriptions per broadband household. Real households hold several services, and richer
+    /// countries hold more (about 4 in the US and 1.8 in lower-income markets).
+    var subscriptionsPerHousehold: Double { min(4.5, max(1.0, 1.2 + 0.2 * priceTolerance)) }
 
-    /// Subscriber ceiling (all services combined).
-    var subscriberCeiling: Double { households * 1_000_000 * Country.maxPenetration }
+    /// Total paid subscriptions the country can hold across ALL services (not just yours).
+    var subscriberCeiling: Double { households * 1_000_000 * subscriptionsPerHousehold }
 
     func taste(_ genre: Genre) -> Double { genreTaste[genre] ?? 1.0 }
 
