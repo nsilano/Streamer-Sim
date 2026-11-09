@@ -59,12 +59,16 @@ final class Phase10Tests: XCTestCase {
         s.markets["IE"]?.subs = TierSet(ad: 0, standard: 1_500_000, premium: 0)
         for i in s.rivals.indices { s.rivals[i].subs = ["IE": 20_000] }
         s.cloudUnits[Region.europe.rawValue] = 10
+        var sawPricing = false, sawWar = false
         for _ in 0..<300 {
             s = SimulationEngine.advanceWeek(s)
             s.markets["IE"]?.subs = TierSet(ad: 0, standard: 1_500_000, premium: 0)
+            // The feed keeps only the latest 150 stories, so look as they happen.
+            if s.news.contains(where: { $0.kind == .pricing }) { sawPricing = true }
+            if s.news.contains(where: { $0.headline.contains("price war") }) { sawWar = true }
         }
-        XCTAssertTrue(s.news.contains { $0.kind == .pricing })
-        XCTAssertTrue(s.news.contains { $0.headline.contains("price war") })
+        XCTAssertTrue(sawPricing)
+        XCTAssertTrue(sawWar)
     }
 
     func testOvertakingRivalsIsNews() {
