@@ -43,6 +43,7 @@ enum SimulationEngine {
         fin.launch = s.finances.ledger.launch
         fin.localization = s.finances.ledger.localization
         fin.other = s.finances.ledger.other
+        fin.promotions = s.finances.ledger.promotions
         let prepaid = s.finances.ledger.total
         s.finances.ledger = SpendLedger()
 
@@ -145,16 +146,17 @@ enum SimulationEngine {
                 wordOfMouth: Formulas.wordOfMouth(penetration: penetration),
                 rivalFactor: Formulas.rivalFactor(rivalShare: pressure.effectiveShare),
                 reach: s.platformReach * (recession ? 0.85 : 1.0) * quality, noise: noise)
-            let adds = min(gross * policy.adds, headroom)
+            let promo = s.promoEffects(for: code)
+            let adds = min(gross * policy.adds * promo.adds, headroom)
             let baseChurn = Formulas.churnRate(appeal: appeal, price: price,
                                                tolerance: country.priceTolerance,
                                                serviceQuality: quality,
                                                rivalHeat: pressure.heat)
-            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * baseChurn)
+            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn)
             let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 
             // Revenue is billed on subscribers at the start of the week.
-            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu
+            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu * promo.arpu
             let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength) * policy.adRevenue
 
             var newSubs = startSubs
@@ -164,7 +166,7 @@ enum SimulationEngine {
             market.subs = newSubs
             market.awareness = Formulas.clamp(Formulas.nextAwareness(
                 awareness: market.awareness, spend: marketingSpend,
-                households: country.households, penetration: penetration) + policy.awareness, 0, 1)
+                households: country.households, penetration: penetration) + policy.awareness + promo.awareness, 0, 1)
             s.markets[code] = market
 
             // Local-content quota: a catalog short on local-language titles draws regulatory fines.
@@ -188,10 +190,10 @@ enum SimulationEngine {
             fin.adRevenue += adRevenue
             fin.marketing += market.marketingBudget
             fin.operations += Formulas.operatingCost(for: country) * s.costScale
-            billedSubs += ownSubs
+            billedSubs += ownSubs * promo.streaming
             totalNew += adds
             totalChurned += ownSubs * churn
-            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost * s.costScale
+            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost * promo.streaming * s.costScale
                 + Formulas.operatingCost(for: country) * s.costScale
                 + market.marketingBudget + marketFine
             marketReports.append(MarketReport(id: code, newSubs: adds, churned: ownSubs * churn,
@@ -259,6 +261,7 @@ enum SimulationEngine {
         }
 
         s.advancePolicyState(effects: policy)
+        s.advancePromotions()
 
         let leaderboardBefore = Dictionary(uniqueKeysWithValues: input.leaderboard.map { ($0.id, $0.subs) })
         advanceRivals(&s, events: &events)

@@ -13,6 +13,8 @@ struct HowToPlayView: View {
                         "Every country has a fair monthly price. Far above it means slow sign-ups and high churn; far below it means thin margins.")
                     tip("rectangle.stack", "Add subscription plans",
                         "You start with a Standard plan. Launch Ad-supported (cheap, ad revenue) and Premium (pricey, superfans) per country from its page on the map.")
+                    tip("megaphone.fill", "Run promotions",
+                        "Need subscribers fast? Launch a limited-time discount, free trial or marketing blitz from the Dashboard. They cost money, and people who join on a deal leave faster later.")
                     tip("megaphone", "Marketing builds awareness",
                         "Awareness fades without spending. Pair it with a good catalog, because ads can't fix a weak lineup.")
                     tip("globe.europe.africa.fill", "Expand across the map",

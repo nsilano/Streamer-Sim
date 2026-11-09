@@ -13,6 +13,22 @@ struct DashboardView: View {
                         statGrid(state)
                         ForEach(Array(state.advice().prefix(2))) { AdviceBanner(advice: $0) }
                         controls(state)
+                        NavigationLink {
+                            PromotionsView()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "megaphone.fill").font(.title3).foregroundStyle(Theme.magenta)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Run a promotion").font(.headline).foregroundStyle(.white)
+                                    Text(state.promotions.isEmpty ? "Discounts, free trials and campaigns to win subscribers fast"
+                                                                  : "\(state.promotions.count) running now")
+                                        .font(.caption).foregroundStyle(Theme.text2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
+                            }
+                            .artCard(tint: Theme.magenta)
+                        }
                         if state.reportHistory.count > 1 { TrendCard(reports: state.reportHistory) }
                         topFive(state)
                         if let report = state.lastReport { ReportSummaryCard(report: report) }

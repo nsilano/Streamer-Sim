@@ -49,6 +49,20 @@ struct CompanyView: View {
                             .artCard(tint: Theme.teal)
                         }
                         NavigationLink {
+                            PromotionsView()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "megaphone.fill").font(.title2).foregroundStyle(Theme.magenta)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Promotions").font(.headline).foregroundStyle(.white)
+                                    Text("Temporary campaigns to drive more subscribers in").font(.caption).foregroundStyle(Theme.text2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
+                            }
+                            .artCard(tint: Theme.magenta)
+                        }
+                        NavigationLink {
                             PoliciesView()
                         } label: {
                             HStack(spacing: 12) {

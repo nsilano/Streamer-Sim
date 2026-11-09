@@ -19,11 +19,12 @@ struct WeeklyFinancials: Codable, Equatable {
     var tech: Double = 0           // platform upkeep and CDN
     var studios: Double = 0        // studio upkeep
     var policies: Double = 0       // running cost of policies (support, moderation, ...)
+    var promotions: Double = 0     // campaign budgets
 
     var revenue: Double { subscriptionRevenue + adRevenue }
     var costs: Double {
         licensing + streaming + staff + marketing + operations + launch
-            + originals + localization + interest + fines + other + tech + studios + policies
+            + originals + localization + interest + fines + other + tech + studios + policies + promotions
     }
     var profit: Double { revenue - costs }
 
@@ -46,6 +47,7 @@ struct WeeklyFinancials: Codable, Equatable {
         sum.tech += other.tech
         sum.studios += other.studios
         sum.policies += other.policies
+        sum.promotions += other.promotions
         return sum
     }
 }
@@ -56,8 +58,9 @@ struct SpendLedger: Codable, Equatable {
     var launch: Double = 0
     var localization: Double = 0
     var other: Double = 0
+    var promotions: Double = 0
 
-    var total: Double { licensing + launch + localization + other }
+    var total: Double { licensing + launch + localization + other + promotions }
 }
 
 struct Finances: Codable, Equatable {
