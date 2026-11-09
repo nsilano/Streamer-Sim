@@ -3,9 +3,9 @@ import Foundation
 /// Pure simulation math. No state, no randomness (noise is passed in).
 enum Formulas {
     // Tunable constants (Phase 4 balancing pass).
-    static let baseAddRate = 0.012            // share of headroom that can join per week at appeal 1.0
-    static let baseChurn = 0.010              // weekly churn at neutral conditions
-    static let appealSaturation = 8.0         // summed title appeal at which catalog appeal ~63%
+    static let baseAddRate = 0.025            // share of headroom that can join per week at appeal 1.0
+    static let baseChurn = 0.008              // weekly churn at neutral conditions
+    static let appealSaturation = 6.0         // summed title appeal at which catalog appeal ~63%
     static let streamingCostPerSubWeek = 0.07
     static let baseStaffCostPerWeek = 20_000.0
     static let adARPUPerMonthAtFullStrength = 4.0
@@ -54,7 +54,7 @@ enum Formulas {
 
     static func licenseCost(kind: TitleKind, quality: Int, popularity: Int, years: Int,
                             ageWeeks: Int, exclusive: Bool) -> Double {
-        let base = kind == .movie ? 400_000.0 : 1_200_000.0
+        let base = kind == .movie ? 160_000.0 : 480_000.0
         let q = Double(quality) / 100
         let qualityTerm = 0.3 + q * q * 2.2
         let popularityTerm = 0.5 + Double(popularity) / 100

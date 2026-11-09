@@ -73,6 +73,7 @@ enum Bot {
         var catalog: Int
         var live: Int
         var outcome: GameOutcome
+        var topRival: Double
     }
 
     static func play(home: String, weeks: Int, seed: UInt64 = 7) -> [Snapshot] {
@@ -85,7 +86,8 @@ enum Bot {
                 snapshots.append(Snapshot(week: s.week - 1, subs: s.totalSubscribers, cash: s.finances.cash,
                                           profit: s.finances.lastWeek.profit, rank: s.rank,
                                           catalog: s.catalog.count, live: s.liveMarketCodes.count,
-                                          outcome: s.outcome))
+                                          outcome: s.outcome,
+                                          topRival: s.rivals.map(\.totalSubs).max() ?? 0))
             }
             if s.outcome != .playing { break }
         }
@@ -98,13 +100,22 @@ final class BalanceTests: XCTestCase {
         for home in ["IE", "NZ", "NL", "CA"] {
             let snapshots = Bot.play(home: home, weeks: 156)
             for snap in snapshots {
-                print(String(format: "BALANCE %@ w%d subs=%.0f cash=%.0f profit=%.0f rank=%d cat=%d live=%d %@",
+                print(String(format: "BALANCE %@ w%d subs=%.0f cash=%.0f profit=%.0f rank=%d cat=%d live=%d top=%.0f %@",
                              home, snap.week, snap.subs, snap.cash, snap.profit, snap.rank,
-                             snap.catalog, snap.live, snap.outcome.rawValue))
+                             snap.catalog, snap.live, snap.topRival, snap.outcome.rawValue))
             }
             let last = snapshots.last!
             XCTAssertNotEqual(last.outcome, .lost, "\(home): a sensible player shouldn't go bankrupt in 3 years")
             XCTAssertGreaterThan(last.subs, 10_000, "\(home): should have real subscribers by year 3")
+        }
+    }
+
+    /// Long-run probe: prints pacing out to 5 years from the biggest starter market (no assertions on scale yet).
+    func testLongRunProbe() {
+        for snap in Bot.play(home: "CA", weeks: 260) {
+            print(String(format: "BALANCE-LONG CA w%d subs=%.0f cash=%.0f profit=%.0f rank=%d live=%d top=%.0f %@",
+                         snap.week, snap.subs, snap.cash, snap.profit, snap.rank, snap.live, snap.topRival,
+                         snap.outcome.rawValue))
         }
     }
 
