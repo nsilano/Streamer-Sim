@@ -21,6 +21,14 @@ jobs:
           for v in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64; do
             if [ -z "${!v}" ]; then echo "::error::Repository secret $v is not set (see docs/TESTFLIGHT.md)"; exit 1; fi
           done
+      - name: Select newest Xcode (App Store requires the iOS 26 SDK / Xcode 26+)
+        run: |
+          ls -d /Applications/Xcode*.app
+          BEST=$(ls -d /Applications/Xcode_*.app | sed -E 's|.*/Xcode_([0-9.]+)(_[A-Za-z0-9_]+)?\.app|\1 &|' | sort -V | tail -1 | cut -d' ' -f2-)
+          echo "Using $BEST"
+          sudo xcode-select -s "$BEST/Contents/Developer"
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i "iOS "
       - run: brew install xcodegen
       - run: xcodegen generate
       - name: Write App Store Connect API key
