@@ -48,6 +48,22 @@ struct CompanyView: View {
                             }
                             .artCard(tint: Theme.teal)
                         }
+                        NavigationLink {
+                            PoliciesView()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "list.bullet.clipboard.fill").font(.title2).foregroundStyle(Theme.violet)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Policies & reputation").font(.headline).foregroundStyle(.white)
+                                    Text("Password sharing, trials, ads, privacy and more · trust \(Int(state.brandTrust))")
+                                        .font(.caption).foregroundStyle(Theme.text2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
+                            }
+                            .artCard(tint: Theme.violet)
+                        }
+                        investmentsCard(state)
                         ownershipCard(state)
                         loansCard(state)
                         investorsCard(state)
@@ -110,6 +126,43 @@ struct CompanyView: View {
     }
 
     // MARK: Funding
+
+    @ViewBuilder
+    private func investmentsCard(_ state: GameState) -> some View {
+        let held = state.stakes.keys.sorted()
+        if !held.isEmpty || state.takeover != nil || !state.acquiredRivals.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                SectionTitle(text: "Investments in rivals", icon: "building.columns.circle.fill", tint: Theme.danger)
+                if let bid = state.takeover, let rival = state.rivals.first(where: { $0.id == bid.rivalID }) {
+                    Label("Hostile bid for \(rival.name): vote in \(bid.weeksLeft) week\(bid.weeksLeft == 1 ? "" : "s")",
+                          systemImage: "flag.fill").font(.footnote.weight(.semibold)).foregroundStyle(Theme.amber)
+                }
+                ForEach(held, id: \.self) { id in
+                    if let rival = state.rivals.first(where: { $0.id == id }) {
+                        let value = state.stakeValue(in: id)
+                        let gain = value - (state.stakeBasis[id] ?? value)
+                        HStack {
+                            RivalBadge(name: rival.name, id: rival.id, size: 30)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(rival.name).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                                Text("\(Format.percent1(state.stake(in: id))) stake").font(.caption2).foregroundStyle(Theme.text2)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text(Format.money(value)).font(Theme.number(15)).foregroundStyle(.white)
+                                Text("\(gain >= 0 ? "+" : "-")\(Format.money(abs(gain)))").font(.caption2).foregroundStyle(gain.profitColor)
+                            }
+                        }
+                    }
+                }
+                if !held.isEmpty { LabeledValue(label: "Total stake value", value: Format.money(state.totalStakeValue)) }
+                if !state.acquiredRivals.isEmpty {
+                    Text("Acquired: \(state.acquiredRivals.joined(separator: ", "))").font(.caption).foregroundStyle(Theme.good)
+                }
+            }
+            .artCard(tint: Theme.danger)
+        }
+    }
 
     private func ownershipCard(_ state: GameState) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -188,6 +241,7 @@ struct CompanyView: View {
             goalRow("Go public (IPO)", done: state.goals.contains("ipo"))
             goalRow("$10B annual revenue (\(Format.money(state.finances.annualizedRevenue)))", done: state.goals.contains("revenue10B"))
             goalRow("All 30 markets (\(state.liveMarketCodes.count)/30)", done: state.goals.contains("allMarkets"))
+            goalRow("Take over a rival", done: state.goals.contains("takeover"))
         }
         .artCard(tint: Theme.good)
     }

@@ -120,6 +120,7 @@ struct RivalDetailSheet: View {
     @EnvironmentObject var store: GameStore
     @Environment(\.dismiss) private var dismiss
     let rivalID: String
+    @State private var premium = 0.5
 
     var body: some View {
         NavigationStack {
@@ -148,6 +149,7 @@ struct RivalDetailSheet: View {
                             LabeledValue(label: "Countries", value: "\(rival.countryCount) / \(CountryData.all.count)")
                         }
                         .artCard(tint: Theme.amber)
+                        investCard(state, rival)
                         regions(rival)
                         topCountries(rival)
                     }
@@ -158,6 +160,84 @@ struct RivalDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
         }
+    }
+
+    // MARK: Shares & takeover
+
+    private func investCard(_ state: GameState, _ rival: Rival) -> some View {
+        let stake = state.stake(in: rival.id)
+        let cap = state.marketCap(rival)
+        let bidHere = state.takeover?.rivalID == rival.id
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "Invest & take over", icon: "chart.line.uptrend.xyaxis", tint: Theme.danger)
+            LabeledValue(label: "Market value", value: Format.money(cap))
+            StatBar(label: "Investor mood", value: min(1, rival.sentiment / 1.6), text: String(format: "%.0f%%", rival.sentiment * 100),
+                    tint: rival.sentiment >= 1 ? Theme.good : Theme.amber, height: 5, compact: true)
+            StatBar(label: "Your stake", value: stake, text: Format.percent1(stake), tint: Theme.magenta)
+            if stake > 0 {
+                LabeledValue(label: "Stake worth", value: Format.money(state.stakeValue(in: rival.id)))
+            }
+            if rival.poisonPill {
+                Label("Poison pill active: shares cost 60% more", systemImage: "shield.lefthalf.filled").font(.caption).foregroundStyle(Theme.amber)
+            }
+            Text("Buying shares pushes the price up. Past 5% you must disclose; past 20% the board defends itself.")
+                .font(.caption2).foregroundStyle(Theme.text2)
+            HStack {
+                ForEach([0.01, 0.05, 0.10], id: \.self) { pct in
+                    let cost = state.sharePrice(rival, percent: pct)
+                    Button("+\(Int(pct * 100))% · \(Format.money(cost))") {
+                        store.perform { try $0.buyShares(rivalID: rival.id, percent: pct) }
+                    }
+                    .buttonStyle(SoftButtonStyle(tint: Theme.teal))
+                    .disabled(state.finances.cash < cost || stake + pct > Formulas.openMarketLimit + 1e-9)
+                }
+            }
+            if stake > 0 {
+                HStack {
+                    Button("Sell 5%") { store.perform { try $0.sellShares(rivalID: rival.id, percent: min(0.05, stake)) } }
+                        .buttonStyle(SoftButtonStyle(tint: Theme.amber))
+                    Button("Sell all") { store.perform { try $0.sellShares(rivalID: rival.id, percent: stake) } }
+                        .buttonStyle(SoftButtonStyle(tint: Theme.danger))
+                }
+            }
+            Divider().overlay(Color.white.opacity(0.12))
+            if bidHere, let bid = state.takeover {
+                Label("Hostile bid in progress: shareholders vote in \(bid.weeksLeft) week\(bid.weeksLeft == 1 ? "" : "s")",
+                      systemImage: "flag.fill").foregroundStyle(Theme.amber)
+                LabeledValue(label: "Offer premium", value: Format.percent(bid.premium))
+                LabeledValue(label: "Money committed", value: Format.money(bid.escrow))
+                LabeledValue(label: "Chance of success", value: Format.percent(state.takeoverChance(rival, premium: bid.premium)))
+            } else {
+                takeoverControls(state, rival, stake: stake)
+            }
+        }
+        .artCard(tint: Theme.danger)
+    }
+
+    @ViewBuilder
+    private func takeoverControls(_ state: GameState, _ rival: Rival, stake: Double) -> some View {
+        let cost = state.takeoverCost(rival, premium: premium)
+        let chance = state.takeoverChance(rival, premium: premium)
+        Text("Hostile takeover").font(.subheadline.weight(.bold)).foregroundStyle(.white)
+        if stake < Formulas.disclosureStake {
+            Text("Build a stake of at least \(Format.percent(Formulas.disclosureStake)) first.").font(.caption).foregroundStyle(Theme.amber)
+        }
+        Text("Offer \(Format.percent(premium)) above the market price for the rest of the company").font(.caption).foregroundStyle(Theme.text2)
+        Slider(value: $premium, in: 0.1...1.0, step: 0.05).tint(Theme.danger)
+        LabeledValue(label: "Total offer", value: Format.money(cost))
+        StatBar(label: "Chance shareholders accept", value: chance, text: Format.percent(chance),
+                tint: chance > 0.6 ? Theme.good : (chance > 0.35 ? Theme.amber : Theme.danger), compact: true)
+        if state.antitrustRisk(rival) {
+            Label("Regulators may balk: you'd control over 30% of all subscribers", systemImage: "scalemass.fill")
+                .font(.caption).foregroundStyle(Theme.amber)
+        }
+        Text("If it works you absorb their subscribers (about 80% stay), cash and library, and countries where you weren't launched go live. If it fails you lose a 2% fee and the rival turns hostile.")
+            .font(.caption2).foregroundStyle(Theme.text2)
+        Button("Launch hostile bid") {
+            store.perform { try $0.launchTakeover(rivalID: rival.id, premium: premium) }
+        }
+        .buttonStyle(GlowButtonStyle(tint: Theme.danger))
+        .disabled(stake < Formulas.disclosureStake || state.finances.cash < cost || state.takeover != nil)
     }
 
     private func pricingText(_ rival: Rival) -> String {

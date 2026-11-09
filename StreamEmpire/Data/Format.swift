@@ -24,4 +24,5 @@ enum Format {
     }
 
     static func percent(_ value: Double) -> String { String(format: "%.0f%%", value * 100) }
+    static func percent1(_ value: Double) -> String { String(format: "%.1f%%", value * 100) }
 }
