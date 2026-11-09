@@ -15,6 +15,9 @@ expanding into countries, building a catalog (licensed + originals) and winning 
 ## Release rule (important)
 **Never push to `main`, merge to `main`, or trigger the TestFlight workflow without the user's explicit permission.** Work on the feature branch only. The TestFlight workflow is manual (`workflow_dispatch`) and must stay that way.
 
+## Changelog rule
+Every commit pushed to the feature branch must also update `CHANGELOG.md` (player-facing summary under "Unreleased", newest first, with the short commit hash and save version if it changed). Do this in the same push, not later.
+
 ## Core loop
 1 turn = 1 week. Player decides -> "Next Week" -> `SimulationEngine.advanceWeek` -> weekly report
 (new subs, churn, revenue, costs, events). Auto-advance toggle on the dashboard.
