@@ -15,6 +15,9 @@ struct Curator: Codable, Equatable {
     var allowSeries = true
     var genres: [Genre] = []                 // empty = any genre
     var onlyMyLanguages = true               // only titles in a language you serve (or English)
+    var autoRenew = true                     // renew expiring titles automatically when the price is right
+    var renewMaxPrice = 1_500_000.0          // most they'll pay for one renewal
+    var renewYears = 2                       // renewal length
 
     static let hireCost = 300_000.0
     static let weeklySalary = 15_000.0

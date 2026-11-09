@@ -52,6 +52,8 @@ extension GameState {
         var title = licenseMarket.remove(at: index)
         title.weeksRemaining = license.weeks
         title.listingWeeksLeft = 0
+        title.paidPrice = price
+        title.popularityAtPurchase = title.popularity
         finances.cash -= price
         finances.ledger.licensing += price
         catalog.append(title)

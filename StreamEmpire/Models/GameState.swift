@@ -31,7 +31,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 14
+    static let currentVersion = 15
 
     var version: Int = GameState.currentVersion
     var companyName: String

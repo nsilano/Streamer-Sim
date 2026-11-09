@@ -133,6 +133,14 @@ struct ContentTabView: View {
 
     @ViewBuilder
     private func catalog(_ state: GameState) -> some View {
+        if !state.expiringTitles.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                SectionTitle(text: "Expiring soon", icon: "clock.badge.exclamationmark.fill", tint: Theme.danger)
+                ForEach(state.expiringTitles) { title in
+                    RenewCard(title: title, state: state, onDone: nil)
+                }
+            }
+        }
         if state.catalog.isEmpty {
             VStack(spacing: 8) {
                 Image(systemName: "film").font(.largeTitle).foregroundStyle(Theme.text2)
@@ -191,6 +199,9 @@ struct TitleDetailSheet: View {
                 if let state = store.state, let title = find(state) {
                     let owned = state.catalog.contains { $0.id == titleID }
                     VStack(spacing: 16) {
+                        if owned, (title.weeksRemaining ?? .max) <= Formulas.renewalWindowWeeks, title.license != nil {
+                            renewCard(title, state)
+                        }
                         PosterView(title: title, cornerRadius: 16)
                             .frame(width: 210)
                             .padding(.top, 6)
@@ -274,6 +285,10 @@ struct TitleDetailSheet: View {
         .artCard(tint: Theme.teal)
     }
 
+    private func renewCard(_ title: Title, _ state: GameState) -> some View {
+        RenewCard(title: title, state: state, onDone: nil)
+    }
+
     private func ownedCard(_ title: Title) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: "In your catalog", icon: "checkmark.seal.fill", tint: Theme.good)
@@ -329,6 +344,19 @@ struct CuratorSheet: View {
                     Toggle("Series", isOn: $draft.allowSeries)
                     Toggle("Allow exclusives", isOn: $draft.allowExclusive)
                     Toggle("Only languages I serve (and English)", isOn: $draft.onlyMyLanguages)
+                }
+                Section {
+                    Toggle("Renew expiring titles automatically", isOn: $draft.autoRenew).tint(Theme.magenta)
+                    Stepper(value: $draft.renewMaxPrice, in: 100_000...50_000_000, step: 100_000) {
+                        LabeledValue(label: "Max price per renewal", value: Format.money(draft.renewMaxPrice))
+                    }
+                    Stepper(value: $draft.renewYears, in: 1...5) {
+                        LabeledValue(label: "Renewal length", value: "\(draft.renewYears) yr")
+                    }
+                } header: {
+                    Text("Renewals")
+                } footer: {
+                    Text("Renews titles within 8 weeks of expiring if they pass your quality bar and fit the price, budget and cash reserve. Otherwise you get a warning.")
                 }
                 Section {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), spacing: 8)], spacing: 8) {
@@ -451,5 +479,46 @@ struct LocalizeView: View {
             if let language = CountryData.country(code)?.language { set.insert(language) }
         }
         return set.filter { $0 != title.language }.sorted { $0.rawValue < $1.rawValue }
+    }
+}
+
+/// Renew an expiring license: pick 1-5 years. Cheaper than the original deal unless the title took off.
+struct RenewCard: View {
+    @EnvironmentObject var store: GameStore
+    let title: Title
+    let state: GameState
+    var onDone: (() -> Void)?
+    @State private var years = 2
+
+    var body: some View {
+        let price = state.renewalPrice(title, years: years)
+        let jumped = state.hasPopularityJump(title)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label(title.name, systemImage: "clock.badge.exclamationmark.fill")
+                    .font(.subheadline.weight(.bold)).foregroundStyle(Theme.danger).lineLimit(1)
+                Spacer()
+                Text("\(title.weeksRemaining ?? 0) wks left").font(.caption).foregroundStyle(Theme.danger)
+            }
+            if title.sought {
+                Text("A famous show: the studio won't discount it.").font(.caption).foregroundStyle(Theme.amber)
+            } else if jumped {
+                Text("Popularity is up since you signed, so the price is higher.").font(.caption).foregroundStyle(Theme.amber)
+            } else {
+                Text("Renewing is cheaper than your original deal.").font(.caption).foregroundStyle(Theme.good)
+            }
+            Stepper(value: $years, in: 1...5) {
+                LabeledValue(label: "Extend by", value: "\(years) year\(years == 1 ? "" : "s")")
+            }
+            Button("Renew for \(Format.money(price))") {
+                store.perform { try $0.renewLicense(titleID: title.id, years: years) }
+                onDone?()
+            }
+            .buttonStyle(GlowButtonStyle(tint: Theme.danger))
+            .disabled(state.finances.cash < price)
+        }
+        .padding(12)
+        .background(Theme.danger.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.danger.opacity(0.6), lineWidth: 1))
     }
 }

@@ -35,6 +35,20 @@ enum Formulas {
         ageWeeks < 4 ? 1.0 + 0.5 * Double(4 - ageWeeks) / 4.0 : 1.0
     }
 
+    /// Famous real-world shows cost this much more to license and draw bigger audiences.
+    static let soughtPremium = 2.2
+    static let soughtAppeal = 1.25
+    /// A license can be renewed once it has this many weeks (or fewer) left.
+    static let renewalWindowWeeks = 26
+
+    /// Price to extend a license. Renewals start 20% below what you paid per year, creep up as the title's
+    /// popularity has risen since you signed, and famous titles never get the discount.
+    static func renewalPrice(perYearPaid: Double, years: Int, popularityGain: Int, sought: Bool) -> Double {
+        let factor = 0.8 + Double(max(0, popularityGain)) / 50.0 + (sought ? 0.3 : 0)
+        let multiYear = 1.0 - 0.03 * Double(max(0, years - 1))
+        return perYearPaid * Double(years) * factor * multiYear
+    }
+
     static func titleAppeal(_ title: Title, in country: Country) -> Double {
         let quality = Double(title.quality) / 100
         let popularity = 0.4 + 0.6 * Double(title.popularity) / 100
@@ -44,6 +58,7 @@ enum Formulas {
             * freshness(ageWeeks: title.ageWeeks)
             * releaseBoost(ageWeeks: title.ageWeeks)
         if title.license?.exclusive == true { appeal *= 1.15 }
+        if title.sought { appeal *= soughtAppeal }
         if title.genre == .local && title.language != country.language { appeal *= 0.3 }
         return appeal
     }

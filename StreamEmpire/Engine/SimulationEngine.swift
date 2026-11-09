@@ -343,6 +343,19 @@ enum SimulationEngine {
         for i in s.catalog.indices {
             s.catalog[i].ageWeeks += 1
             if let left = s.catalog[i].weeksRemaining { s.catalog[i].weeksRemaining = left - 1 }
+            // Licensed shows sometimes catch a second wind (reruns, memes, a hit remake), which makes renewals pricier.
+            if s.catalog[i].license != nil, s.rng.chance(0.01) {
+                s.catalog[i].popularity = min(100, s.catalog[i].popularity + s.rng.nextInt(in: 10...20))
+            }
+            if let left = s.catalog[i].weeksRemaining, left == 12 || left == 4 {
+                let title = s.catalog[i]
+                s.addNews(.licensing, "\"\(title.name)\" expires in \(left) weeks",
+                          "Renew it from the Content tab for \(Format.money(s.renewalPrice(title, years: 2))) (2 years), or it leaves your catalog.")
+                if left == 4 {
+                    events.append(s.makeEvent(.warning, "License expiring soon",
+                                              "\"\(title.name)\" leaves in 4 weeks. Renew it in the Content tab."))
+                }
+            }
         }
         let expired = s.catalog.filter { ($0.weeksRemaining ?? 1) <= 0 }
         s.catalog.removeAll { ($0.weeksRemaining ?? 1) <= 0 }
@@ -465,7 +478,7 @@ enum SimulationEngine {
             var winner: Int?
             for index in s.rivals.indices {
                 let chance = Formulas.bidChance(personality: s.rivals[index].personality, quality: title.quality)
-                    * (1 + 0.5 * threats[index])
+                    * (1 + 0.5 * threats[index]) * (title.sought ? 2 : 1)
                 if s.rng.chance(chance) { winner = index; break }
             }
             guard let w = winner else { kept.append(title); continue }

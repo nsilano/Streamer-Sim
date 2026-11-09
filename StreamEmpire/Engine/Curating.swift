@@ -18,8 +18,14 @@ extension GameState {
             run.note = "Paused."
             return run
         }
+        var renewal = (names: [String](), spent: 0.0, skipped: 0)
+        if c.autoRenew { renewal = curatorRenew(c, allowance: c.weeklyBudget + c.carryBudget) }
+        let renewNote = renewal.names.isEmpty && renewal.skipped == 0 ? "" :
+            " Renewed \(renewal.names.count) (\(Format.money(renewal.spent)))\(renewal.skipped > 0 ? ", \(renewal.skipped) too pricey to renew" : "")."
         guard catalog.count < c.targetCatalogSize else {
-            run.note = "Your catalog already has \(catalog.count) titles (target \(c.targetCatalogSize))."
+            c.carryBudget = min(3 * c.weeklyBudget, max(0, c.weeklyBudget + c.carryBudget - renewal.spent))
+            curator = c
+            run.note = "Your catalog already has \(catalog.count) titles (target \(c.targetCatalogSize)).\(renewNote)"
             return run
         }
 
@@ -28,7 +34,7 @@ extension GameState {
             if let language = CountryData.country(code)?.language { languages.insert(language) }
         }
 
-        let available = c.weeklyBudget + c.carryBudget
+        let available = c.weeklyBudget + c.carryBudget - renewal.spent
         run.available = available
         var rejected: [String: Int] = [:]
         var passing: [Title] = []
@@ -65,8 +71,9 @@ extension GameState {
         } else {
             let top = rejected.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }.prefix(3)
             let reasons = top.map { "\($0.value) \(c.describe(reason: $0.key))" }.joined(separator: ", ")
-            run.note = "Nothing bought from \(licenseMarket.count) listings (\(reasons)). Available this week: \(Format.money(available))."
+            run.note = "Nothing bought from \(licenseMarket.count) listings (\(reasons)). Available this week: \(Format.money(available)).\(renewNote)"
         }
+        if !run.bought.isEmpty { run.note += renewNote }
         return run
     }
 

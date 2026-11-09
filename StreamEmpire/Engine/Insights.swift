@@ -72,6 +72,15 @@ extension GameState {
                                 detail: "You're losing money every week. Raise funding or cut costs."))
         }
 
+        let expiring = expiringTitles
+        if !expiring.isEmpty {
+            let soon = expiring.filter { ($0.weeksRemaining ?? 99) <= 8 }
+            let names = expiring.prefix(3).map { "\"\($0.name)\"" }.joined(separator: ", ")
+            items.append(Advice(id: "expiring", icon: "clock.badge.exclamationmark.fill", urgent: !soon.isEmpty,
+                                title: "\(expiring.count) license\(expiring.count == 1 ? "" : "s") expiring soon",
+                                detail: "\(names)\(expiring.count > 3 ? " and more" : "") will leave your catalog. Renew them in the Content tab, usually cheaper than a new deal."))
+        }
+
         if catalog.isEmpty {
             items.append(Advice(id: "catalog", icon: "film.stack", urgent: true, title: "License your first titles",
                                 detail: "Nobody subscribes to an empty catalog. Browse the Licensing tab."))

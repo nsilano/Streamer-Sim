@@ -69,6 +69,7 @@ struct PosterSpec: Equatable {
 
         var badge: String?
         if title.isOriginal { badge = "ORIGINAL" }
+        else if title.sought { badge = "ICONIC" }
         else if title.license?.exclusive == true { badge = "EXCLUSIVE" }
         else if title.ageWeeks < 4 { badge = "NEW" }
 

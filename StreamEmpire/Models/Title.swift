@@ -23,6 +23,9 @@ struct Title: Codable, Identifiable, Equatable {
     var listingWeeksLeft: Int      // licensing market: weeks the offer stays open
     var subtitles: [Language] = [] // languages with subtitles
     var dubs: [Language] = []      // languages with dubbing
+    var sought = false             // a real-world-famous show: scarce, pricey, loved by audiences
+    var paidPrice = 0.0            // what you paid for the current license term
+    var popularityAtPurchase = 0   // popularity when the term was signed (renewals get pricier if it jumped)
 
     func isAvailable(in countryCode: String) -> Bool {
         guard let license = license else { return true }

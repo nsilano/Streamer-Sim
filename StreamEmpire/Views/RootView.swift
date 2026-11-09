@@ -14,6 +14,7 @@ struct RootView: View {
                         .tabItem { Label("Markets", systemImage: "globe.europe.africa.fill") }
                     ContentTabView()
                         .tabItem { Label("Content", systemImage: "film.stack") }
+                        .badge(state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 8 }.count)
                     RivalsView()
                         .tabItem { Label("Rivals", systemImage: "trophy.fill") }
                         .badge(state.unreadNewsCount)

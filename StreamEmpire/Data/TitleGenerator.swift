@@ -76,17 +76,23 @@ enum TitleGenerator {
         let age = rng.chance(0.25) ? rng.nextInt(in: 0...8) : rng.nextInt(in: 0...300)
         let years = rng.pickWeighted([(1, 25.0), (2, 30.0), (3, 25.0), (4, 12.0), (5, 8.0)])
         let exclusive = rng.chance(0.2)
-        let cost = Formulas.licenseCost(kind: kind, quality: quality, popularity: popularity,
-                                        years: years, ageWeeks: age, exclusive: exclusive)
+        let iconic = ParodyLibrary.iconicNames.contains(parody.name)
+        let sought = iconic || (quality >= 70 && rng.chance(0.12))
+        let quality2 = sought ? max(quality, 78) : quality
+        let popularity2 = sought ? max(popularity, 85) : popularity
+        let baseCost = Formulas.licenseCost(kind: kind, quality: quality2, popularity: popularity2,
+                                            years: years, ageWeeks: age, exclusive: exclusive)
+        let cost = sought ? baseCost * Formulas.soughtPremium : baseCost
         return Title(
             id: id,
             name: parody.name,
             kind: kind, genre: genre, language: language,
-            quality: quality, popularity: popularity, ageWeeks: age,
+            quality: quality2, popularity: popularity2, ageWeeks: age,
             isOriginal: false,
             license: LicenseTerms(cost: cost, years: years, regions: [], exclusive: exclusive),
             weeksRemaining: nil,
-            listingWeeksLeft: rng.nextInt(in: 4...10)
+            listingWeeksLeft: rng.nextInt(in: 4...10),
+            sought: sought
         )
     }
 }

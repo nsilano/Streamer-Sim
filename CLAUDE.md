@@ -65,6 +65,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 8. **Phase 8 (done):** news covers the player's moves (`NewsEngine.publishPlayerPrices`: net price changes per week; launches, builds, studios, productions, funding, event outcomes), and temporary promotions (`Models/Promotion.swift`, `Engine/Promotions.swift`, `Views/PromotionsView.swift`: 5 campaign kinds, scope all/one country, up to 3 at once, fatigue, post-campaign churn hangover, result log; campaign budgets are their own cost line `CostCategory.promotions`). Save version is 13.
 
+9. **Phase 9 (done):** random events are rare (from week 12, 12-week gap, negatives only from week 24 once you have cash and subs), mild, and never a modal pop-up: `pendingEvent` is a red `AlertCard` on the Dashboard (plus tab badge), never blocks `advanceWeek`, and settles itself with `defaultChoice` after 6 weeks (`RandomEvents.resolveExpired`). Regulation no longer rolls randomly. License renewals (`Engine/Renewals.swift`: `renewalPrice` = 80% of per-year paid, higher if popularity jumped or the title is `sought`, `renewLicense`, 26-week window, news at 12 and 4 weeks, Content tab "Expiring soon" cards and badge), sought-after iconic titles (`Title.sought`, `ParodyLibrary.iconicNames`, 2.2x price, appeal x1.25, rivals bid 2x), and licensing-manager auto-renew (`Curator.autoRenew/renewMaxPrice/renewYears`). Save version is 15.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

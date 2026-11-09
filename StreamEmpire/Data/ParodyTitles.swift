@@ -9,6 +9,9 @@ struct ParodyTitle: Equatable {
 }
 
 enum ParodyLibrary {
+    /// Parodies of shows that are famous in real life: licensors know what they are worth.
+    static let iconicNames: Set<String> = ["The Offsite", "Fiends", "Sinfeld", "Brooklyn Nine-Five", "Parks and Wreckreation"]
+
     // Format: "S|Name" for a series, "M|Name" for a movie. Local titles are "S|language|Name".
     private static let drama = """
     S|The First of Us
