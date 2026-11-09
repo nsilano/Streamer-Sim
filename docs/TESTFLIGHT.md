@@ -4,7 +4,7 @@ Everything here is prepared but **has not been run**: it needs your Apple Develo
 
 ## One-time setup
 1. **Apple Developer Program** membership (paid). Note your **Team ID** (developer.apple.com > Membership).
-2. **Pick a bundle ID** you own. The default is `com.streamempire.app` (`project.yml` > `PRODUCT_BUNDLE_IDENTIFIER`
+2. **Pick a bundle ID** you own. The default is `com.nsilano.streamempire` (`project.yml` > `PRODUCT_BUNDLE_IDENTIFIER`
    and `bundleIdPrefix`). Change both to something unique to you, then register it under
    Certificates, Identifiers & Profiles > Identifiers.
 3. **Create the app record** in App Store Connect > Apps > + > New App, using that bundle ID.
