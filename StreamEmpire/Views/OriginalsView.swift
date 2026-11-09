@@ -53,6 +53,7 @@ struct CommissionView: View {
     private var range: ClosedRange<Double> { Formulas.budgetRange(kind) }
     private var expected: Double {
         Formulas.expectedOriginalQuality(kind: kind, budget: min(max(budget, range.lowerBound), range.upperBound), weeks: weeks)
+            + Formulas.originalQualityBonus(contentLevel: store.state?.staff.content ?? 0)
     }
 
     var body: some View {

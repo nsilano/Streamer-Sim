@@ -242,3 +242,43 @@ enum Formulas {
         20_000_000 + 5 * annualRevenue + 60 * subscribers
     }
 }
+
+// MARK: - Tech, infrastructure & staff
+
+extension Formulas {
+    static let maxDepartmentLevel = 5
+    static let salaryPerLevelPerWeek = 10_000.0
+    static func hireCost(currentLevel: Int) -> Double { 200_000 * Double(currentLevel + 1) }
+
+    static let baseWebReach = 0.70
+    static func platformReach(_ platforms: [Platform]) -> Double {
+        let bonus = Platform.allCases.filter { platforms.contains($0) }.reduce(0) { $0 + $1.reachBonus }
+        return baseWebReach + bonus
+    }
+
+    // CDN: every region starts with 200k subscribers of capacity; each expansion adds 250k.
+    static let baseCDNCapacity = 200_000.0
+    static let cdnStepCapacity = 250_000.0
+    static let cdnStepCost = 150_000.0
+    static let cdnStepUpkeepPerWeek = 600.0
+    static let maxCDNSteps = 40
+
+    static func cdnCapacity(steps: Int) -> Double { baseCDNCapacity + Double(steps) * cdnStepCapacity }
+
+    /// 1.0 while within capacity; buffering and outages degrade it once load passes 100%.
+    static func serviceQuality(load: Double) -> Double {
+        load <= 1 ? 1.0 : clamp(1 - (load - 1) * 1.2, 0.3, 1.0)
+    }
+
+    // Department effects (level 0...5)
+    static func licenseDiscount(contentLevel: Int) -> Double { 0.02 * Double(contentLevel) }
+    static func originalQualityBonus(contentLevel: Int) -> Double { 2.0 * Double(contentLevel) }
+    static func marketingBoost(marketingLevel: Int) -> Double { 1.0 + 0.06 * Double(marketingLevel) }
+    static func buildWeeks(base: Int, engineeringLevel: Int) -> Int { max(2, base - engineeringLevel) }
+    static func cdnCostMultiplier(engineeringLevel: Int) -> Double { 1.0 - 0.05 * Double(engineeringLevel) }
+    static func fineMultiplier(legalLevel: Int) -> Double { 1.0 - 0.15 * Double(legalLevel) }
+    static func regulationCostMultiplier(legalLevel: Int) -> Double { 1.0 - 0.10 * Double(legalLevel) }
+    static func lobbySuccessChance(legalLevel: Int) -> Double { 0.6 + 0.05 * Double(legalLevel) }
+    static func loanRateDiscount(financeLevel: Int) -> Double { 0.005 * Double(financeLevel) }
+    static func valuationBoost(financeLevel: Int) -> Double { 1.0 + 0.03 * Double(financeLevel) }
+}

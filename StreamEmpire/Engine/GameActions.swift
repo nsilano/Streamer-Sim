@@ -45,14 +45,15 @@ extension GameState {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = licenseMarket.firstIndex(where: { $0.id == titleID }),
               let license = licenseMarket[index].license else { throw ActionError.titleNotFound }
-        guard finances.cash >= license.cost else {
-            throw ActionError.insufficientFunds(needed: license.cost)
+        let price = licensePrice(licenseMarket[index])
+        guard finances.cash >= price else {
+            throw ActionError.insufficientFunds(needed: price)
         }
         var title = licenseMarket.remove(at: index)
         title.weeksRemaining = license.weeks
         title.listingWeeksLeft = 0
-        finances.cash -= license.cost
-        finances.ledger.licensing += license.cost
+        finances.cash -= price
+        finances.ledger.licensing += price
         catalog.append(title)
     }
 

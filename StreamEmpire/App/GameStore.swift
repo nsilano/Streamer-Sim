@@ -6,6 +6,7 @@ final class GameStore: ObservableObject {
     @Published private(set) var state: GameState?
     @Published var showReport = false
     @Published var errorMessage: String?
+    @Published var autoSpeed: Double = 0.7        // seconds per week
     @Published var autoAdvance = false {
         didSet { autoAdvance ? startAutoAdvance() : stopAutoAdvance() }
     }
@@ -61,7 +62,8 @@ final class GameStore: ObservableObject {
         autoTask?.cancel()
         autoTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 700_000_000)
+                let seconds = self?.autoSpeed ?? 0.7
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
                 guard !Task.isCancelled else { break }
                 self?.nextWeek(showReport: false)
             }

@@ -15,12 +15,13 @@ struct WeeklyFinancials: Codable, Equatable {
     var localization: Double = 0
     var interest: Double = 0
     var fines: Double = 0
-    var other: Double = 0          // event-driven spending
+    var other: Double = 0          // event, hiring and platform-build spending
+    var tech: Double = 0           // platform upkeep and CDN
 
     var revenue: Double { subscriptionRevenue + adRevenue }
     var costs: Double {
         licensing + streaming + staff + marketing + operations + launch
-            + originals + localization + interest + fines + other
+            + originals + localization + interest + fines + other + tech
     }
     var profit: Double { revenue - costs }
 }

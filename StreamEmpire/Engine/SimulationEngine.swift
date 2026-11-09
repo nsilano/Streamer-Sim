@@ -47,6 +47,19 @@ enum SimulationEngine {
         refreshLicenseMarket(&s, events: &events)
         produceOriginals(&s, fin: &fin, events: &events)
         let recession = s.recessionWeeksLeft > 0
+        progressPlatformBuilds(&s, events: &events)
+
+        // Infrastructure load per region (start-of-week subscribers vs CDN capacity).
+        var regionQuality: [Region: Double] = [:]
+        for region in Region.allCases {
+            let load = s.cdnLoad(region)
+            regionQuality[region] = Formulas.serviceQuality(load: load)
+            if load > 1, s.week % 4 == 0 {
+                events.append(s.makeEvent(.warning, "Buffering in \(region.displayName)",
+                                          "Servers are at \(Format.percent(load)) of capacity. Subscribers are churning; expand the CDN in the Company tab."))
+            }
+        }
+        let marketingBoost = Formulas.marketingBoost(marketingLevel: s.staff.marketing)
 
         // Markets
         var marketReports: [MarketReport] = []
@@ -88,19 +101,21 @@ enum SimulationEngine {
             let headroom = max(0, ceiling - ownSubs - rivalSubs)
 
             let price = Formulas.blendedPrice(market.prices)
+            let quality = regionQuality[country.region] ?? 1.0
+            let marketingSpend = market.marketingBudget * marketingBoost
             let noise = s.rng.nextDouble(in: 0.92...1.08)
             let gross = Formulas.grossAdds(
                 headroom: headroom, appeal: appeal,
                 priceFactor: Formulas.priceFactor(price: price, tolerance: country.priceTolerance),
                 awareness: market.awareness,
-                marketingFactor: Formulas.marketingFactor(spend: market.marketingBudget, households: country.households),
+                marketingFactor: Formulas.marketingFactor(spend: marketingSpend, households: country.households),
                 wordOfMouth: Formulas.wordOfMouth(penetration: penetration),
                 rivalFactor: Formulas.rivalFactor(rivalShare: pressure.effectiveShare),
-                reach: s.platformReach * (recession ? 0.85 : 1.0), noise: noise)
+                reach: s.platformReach * (recession ? 0.85 : 1.0) * quality, noise: noise)
             let adds = min(gross, headroom)
             let churn = (recession ? 1.1 : 1.0) * Formulas.churnRate(appeal: appeal, price: price,
                                            tolerance: country.priceTolerance,
-                                           serviceQuality: s.serviceQuality,
+                                           serviceQuality: quality,
                                            rivalHeat: pressure.heat)
             let split = Formulas.tierSplit(prices: market.prices)
 
@@ -114,7 +129,7 @@ enum SimulationEngine {
             }
             market.subs = newSubs
             market.awareness = Formulas.nextAwareness(
-                awareness: market.awareness, spend: market.marketingBudget,
+                awareness: market.awareness, spend: marketingSpend,
                 households: country.households, penetration: penetration)
             s.markets[code] = market
 
@@ -123,6 +138,7 @@ enum SimulationEngine {
             let compliance = Formulas.quotaCompliance(localCount: localCount, total: titles.count, quota: country.localQuota)
             fin.fines += Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
                                             compliance: compliance)
+                * Formulas.fineMultiplier(legalLevel: s.staff.legal)
 
             fin.subscriptionRevenue += subRevenue
             fin.adRevenue += adRevenue
@@ -136,7 +152,8 @@ enum SimulationEngine {
         }
 
         fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek
-        fin.staff = Formulas.baseStaffCostPerWeek
+        fin.staff = Formulas.baseStaffCostPerWeek + s.weeklySalaries
+        fin.tech = s.weeklyTechCost
 
         // Loans: interest is a cost; scheduled principal is a cash outflow only.
         var principalPaid = 0.0
@@ -227,6 +244,21 @@ enum SimulationEngine {
         }
     }
 
+    private static func progressPlatformBuilds(_ s: inout GameState, events: inout [GameEvent]) {
+        var remaining: [PlatformBuild] = []
+        for var build in s.builds {
+            build.weeksLeft -= 1
+            if build.weeksLeft <= 0 {
+                s.platforms.append(build.platform)
+                events.append(s.makeEvent(.news, "\(build.platform.displayName) launched",
+                                          "Your reach just grew to \(Format.percent(s.platformReach))."))
+            } else {
+                remaining.append(build)
+            }
+        }
+        s.builds = remaining
+    }
+
     private static func produceOriginals(_ s: inout GameState, fin: inout WeeklyFinancials,
                                          events: inout [GameEvent]) {
         var remaining: [OriginalProject] = []
@@ -237,6 +269,7 @@ enum SimulationEngine {
 
             let expected = Formulas.expectedOriginalQuality(kind: project.kind, budget: project.budget,
                                                             weeks: project.weeksTotal)
+                + Formulas.originalQualityBonus(contentLevel: s.staff.content)
             let u1 = s.rng.nextDouble(), u2 = s.rng.nextDouble(), u3 = s.rng.nextDouble()
             let breakout = s.rng.chance(0.05)
             let quality = Formulas.rolledOriginalQuality(expected: expected, u1: u1, u2: u2, u3: u3, breakout: breakout)

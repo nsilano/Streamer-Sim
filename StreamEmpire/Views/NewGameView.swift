@@ -4,6 +4,7 @@ struct NewGameView: View {
     @EnvironmentObject var store: GameStore
     @State private var companyName = ""
     @State private var selected = "IE"
+    @State private var showHelp = false
 
     var body: some View {
         NavigationStack {
@@ -41,6 +42,8 @@ struct NewGameView: View {
                 }
             }
             .navigationTitle("Stream Empire")
+            .toolbar { Button("How to play") { showHelp = true } }
+            .sheet(isPresented: $showHelp) { HowToPlayView() }
         }
     }
 }

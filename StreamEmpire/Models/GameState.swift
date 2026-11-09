@@ -29,7 +29,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 3
+    static let currentVersion = 4
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -54,9 +54,29 @@ struct GameState: Codable, Equatable {
     var eventsEnabled = true                   // tests switch random events off
     var previousSubs: [String: Double] = [:]   // leaderboard subs a week ago ("player" or rival id)
 
-    // Placeholders until Phase 4 (tech & infrastructure).
-    var platformReach: Double = 0.8            // 0...1+, from unlocked platforms
-    var serviceQuality: Double = 1.0           // 0...1, from CDN capacity
+    // Tech & operations
+    var platforms: [Platform] = [.web]
+    var builds: [PlatformBuild] = []
+    var cdnSteps: [String: Int] = [:]          // Region.rawValue -> capacity expansions bought
+    var staff = Staff()
+
+    /// Reach multiplier from the platforms you ship on (web only = 0.70, everything = 1.0).
+    var platformReach: Double { Formulas.platformReach(platforms) }
+
+    func cdnCapacity(_ region: Region) -> Double {
+        Formulas.cdnCapacity(steps: cdnSteps[region.rawValue] ?? 0)
+    }
+
+    /// Player subscribers in a region.
+    func subscribers(in region: Region) -> Double {
+        var total = 0.0
+        for code in markets.keys.sorted() where CountryData.country(code)?.region == region {
+            total += markets[code]?.subs.total ?? 0
+        }
+        return total
+    }
+
+    func cdnLoad(_ region: Region) -> Double { subscribers(in: region) / cdnCapacity(region) }
 
     static let startingCash: Double = 25_000_000
     static let targetListings = 14

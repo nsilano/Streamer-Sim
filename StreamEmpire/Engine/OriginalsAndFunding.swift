@@ -54,6 +54,7 @@ extension GameState {
 
     var valuation: Double {
         Formulas.valuation(annualRevenue: finances.annualizedRevenue, subscribers: totalSubscribers)
+            * Formulas.valuationBoost(financeLevel: staff.finance)
     }
 
     /// nil if an investor round is available now, otherwise why not.
@@ -87,7 +88,7 @@ extension GameState {
         guard amount <= creditRoom else {
             throw ActionError.locked("Lenders will only extend \(Format.money(creditRoom)) more right now.")
         }
-        let rate = Formulas.loanRate(profitable: finances.recentWeeklyProfit >= 0)
+        let rate = loanRate
         loans.append(Loan(id: takeID(), principal: amount, balance: amount, annualRate: rate,
                           weeklyPrincipal: amount / Double(termWeeks)))
         finances.cash += amount

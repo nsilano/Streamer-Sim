@@ -60,11 +60,11 @@ struct ContentTabView: View {
                         Text("\(license.years) yr\(license.years == 1 ? "" : "s")\(license.exclusive ? " · Exclusive" : "")")
                             .font(.caption).foregroundStyle(.secondary)
                         Spacer()
-                        Button(Format.money(license.cost)) {
+                        Button(Format.money(state.licensePrice(title))) {
                             store.perform { try $0.buyLicense(titleID: title.id) }
                         }
                         .buttonStyle(.borderedProminent)
-                        .disabled(state.finances.cash < license.cost)
+                        .disabled(state.finances.cash < state.licensePrice(title))
                     }
                 }
             }

@@ -31,6 +31,9 @@ struct DashboardView: View {
                         }
 
                         controls
+                        if state.reportHistory.count > 1 {
+                            TrendCard(reports: state.reportHistory)
+                        }
                         if let report = state.lastReport {
                             ReportSummaryCard(report: report)
                         }
@@ -66,6 +69,10 @@ struct DashboardView: View {
             }
 
             Toggle("Auto-advance", isOn: $store.autoAdvance)
+            Picker("Speed", selection: $store.autoSpeed) {
+                Text("Slow").tag(1.5); Text("Normal").tag(0.7); Text("Fast").tag(0.25)
+            }
+            .pickerStyle(.segmented)
         }
     }
 
@@ -127,7 +134,8 @@ struct WeeklyReportView: View {
                     if f.localization > 0 { LabeledValue(label: "Dubbing & subtitles", value: "-" + Format.money(f.localization)) }
                     if f.interest > 0 { LabeledValue(label: "Loan interest", value: "-" + Format.money(f.interest)) }
                     if f.fines > 0 { LabeledValue(label: "Regulatory fines", value: "-" + Format.money(f.fines)) }
-                    if f.other > 0 { LabeledValue(label: "Event costs", value: "-" + Format.money(f.other)) }
+                    if f.other > 0 { LabeledValue(label: "Hiring, tech builds & events", value: "-" + Format.money(f.other)) }
+                    if f.tech > 0 { LabeledValue(label: "Platform upkeep & CDN", value: "-" + Format.money(f.tech)) }
                     LabeledValue(label: "Profit / loss", value: Format.money(f.profit), tint: f.profit.profitColor)
                     LabeledValue(label: "Cash", value: Format.money(report.cashEnd))
                 }

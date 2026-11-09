@@ -7,6 +7,11 @@ enum RandomEvents {
     /// One week of revenue (min $200k): the scale for event costs.
     static func unit(_ s: GameState) -> Double { max(200_000, s.finances.lastWeek.revenue) }
 
+    /// Regulation costs shrink with the Legal department.
+    static func regulationUnit(_ s: GameState) -> Double {
+        unit(s) * Formulas.regulationCostMultiplier(legalLevel: s.staff.legal)
+    }
+
     /// Maybe starts an event. Returns it so it shows up in the weekly report.
     static func roll(_ s: inout GameState) -> GameEvent? {
         guard s.eventsEnabled, s.pendingEvent == nil, s.week >= 4, s.rng.chance(weeklyChance) else { return nil }
@@ -20,6 +25,7 @@ enum RandomEvents {
 
     static func create(_ key: String, _ s: inout GameState) -> GameEvent {
         let u = unit(s)
+        let ru = regulationUnit(s)
         switch key {
         case "viral":
             let index = s.rng.nextInt(in: 0...(s.catalog.count - 1))
@@ -43,8 +49,8 @@ enum RandomEvents {
         case "regulation":
             return decide(key, &s, .news, "New content regulation",
                           "Lawmakers are tightening streaming rules, and compliance isn't free.",
-                          [("lobby", "Lobby against it (\(Format.money(2 * u)), may backfire)"),
-                           ("comply", "Comply (\(Format.money(u)))")])
+                          [("lobby", "Lobby against it (\(Format.money(2 * ru)), may backfire)"),
+                           ("comply", "Comply (\(Format.money(ru)))")])
         case "strike":
             return decide(key, &s, .warning, "Actor strike",
                           "Performers walked out and your productions are affected.",
@@ -119,16 +125,18 @@ enum RandomEvents {
             shiftAwareness(&s, 0.02)
             (headline, detail) = ("Goodwill gained", "Staying friendly earned some positive press.")
         case ("regulation", "lobby"):
-            if s.rng.chance(0.6) {
-                spend(&s, 2 * u)
-                (headline, detail) = ("Lobbying worked", "The rules were softened. Cost \(Format.money(2 * u)).")
+            let ru = regulationUnit(s)
+            if s.rng.chance(Formulas.lobbySuccessChance(legalLevel: s.staff.legal)) {
+                spend(&s, 2 * ru)
+                (headline, detail) = ("Lobbying worked", "The rules were softened. Cost \(Format.money(2 * ru)).")
             } else {
-                spend(&s, 5 * u)
-                (headline, detail) = ("Lobbying failed", "The rules passed anyway. Total cost \(Format.money(5 * u)).")
+                spend(&s, 5 * ru)
+                (headline, detail) = ("Lobbying failed", "The rules passed anyway. Total cost \(Format.money(5 * ru)).")
             }
         case ("regulation", _):
-            spend(&s, u)
-            (headline, detail) = ("Compliance done", "Legal work cost \(Format.money(u)).")
+            let ru = regulationUnit(s)
+            spend(&s, ru)
+            (headline, detail) = ("Compliance done", "Legal work cost \(Format.money(ru)).")
         case ("strike", "pay"):
             let cost = 0.15 * s.projects.reduce(0) { $0 + $1.budget }
             spend(&s, cost)

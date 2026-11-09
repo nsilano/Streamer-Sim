@@ -14,11 +14,7 @@ struct CompanyView: View {
                     financeSections(state)
                     fundingSections(state)
                     goalsSection(state)
-                    Section("Coming soon") {
-                        Text("Staff departments (Phase 4)")
-                        Text("Platforms & infrastructure (Phase 4)")
-                    }
-                    .foregroundStyle(.secondary)
+                    NavigationLink("Platforms, infrastructure & staff") { TechStaffView() }
                     Section {
                         Button("Abandon company & start over", role: .destructive) { confirmReset = true }
                     }
@@ -57,7 +53,8 @@ struct CompanyView: View {
             LabeledValue(label: "Country operations", value: "-" + Format.money(week.operations))
             LabeledValue(label: "Loan interest", value: "-" + Format.money(week.interest))
             LabeledValue(label: "Regulatory fines", value: "-" + Format.money(week.fines))
-            LabeledValue(label: "Event costs", value: "-" + Format.money(week.other))
+            LabeledValue(label: "Hiring, tech builds & events", value: "-" + Format.money(week.other))
+            LabeledValue(label: "Platform upkeep & CDN", value: "-" + Format.money(week.tech))
         }
     }
 
@@ -91,7 +88,7 @@ struct CompanyView: View {
                 Text("1 yr").tag(52); Text("2 yrs").tag(104); Text("4 yrs").tag(208)
             }
             .pickerStyle(.segmented)
-            Text("Rate: \(Format.percent(Formulas.loanRate(profitable: state.finances.recentWeeklyProfit >= 0))) a year, repaid weekly. Lenders lend against your revenue.")
+            Text("Rate: \(Format.percent(state.loanRate)) a year, repaid weekly. Lenders lend against your revenue.")
                 .font(.footnote).foregroundStyle(.secondary)
             Button("Take loan") {
                 store.perform { try $0.takeLoan(amount: loanAmount, termWeeks: loanTerm) }
