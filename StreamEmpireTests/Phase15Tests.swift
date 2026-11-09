@@ -130,7 +130,8 @@ final class Phase15Tests: XCTestCase {
 
     func testDiscountsBoostSignupsAndCutRevenue() throws {
         let base = try week(nil), promo = try week(.discount, intensity: 0.3)
-        XCTAssertEqual(promo.1.newSubs / base.1.newSubs, 1.45, accuracy: 0.001)
+        // The default "never discount" policy makes promotions land 15% harder: 1 + 1.5 x 0.3 x 1.15.
+        XCTAssertEqual(promo.1.newSubs / base.1.newSubs, 1 + 1.5 * 0.3 * 1.15, accuracy: 0.001)
         XCTAssertEqual(promo.1.financials.subscriptionRevenue / base.1.financials.subscriptionRevenue, 0.82, accuracy: 1e-6)
         XCTAssertEqual(promo.1.financials.adRevenue, base.1.financials.adRevenue, accuracy: 1e-6, "ads unaffected")
     }
@@ -164,9 +165,9 @@ final class Phase15Tests: XCTestCase {
         var s = newState()
         try s.setPolicy("promos", option: "always")
         XCTAssertLessThan(s.promotionQuote(kind: .discount, scope: "", weeks: 4, intensity: 0.5).strength, 1)
-        var calm = newState()
-        try calm.setPolicy("promos", option: "never")
-        XCTAssertGreaterThan(calm.promotionQuote(kind: .discount, scope: "", weeks: 4, intensity: 0.5).strength, 1)
+        let calm = newState()    // the default policy is already "never discount"
+        XCTAssertEqual(calm.policyOptionID("promos"), "never")
+        XCTAssertEqual(calm.promotionQuote(kind: .discount, scope: "", weeks: 4, intensity: 0.5).strength, 1.15, accuracy: 1e-9)
         XCTAssertGreaterThan(never, 0); XCTAssertGreaterThan(normal, 0)
 
         var repeated = newState()
