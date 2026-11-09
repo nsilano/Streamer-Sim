@@ -24,6 +24,7 @@ struct Rival: Codable, Identifiable, Equatable {
     var priceLevel: Double            // 1.0 = normal; below 1 = price cuts (0.7...1.15)
     var weeklyGrowth: Double          // fractional weekly growth in existing markets
 
-    var totalSubs: Double { subs.values.reduce(0, +) }
+    /// Summed in sorted key order so floating-point results are identical across runs and loads.
+    var totalSubs: Double { subs.keys.sorted().reduce(0) { $0 + (subs[$1] ?? 0) } }
     var countryCount: Int { subs.values.filter { $0 > 0 }.count }
 }

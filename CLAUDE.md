@@ -32,6 +32,7 @@ Dashboard - Markets - Content - Rivals - Company.
 - `Engine/` is **pure Swift, no UI imports**. `SimulationEngine.advanceWeek(_:) -> GameState` is the single entry point; `Formulas` holds all tunable math; `GameActions` holds player decisions as `GameState` mutating funcs that throw `ActionError`.
 - `Data/` country table, rival table, title name generator, display `Format`. Keep each in its own file.
 - **All randomness** goes through `SeededRNG` (SplitMix64) stored inside `GameState`, so runs and saves are reproducible. Never use `Int.random`/`Date()` in the engine.
+- **Never sum or iterate `Dictionary.values` / unsorted keys in the engine for floating-point results**: dictionary order differs between instances (even after a save/load), which breaks determinism. Iterate `keys.sorted()` (see `GameState.totalSubscribers`, `Rival.totalSubs`).
 - `Persistence/SaveManager` autosaves `GameState` as JSON after every change (`GameStore.persist`).
 - `Views/` + `App/` are the only places that import SwiftUI.
 - Money flow rule: licensing and launch costs are deducted from cash when paid and recorded in `finances.ledger`; the next weekly report includes them in costs but does not deduct them again.

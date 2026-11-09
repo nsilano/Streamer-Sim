@@ -53,7 +53,8 @@ struct GameState: Codable, Equatable {
     static let startingCash: Double = 25_000_000
     static let targetListings = 14
 
-    var totalSubscribers: Double { markets.values.reduce(0) { $0 + $1.subs.total } }
+    /// Summed in sorted key order so floating-point results don't depend on dictionary ordering.
+    var totalSubscribers: Double { markets.keys.sorted().reduce(0) { $0 + (markets[$1]?.subs.total ?? 0) } }
 
     var liveMarketCodes: [String] {
         markets.filter { $0.value.isLive }.map { $0.key }.sorted()
