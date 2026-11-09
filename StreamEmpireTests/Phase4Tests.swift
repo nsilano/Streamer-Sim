@@ -176,7 +176,8 @@ final class Phase4Tests: XCTestCase {
             var s = newState()
             s.staff.legal = level
             s.markets["NL"]?.status = .live
-            s.markets["NL"]?.subs = TierSet(ad: 0, standard: 10_000, premium: 0)
+            s.week = 60
+            s.markets["NL"]?.subs = TierSet(ad: 0, standard: 30_000, premium: 0)
             s.catalog = titles(10)               // all English: NL quota unmet
             return SimulationEngine.advanceWeek(s).lastReport!.financials.fines
         }

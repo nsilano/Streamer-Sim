@@ -9,13 +9,19 @@ enum RandomEvents {
 
     /// Regulation costs shrink with the Legal department.
     static func regulationUnit(_ s: GameState) -> Double {
-        unit(s) * Formulas.regulationCostMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
+        max(50_000, s.finances.lastWeek.revenue) * Formulas.regulationCostMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
     }
 
     /// Maybe starts an event. Returns it so it shows up in the weekly report.
     static func roll(_ s: inout GameState) -> GameEvent? {
         guard s.eventsEnabled, s.pendingEvent == nil, s.week >= 4, s.rng.chance(weeklyChance) else { return nil }
-        var options: [(String, Double)] = [("regulation", 8), ("merger", 6)]
+        var options: [(String, Double)] = [("merger", 6)]
+        // New regulations only bother established services, and not more than once a year.
+        if s.week >= Formulas.regulationEventMinWeek,
+           s.finances.annualizedRevenue >= Formulas.regulationEventMinAnnualRevenue,
+           s.week - s.lastRegulationWeek >= Formulas.regulationEventCooldownWeeks {
+            options.append(("regulation", 3))
+        }
         if !s.catalog.isEmpty { options.append(("viral", 10)) }
         if s.totalSubscribers > 1_000 { options += [("outage", 10), ("password", 8), ("piracy", 8)] }
         if !s.projects.isEmpty { options.append(("strike", 6)) }
@@ -53,6 +59,7 @@ enum RandomEvents {
                           "Your team proposes cracking down on shared accounts.",
                           [("crack", "Crack down (risky)"), ("friendly", "Stay subscriber-friendly")])
         case "regulation":
+            s.lastRegulationWeek = s.week
             return decide(key, &s, .news, "New content regulation",
                           "Lawmakers are tightening streaming rules, and compliance isn't free.",
                           [("lobby", "Lobby against it (\(Format.money(2 * ru)), may backfire)"),

@@ -238,7 +238,19 @@ enum Formulas {
     }
 
     static func quotaFine(revenue: Double, risk: Double, compliance: Double) -> Double {
-        revenue * risk * (1 - compliance) * 0.25
+        revenue * risk * (1 - compliance) * 0.125
+    }
+
+    // Regulators give new services room to grow: no quota fines in the early game, and fines are capped.
+    static let quotaGraceWeeks = 40
+    static let quotaMinSubscribers = 20_000.0
+    static let maxFineShareOfRevenue = 0.05
+    static let regulationEventMinWeek = 30
+    static let regulationEventMinAnnualRevenue = 2_000_000.0
+    static let regulationEventCooldownWeeks = 52
+
+    static func quotaFinesApply(week: Int, subscribers: Double) -> Bool {
+        week >= quotaGraceWeeks && subscribers >= quotaMinSubscribers
     }
 
     // MARK: Funding
@@ -467,5 +479,42 @@ extension Formulas {
         case .premium: tierMultiplier = 1.5
         }
         return psychologicalPrice(country.priceTolerance * priceFactor * priceLevel * tierMultiplier)
+    }
+}
+
+
+// MARK: - Shares & takeovers
+
+extension Formulas {
+    static let disclosureStake = 0.05          // you must disclose and rivals notice
+    static let poisonPillStake = 0.20          // rivals defend: shares get far pricier
+    static let openMarketLimit = 0.49          // beyond this you need a takeover bid
+    static let takeoverWeeks = 4
+    static let takeoverFeeRate = 0.02          // a failed bid costs this share of the money put up
+    static let takeoverRetention = 0.8         // share of a rival's subscribers who stay after a takeover
+
+    /// What a whole rival is worth: profit and subscribers, scaled by investor mood.
+    static func rivalMarketCap(annualProfit: Double, subscribers: Double, sentiment: Double) -> Double {
+        max(50_000_000, (25 * annualProfit + 60 * subscribers) * sentiment)
+    }
+
+    /// Buying moves the price: the more you already own, the more each extra percent costs.
+    static func sharePurchaseCost(marketCap: Double, currentStake: Double, percent: Double, poisonPill: Bool) -> Double {
+        marketCap * percent * (1 + (currentStake + percent / 2)) * (poisonPill ? 1.6 : 1.0)
+    }
+
+    static func shareSaleProceeds(marketCap: Double, percent: Double) -> Double { marketCap * percent * 0.97 }
+
+    /// Offer price for every share you don't own yet.
+    static func takeoverCost(marketCap: Double, stake: Double, premium: Double) -> Double {
+        marketCap * (1 - stake) * (1 + premium)
+    }
+
+    /// Odds shareholders accept the bid.
+    static func takeoverSuccessChance(premium: Double, stake: Double, poisonPill: Bool,
+                                      catalogStrength: Double, antitrust: Bool) -> Double {
+        let raw = 0.20 + 1.1 * premium + 0.9 * stake - (poisonPill ? 0.25 : 0)
+            - 0.15 * catalogStrength / 100 - (antitrust ? 0.25 : 0)
+        return clamp(raw, 0.05, 0.95)
     }
 }

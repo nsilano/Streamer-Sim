@@ -131,14 +131,15 @@ final class Phase3Tests: XCTestCase {
         XCTAssertEqual(Formulas.quotaCompliance(localCount: 3, total: 10, quota: 0.3), 1.0, accuracy: 1e-9)
         XCTAssertEqual(Formulas.quotaCompliance(localCount: 1, total: 10, quota: 0.4), 0.25, accuracy: 1e-9)
         XCTAssertEqual(Formulas.quotaFine(revenue: 100_000, risk: 0.2, compliance: 1), 0, accuracy: 1e-9)
-        XCTAssertEqual(Formulas.quotaFine(revenue: 100_000, risk: 0.2, compliance: 0), 5_000, accuracy: 1e-6)
+        XCTAssertEqual(Formulas.quotaFine(revenue: 100_000, risk: 0.2, compliance: 0), 2_500, accuracy: 1e-6)
     }
 
     func testMissingLocalContentDrawsFinesUntilDubbed() {
         func fines(catalog: [Title]) -> Double {
             var s = newState()
             s.markets["NL"]?.status = .live
-            s.markets["NL"]?.subs = TierSet(ad: 0, standard: 10_000, premium: 0)
+            s.week = 60                       // fines only apply to established services
+            s.markets["NL"]?.subs = TierSet(ad: 0, standard: 30_000, premium: 0)
             s.catalog = catalog
             return SimulationEngine.advanceWeek(s).lastReport!.financials.fines
         }

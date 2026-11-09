@@ -11,6 +11,7 @@ enum SimulationEngine {
     static func achievedGoals(_ s: GameState) -> [String] {
         var goals: [String] = []
         if s.equity.ipoDone { goals.append("ipo") }
+        if !s.acquiredRivals.isEmpty { goals.append("takeover") }
         if s.finances.annualizedRevenue >= 10_000_000_000 { goals.append("revenue10B") }
         if s.liveMarketCodes.count == CountryData.all.count { goals.append("allMarkets") }
         return goals
@@ -20,6 +21,7 @@ enum SimulationEngine {
         switch goal {
         case "ipo": return "IPO"
         case "revenue10B": return "$10B annual revenue"
+        case "takeover": return "Acquire a rival"
         default: return "All 30 markets"
         }
     }
@@ -163,9 +165,18 @@ enum SimulationEngine {
             // Local-content quota: a catalog short on local-language titles draws regulatory fines.
             let localCount = titles.filter { $0.language == country.language || $0.dubs.contains(country.language) }.count
             let compliance = Formulas.quotaCompliance(localCount: localCount, total: titles.count, quota: country.localQuota)
-            let marketFine = Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
-                                                compliance: compliance)
-                * Formulas.fineMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
+            var marketFine = 0.0
+            if Formulas.quotaFinesApply(week: s.week, subscribers: ownSubs) {
+                let raw = Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
+                                             compliance: compliance)
+                    * Formulas.fineMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
+                marketFine = min(raw, Formulas.maxFineShareOfRevenue * (subRevenue + adRevenue))
+            } else if compliance < 1, titles.count >= 5, ownSubs > 0, !s.quotaWarned.contains(code),
+                      s.week >= Formulas.quotaGraceWeeks - 12 {
+                s.quotaWarned.append(code)
+                events.append(s.makeEvent(.warning, "Regulators are watching \(country.name)",
+                                          "\(country.flag) Too little of your \(country.name) catalog is in \(country.language.displayName) (quota \(Format.percent(country.localQuota))). Fines start once you are established there. Add local titles or dub existing ones to stay clear."))
+            }
             fin.fines += marketFine
 
             fin.subscriptionRevenue += subRevenue
@@ -240,6 +251,7 @@ enum SimulationEngine {
 
         let leaderboardBefore = Dictionary(uniqueKeysWithValues: input.leaderboard.map { ($0.id, $0.subs) })
         advanceRivals(&s, events: &events)
+        progressTakeover(&s, events: &events)
         s.previousSubs = leaderboardBefore
         NewsEngine.update(&s)
 
@@ -458,7 +470,8 @@ enum SimulationEngine {
         var added = 0
         while s.licenseMarket.count < GameState.targetListings && added < 4 {
             let id = s.takeID()
-            let title = TitleGenerator.generate(id: id, rng: &s.rng)
+            let taken = Set(s.licenseMarket.map(\.name) + s.catalog.map(\.name) + s.projects.map(\.name))
+            let title = TitleGenerator.generate(id: id, rng: &s.rng, avoiding: taken)
             s.licenseMarket.append(title)
             added += 1
         }
@@ -570,7 +583,33 @@ enum SimulationEngine {
                                           "Expect extra churn in markets where \(rival.name) competes with you."))
             }
 
+            // Investor mood drifts back to normal with random swings.
+            rival.sentiment = Formulas.clamp(rival.sentiment + (1 - rival.sentiment) * 0.04 + s.rng.nextDouble(in: -0.03...0.03), 0.6, 1.6)
+
             s.rivals[i] = rival
         }
+    }
+
+    /// Counts a takeover bid down and holds the shareholder vote when time is up.
+    private static func progressTakeover(_ s: inout GameState, events: inout [GameEvent]) {
+        guard var bid = s.takeover else { return }
+        bid.weeksLeft -= 1
+        s.takeover = bid
+        guard let rival = s.rivals.first(where: { $0.id == bid.rivalID }) else { s.takeover = nil; return }
+        if bid.weeksLeft > 0 {
+            if bid.weeksLeft == 2 {
+                s.addNews(.industry, "\(rival.name)'s board urges shareholders to reject \(s.companyName)",
+                          "The board calls the \(Int(bid.premium * 100))% premium opportunistic and hunts for a white knight.", rival: rival.id)
+            }
+            return
+        }
+        let chance = s.takeoverChance(rival, premium: bid.premium)
+        let success = s.rng.chance(chance)
+        let name = rival.name
+        s.finishTakeover(success: success)
+        events.append(s.makeEvent(success ? .milestone : .warning,
+                                  success ? "You acquired \(name)!" : "Takeover of \(name) failed",
+                                  success ? "Shareholders accepted your bid. Their subscribers, cash and library are yours."
+                                          : "Shareholders rejected your bid. You recover your offer minus a 2% fee."))
     }
 }

@@ -31,7 +31,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 8
+    static let currentVersion = 9
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -72,6 +72,12 @@ struct GameState: Codable, Equatable {
     var curatorStatus: String?                 // what the manager did (or why nothing) the last time they shopped
     var news: [NewsItem] = []                  // newest first
     var newsSeenThrough = 0                    // highest news id the player has seen
+    var stakes: [String: Double] = [:]         // rival id -> share of the company you own (0...1)
+    var stakeBasis: [String: Double] = [:]     // rival id -> what you paid for those shares
+    var takeover: TakeoverBid?                 // hostile bid in progress (one at a time)
+    var acquiredRivals: [String] = []          // rivals you have taken over
+    var quotaWarned: [String] = []             // countries already warned about the local-content quota
+    var lastRegulationWeek = -100              // when the last regulation event happened
     var milestonesReached: [String] = []       // rival milestones already reported ("netflux-subs-300")
     var previousRanking: [String] = []         // leaderboard order last week, for "overtakes" stories
 
@@ -179,7 +185,8 @@ struct GameState: Codable, Equatable {
         // Seed the licensing market.
         while state.licenseMarket.count < GameState.targetListings {
             let id = state.takeID()
-            state.licenseMarket.append(TitleGenerator.generate(id: id, rng: &state.rng))
+            let taken = Set(state.licenseMarket.map(\.name))
+            state.licenseMarket.append(TitleGenerator.generate(id: id, rng: &state.rng, avoiding: taken))
         }
         state.previousRanking = state.leaderboard.map { $0.id }
         state.addNews(.industry, "The streaming wars begin",

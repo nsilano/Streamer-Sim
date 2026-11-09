@@ -26,7 +26,8 @@ struct Rival: Codable, Identifiable, Equatable {
     var priceLevel: Double            // 1.0 = normal; below 1 = price cuts (0.7...1.15)
     var weeklyGrowth: Double          // fractional weekly growth in existing markets
     var priceFactor: Double = 1.0     // how expensive the brand is relative to a country's fair price
-
+    var sentiment: Double = 1.0       // investor mood: moves the share price (0.6...1.6)
+    var poisonPill = false            // a defence adopted once you hold a large stake
     /// Weekly profit per subscriber (also what the engine adds to a rival's cash).
     static let profitPerSubscriberWeek = 0.12
     var annualProfit: Double { totalSubs * Rival.profitPerSubscriberWeek * 52 }

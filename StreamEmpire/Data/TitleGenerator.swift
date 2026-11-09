@@ -42,17 +42,31 @@ enum TitleGenerator {
             .replacingOccurrences(of: "{N}", with: noun)
     }
 
-    /// Generates one licensable title (a fresh market listing).
-    static func generate(id: Int, rng: inout SeededRNG) -> Title {
-        let genre = rng.pickWeighted(genreWeights)
-        let kind: TitleKind = rng.chance(0.55) ? .movie : .series
+    private static let romanSuffixes = ["II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
 
-        let language: Language
-        switch genre {
-        case .anime: language = .japanese
-        case .local: language = rng.pick(localLanguages)
-        default: language = rng.pickWeighted(languageWeights)
+    /// Picks a parody for the genre that isn't already on the market or in a catalog. When the library
+    /// runs dry it reuses a name with a sequel number ("Pulp Friction II").
+    static func pickParody(genre: Genre, rng: inout SeededRNG, avoiding: Set<String>) -> ParodyTitle {
+        let pool = ParodyLibrary.byGenre[genre] ?? []
+        let fresh = pool.filter { !avoiding.contains($0.name) }
+        if !fresh.isEmpty { return rng.pick(fresh) }
+        var base = rng.pick(pool)
+        for suffix in romanSuffixes {
+            let candidate = "\(base.name) \(suffix)"
+            if !avoiding.contains(candidate) {
+                base.name = candidate
+                return base
+            }
         }
+        return base
+    }
+
+    /// Generates one licensable title (a fresh market listing), a parody of a real show or movie.
+    static func generate(id: Int, rng: inout SeededRNG, avoiding: Set<String> = []) -> Title {
+        let genre = rng.pickWeighted(genreWeights)
+        let parody = pickParody(genre: genre, rng: &rng, avoiding: avoiding)
+        let kind = parody.kind
+        let language = parody.language
 
         let u1 = rng.nextDouble(), u2 = rng.nextDouble(), u3 = rng.nextDouble()
         let quality = Int(25 + 70 * (u1 + u2 + u3) / 3)
@@ -66,7 +80,7 @@ enum TitleGenerator {
                                         years: years, ageWeeks: age, exclusive: exclusive)
         return Title(
             id: id,
-            name: makeName(genre: genre, rng: &rng),
+            name: parody.name,
             kind: kind, genre: genre, language: language,
             quality: quality, popularity: popularity, ageWeeks: age,
             isOriginal: false,
