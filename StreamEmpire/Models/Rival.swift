@@ -25,7 +25,11 @@ struct Rival: Codable, Identifiable, Equatable {
     var subs: [String: Double]        // country code -> subscribers
     var priceLevel: Double            // 1.0 = normal; below 1 = price cuts (0.7...1.15)
     var weeklyGrowth: Double          // fractional weekly growth in existing markets
+    var priceFactor: Double = 1.0     // how expensive the brand is relative to a country's fair price
 
+    /// Weekly profit per subscriber (also what the engine adds to a rival's cash).
+    static let profitPerSubscriberWeek = 0.12
+    var annualProfit: Double { totalSubs * Rival.profitPerSubscriberWeek * 52 }
     /// Summed in sorted key order so floating-point results are identical across runs and loads.
     var totalSubs: Double { subs.keys.sorted().reduce(0) { $0 + (subs[$1] ?? 0) } }
     var countryCount: Int { subs.values.filter { $0 > 0 }.count }

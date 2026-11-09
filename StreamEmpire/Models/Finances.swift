@@ -25,6 +25,27 @@ struct WeeklyFinancials: Codable, Equatable {
             + originals + localization + interest + fines + other + tech + studios
     }
     var profit: Double { revenue - costs }
+
+    /// Field-by-field sum, used for lifetime totals.
+    func adding(_ other: WeeklyFinancials) -> WeeklyFinancials {
+        var sum = self
+        sum.subscriptionRevenue += other.subscriptionRevenue
+        sum.adRevenue += other.adRevenue
+        sum.licensing += other.licensing
+        sum.streaming += other.streaming
+        sum.staff += other.staff
+        sum.marketing += other.marketing
+        sum.operations += other.operations
+        sum.launch += other.launch
+        sum.originals += other.originals
+        sum.localization += other.localization
+        sum.interest += other.interest
+        sum.fines += other.fines
+        sum.other += other.other
+        sum.tech += other.tech
+        sum.studios += other.studios
+        return sum
+    }
 }
 
 /// Spend already deducted from cash since the last weekly simulation.
@@ -42,6 +63,8 @@ struct Finances: Codable, Equatable {
     var weeksInDebt: Int = 0
     var ledger = SpendLedger()
     var lastWeek = WeeklyFinancials()
+    var history: [WeeklyFinancials] = []      // last 26 weeks, oldest first
+    var lifetime = WeeklyFinancials()         // everything since week 1
     var profitHistory: [Double] = []      // last 12 weeks
     var revenueHistory: [Double] = []     // last 52 weeks
 

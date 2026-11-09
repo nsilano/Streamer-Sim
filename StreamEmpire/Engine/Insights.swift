@@ -101,6 +101,94 @@ extension GameState {
     }
 }
 
+/// One line of the "where does my money go" breakdown.
+struct CostLine: Identifiable, Equatable {
+    var id: String
+    var category: CostCategory
+    var amount: Double
+    var previous: Double
+    var shareOfCosts: Double
+    var shareOfRevenue: Double
+    var change: Double { amount - previous }
+}
+
+extension GameState {
+    /// Last week's spending by category, biggest first, with change vs the week before.
+    func costBreakdown() -> [CostLine] {
+        let last = finances.lastWeek
+        let before = finances.history.count >= 2 ? finances.history[finances.history.count - 2] : nil
+        let totalCosts = max(1, last.costs)
+        let revenue = max(1, last.revenue)
+        return CostCategory.allCases.compactMap { category -> CostLine? in
+            let amount = category.amount(in: last)
+            guard amount > 0 else { return nil }
+            return CostLine(id: category.rawValue, category: category, amount: amount,
+                            previous: before.map { category.amount(in: $0) } ?? amount,
+                            shareOfCosts: amount / totalCosts, shareOfRevenue: amount / revenue)
+        }.sorted { $0.amount > $1.amount }
+    }
+
+    /// Countries that cost more to run than they earn, worst first (from last week's report).
+    func losingMarkets() -> [MarketReport] {
+        (lastReport?.markets ?? []).filter { $0.profit < 0 }.sorted { $0.profit < $1.profit }
+    }
+
+    /// Plain-language reasons you are (or aren't) losing money.
+    func diagnosis() -> [Advice] {
+        let last = finances.lastWeek
+        var items: [Advice] = []
+        guard finances.history.count >= 1 else {
+            return [Advice(id: "wait", icon: "hourglass", urgent: false, title: "No data yet",
+                           detail: "Play a week and your spending breakdown will appear here.")]
+        }
+        let lines = costBreakdown()
+        if last.profit < 0 {
+            let top = lines.prefix(3).map { "\($0.category.displayName) (\(Format.money($0.amount)))" }.joined(separator: ", ")
+            items.append(Advice(id: "loss", icon: "arrow.down.right.circle.fill", urgent: true,
+                                title: "You lost \(Format.money(-last.profit)) last week",
+                                detail: "Revenue was \(Format.money(last.revenue)) against \(Format.money(last.costs)) of costs. Biggest costs: \(top)."))
+        } else {
+            items.append(Advice(id: "profit", icon: "arrow.up.right.circle.fill", urgent: false,
+                                title: "You made \(Format.money(last.profit)) last week",
+                                detail: "Revenue \(Format.money(last.revenue)) against \(Format.money(last.costs)) of costs."))
+        }
+        if let top = lines.first, top.shareOfCosts > 0.4 {
+            items.append(Advice(id: "top-cost", icon: top.category.icon, urgent: false,
+                                title: "\(top.category.displayName) is \(Int(top.shareOfCosts * 100))% of your spending",
+                                detail: "That's \(Format.money(top.amount)) last week, equal to \(Int(top.shareOfRevenue * 100))% of your revenue."))
+        }
+        for line in lines where line.previous > 0 && line.amount > line.previous * 1.5 && line.amount > 20_000 {
+            items.append(Advice(id: "jump-\(line.id)", icon: "chart.line.uptrend.xyaxis", urgent: false,
+                                title: "\(line.category.displayName) jumped to \(Format.money(line.amount))",
+                                detail: "That's up \(Format.money(line.change)) from the week before."))
+        }
+        if last.revenue > 0 {
+            if last.marketing / last.revenue > 0.3 {
+                items.append(Advice(id: "marketing", icon: "megaphone.fill", urgent: false,
+                                    title: "Marketing eats \(Int(last.marketing / last.revenue * 100))% of revenue",
+                                    detail: "Check each country: marketing only pays off if your catalog is strong enough to keep new subscribers."))
+            }
+            if last.streaming / last.revenue > 0.2 {
+                items.append(Advice(id: "streaming", icon: "antenna.radiowaves.left.and.right", urgent: false,
+                                    title: "Hosting costs \(Int(last.streaming / last.revenue * 100))% of revenue",
+                                    detail: "Each subscriber costs money to stream. Raise prices or favour higher-paying plans."))
+            }
+            if last.interest / last.revenue > 0.05 {
+                items.append(Advice(id: "interest", icon: "percent", urgent: false,
+                                    title: "Loan interest is \(Int(last.interest / last.revenue * 100))% of revenue",
+                                    detail: "Consider repaying expensive loans when you have spare cash."))
+            }
+        }
+        for market in losingMarkets().prefix(3) {
+            let country = CountryData.country(market.id)
+            items.append(Advice(id: "market-\(market.id)", icon: "flag.fill", urgent: false,
+                                title: "\(country?.flag ?? "") \(country?.name ?? market.id) loses \(Format.money(-market.profit)) a week",
+                                detail: "It earns \(Format.money(market.revenue)) but costs \(Format.money(market.costs)) to run, stream and market. Grow it, raise prices or trim marketing."))
+        }
+        return items
+    }
+}
+
 struct Advice: Identifiable, Equatable {
     var id: String
     var icon: String

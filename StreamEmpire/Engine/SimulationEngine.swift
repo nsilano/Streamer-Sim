@@ -163,9 +163,10 @@ enum SimulationEngine {
             // Local-content quota: a catalog short on local-language titles draws regulatory fines.
             let localCount = titles.filter { $0.language == country.language || $0.dubs.contains(country.language) }.count
             let compliance = Formulas.quotaCompliance(localCount: localCount, total: titles.count, quota: country.localQuota)
-            fin.fines += Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
-                                            compliance: compliance)
+            let marketFine = Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
+                                                compliance: compliance)
                 * Formulas.fineMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
+            fin.fines += marketFine
 
             fin.subscriptionRevenue += subRevenue
             fin.adRevenue += adRevenue
@@ -174,8 +175,10 @@ enum SimulationEngine {
             billedSubs += ownSubs
             totalNew += adds
             totalChurned += ownSubs * churn
+            let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek + Formulas.operatingCost(for: country)
+                + market.marketingBudget + marketFine
             marketReports.append(MarketReport(id: code, newSubs: adds, churned: ownSubs * churn,
-                                              subs: newSubs.total, revenue: subRevenue + adRevenue))
+                                              subs: newSubs.total, revenue: subRevenue + adRevenue, costs: marketCosts))
         }
 
         // Overloaded servers can crash: subscribers leave and the region limps for two weeks.
@@ -231,16 +234,21 @@ enum SimulationEngine {
             s.recessionWeeksLeft -= 1
             if s.recessionWeeksLeft == 0 {
                 events.append(s.makeEvent(.news, "Recession over", "Consumer spending is recovering."))
+                s.addNews(.industry, "The recession is over", "Streaming demand is recovering across the industry.")
             }
         }
 
         let leaderboardBefore = Dictionary(uniqueKeysWithValues: input.leaderboard.map { ($0.id, $0.subs) })
         advanceRivals(&s, events: &events)
         s.previousSubs = leaderboardBefore
+        NewsEngine.update(&s)
 
         // Cash: prepaid items were already deducted when paid; principal repayments aren't P&L.
         s.finances.cash += fin.profit + prepaid - principalPaid
         s.finances.lastWeek = fin
+        s.finances.history.append(fin)
+        if s.finances.history.count > 26 { s.finances.history.removeFirst() }
+        s.finances.lifetime = s.finances.lifetime.adding(fin)
         s.finances.profitHistory.append(fin.profit)
         if s.finances.profitHistory.count > 12 { s.finances.profitHistory.removeFirst() }
         s.finances.revenueHistory.append(fin.revenue)
@@ -252,6 +260,8 @@ enum SimulationEngine {
         for milestone in milestones where totalBefore < milestone && totalAfter >= milestone {
             events.append(s.makeEvent(.milestone, "\(Format.count(milestone)) subscribers!",
                                       "\(s.companyName) just passed \(Format.count(milestone)) subscribers worldwide."))
+            s.addNews(.you, "\(s.companyName) passes \(Format.count(milestone)) subscribers",
+                      "Your service now has \(Format.count(totalAfter)) subscribers worldwide.")
         }
 
         // Win / lose
@@ -260,6 +270,7 @@ enum SimulationEngine {
         for goal in newGoals {
             s.goals.append(goal)
             events.append(s.makeEvent(.milestone, "Goal reached: \(goalTitle(goal))", "A bonus goal is complete!"))
+            s.addNews(.you, "\(s.companyName) reaches a goal: \(goalTitle(goal))", "A major milestone for your company.")
         }
 
         let broke = s.finances.weeksInDebt >= debtWeeksToLose
@@ -332,35 +343,11 @@ enum SimulationEngine {
 
     /// The hired licensing manager shops the market within the limits you set.
     private static func runCurator(_ s: inout GameState, events: inout [GameEvent]) {
-        guard let curator = s.curator, curator.enabled, s.catalog.count < curator.targetCatalogSize else { return }
-        var languages: Set<Language> = [.english]
-        for code in s.markets.keys.sorted() where s.markets[code]?.status != .notLaunched {
-            if let language = CountryData.country(code)?.language { languages.insert(language) }
-        }
-        func value(_ title: Title) -> Double {
-            guard let license = title.license else { return 0 }
-            let price = max(1, s.licensePrice(title))
-            return s.marketFit(of: title) * (0.5 + Double(title.quality) / 100) * sqrt(Double(license.years)) / price
-        }
-        let candidates = s.licenseMarket
-            .filter { curator.allows($0, languages: languages) }
-            .sorted { value($0) != value($1) ? value($0) > value($1) : $0.id < $1.id }
-
-        var spent = 0.0
-        var names: [String] = []
-        for title in candidates {
-            if names.count >= Curator.maxPurchasesPerWeek || s.catalog.count >= curator.targetCatalogSize { break }
-            let price = s.licensePrice(title)
-            guard price <= curator.maxPricePerTitle, spent + price <= curator.weeklyBudget,
-                  s.finances.cash - price >= curator.cashReserve else { continue }
-            if (try? s.buyLicense(titleID: title.id)) != nil {
-                spent += price
-                names.append(title.name)
-            }
-        }
-        if !names.isEmpty {
-            events.append(s.makeEvent(.news, "Licensing manager signed \(names.count) title\(names.count == 1 ? "" : "s")",
-                                      "\(names.joined(separator: ", ")) for \(Format.money(spent)), within your limits."))
+        guard let run = s.curatorShop() else { return }
+        s.curatorStatus = "Week \(s.week): \(run.note)"
+        if !run.bought.isEmpty {
+            events.append(s.makeEvent(.news, "Licensing manager signed \(run.bought.count) title\(run.bought.count == 1 ? "" : "s")",
+                                      "\(run.bought.joined(separator: ", ")) for \(Format.money(run.spent)), within your limits."))
         }
     }
 
@@ -441,6 +428,7 @@ enum SimulationEngine {
         // Rivals bid on listings before you do; aggressive bidders win more often.
         var kept: [Title] = []
         var announced = 0
+        var newsLicenses = 0
         let threats = s.rivals.map { s.threat(from: $0) }     // rivals bid harder against a dominant player
         for title in s.licenseMarket {
             var winner: Int?
@@ -456,6 +444,13 @@ enum SimulationEngine {
                 events.append(s.makeEvent(.licenseLost, "\(name) outbid you",
                                           "\"\(title.name)\" was licensed by \(name)."))
                 announced += 1
+            }
+            if title.quality >= 70, newsLicenses < 2 {
+                let rival = s.rivals[w]
+                s.addNews(.licensing, "\(rival.name) licenses \"\(title.name)\"",
+                          "A \(title.quality)-quality \(title.genre.displayName.lowercased()) \(title.kind.displayName.lowercased()) goes to \(rival.name), strengthening its catalog.",
+                          rival: rival.id)
+                newsLicenses += 1
             }
         }
         s.licenseMarket = kept
@@ -514,6 +509,9 @@ enum SimulationEngine {
                     if let country = CountryData.country(code), rival.cash >= country.launchCost * 0.5 {
                         rival.cash -= country.launchCost * 0.5
                         rival.subs[code] = country.subscriberCeiling * 0.005
+                        s.addNews(.expansion, "\(rival.name) launches in \(country.name)",
+                                  "\(country.flag) \(rival.name) opens in \(country.name), a market of \(Format.count(country.subscriberCeiling)) subscriptions, now in \(rival.countryCount) countries.",
+                                  rival: rival.id)
                         if !announcedExpansion, s.markets[code]?.isLive == true {
                             announcedExpansion = true
                             events.append(s.makeEvent(.news, "\(rival.name) enters \(country.name)",
@@ -550,6 +548,17 @@ enum SimulationEngine {
             }
 
             let overlap = s.markets.contains { $0.value.isLive && (rival.subs[$0.key] ?? 0) > 0 }
+            let priceMove = rival.priceLevel - previousLevel
+            if warCut {
+                s.addNews(.pricing, "\(rival.name) declares a price war on \(s.companyName)",
+                          "Prices are down \(Int(-priceMove * 100))% in a bid to win back subscribers.", rival: rival.id)
+            } else if priceMove <= -0.05 {
+                s.addNews(.pricing, "\(rival.name) cuts prices",
+                          "A promotion takes about \(Int(-priceMove * 100))% off its plans. Expect a fight for budget-conscious viewers.", rival: rival.id)
+            } else if priceMove >= 0.05 {
+                s.addNews(.pricing, "\(rival.name) raises prices",
+                          "Plans cost about \(Int(priceMove * 100))% more, which may push customers to cheaper services.", rival: rival.id)
+            }
             if warCut, !announcedPriceWar, overlap {
                 announcedPriceWar = true
                 announcedPriceCut = true

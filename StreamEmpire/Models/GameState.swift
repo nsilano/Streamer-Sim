@@ -31,7 +31,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 7
+    static let currentVersion = 8
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -69,6 +69,11 @@ struct GameState: Codable, Equatable {
     var staff = Staff()
     var studios: [Studio] = []
     var curator: Curator?                      // hired licensing manager (nil = not hired)
+    var curatorStatus: String?                 // what the manager did (or why nothing) the last time they shopped
+    var news: [NewsItem] = []                  // newest first
+    var newsSeenThrough = 0                    // highest news id the player has seen
+    var milestonesReached: [String] = []       // rival milestones already reported ("netflux-subs-300")
+    var previousRanking: [String] = []         // leaderboard order last week, for "overtakes" stories
 
     /// Reach multiplier from the platforms you ship on (web only = 0.70, everything = 1.0).
     var platformReach: Double { Formulas.platformReach(platforms) }
@@ -134,6 +139,16 @@ struct GameState: Codable, Equatable {
         (leaderboard.firstIndex { $0.isPlayer } ?? 0) + 1
     }
 
+    /// Publishes a story to the news feed (kept to the latest 150).
+    mutating func addNews(_ kind: NewsKind, _ headline: String, _ body: String, rival: String? = nil) {
+        news.insert(NewsItem(id: takeID(), week: week, kind: kind, headline: headline, body: body, rivalID: rival), at: 0)
+        if news.count > 150 { news.removeLast(news.count - 150) }
+    }
+
+    var unreadNewsCount: Int { news.filter { $0.id > newsSeenThrough }.count }
+
+    mutating func markNewsRead() { newsSeenThrough = news.first?.id ?? newsSeenThrough }
+
     mutating func takeID() -> Int {
         defer { nextID += 1 }
         return nextID
@@ -160,11 +175,16 @@ struct GameState: Codable, Equatable {
         )
         state.startCountry = startCountry
         state.startSeedText = String(seed)
+        NewsEngine.seed(&state)
         // Seed the licensing market.
         while state.licenseMarket.count < GameState.targetListings {
             let id = state.takeID()
             state.licenseMarket.append(TitleGenerator.generate(id: id, rng: &state.rng))
         }
+        state.previousRanking = state.leaderboard.map { $0.id }
+        state.addNews(.industry, "The streaming wars begin",
+                      "\(state.rivals.count) services already fight for viewers, led by \(state.rivals.first?.name ?? "the incumbents"). Watch this feed for their moves.")
+        state.markNewsRead()
         return state
     }
 }

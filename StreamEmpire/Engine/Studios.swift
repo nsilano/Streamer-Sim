@@ -71,4 +71,31 @@ extension GameState {
             markets[code]?.prices = Formulas.prices(for: country, level: level)
         }
     }
+
+    /// Sets exact dollar prices for every launched market (0...100 per tier).
+    mutating func applyPrices(_ prices: TierSet) throws {
+        for tier in Tier.allCases where prices[tier] < 0 || prices[tier] > 100 { throw ActionError.invalidPrice }
+        for code in markets.keys.sorted() where markets[code]?.status != .notLaunched {
+            markets[code]?.prices = prices
+        }
+    }
+
+    func rivalPrices(_ rival: Rival, in code: String) -> TierSet? {
+        guard let country = CountryData.country(code), (rival.subs[code] ?? 0) > 0 else { return nil }
+        func price(_ tier: Tier) -> Double {
+            Formulas.rivalPrice(country: country, priceFactor: rival.priceFactor, priceLevel: rival.priceLevel, tier: tier)
+        }
+        return TierSet(ad: price(.ad), standard: price(.standard), premium: price(.premium))
+    }
+
+    /// Copies a rival's dollar prices in one country, optionally undercutting them.
+    mutating func matchRival(id: String, in code: String, undercutBy: Double = 0) throws {
+        guard let rival = rivals.first(where: { $0.id == id }), let theirs = rivalPrices(rival, in: code) else {
+            throw ActionError.invalidProject("That rival isn't in this country.")
+        }
+        var prices = TierSet(ad: max(0.49, theirs.ad - undercutBy), standard: max(0.49, theirs.standard - undercutBy),
+                             premium: max(0.49, theirs.premium - undercutBy))
+        prices.ad = min(100, prices.ad); prices.standard = min(100, prices.standard); prices.premium = min(100, prices.premium)
+        try setPrices(code: code, prices: prices)
+    }
 }

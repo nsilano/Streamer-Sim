@@ -6,6 +6,9 @@ struct MarketReport: Codable, Equatable, Identifiable {
     var churned: Double
     var subs: Double          // subscribers at end of week
     var revenue: Double
+    var costs: Double = 0     // streaming + running the country + marketing + fines
+
+    var profit: Double { revenue - costs }
 }
 
 struct WeeklyReport: Codable, Equatable {

@@ -176,9 +176,9 @@ final class Phase9Tests: XCTestCase {
             return SimulationEngine.advanceWeek(s)
         }
         XCTAssertEqual(try run { $0.weeklyBudget = 5_000_000 }.catalog.count, 3, "at most 3 purchases a week")
-        XCTAssertEqual(try run { _ in }.catalog.count, 1, "the default $500K weekly budget only covers one $400K title")
+        XCTAssertEqual(try run { $0.weeklyBudget = 500_000 }.catalog.count, 1, "a $500K budget only covers one $400K title")
         XCTAssertEqual(try run { $0.weeklyBudget = 900_000 }.catalog.count, 2, "weekly budget")
-        XCTAssertEqual(try run({ _ in }, cash: 3_200_000).catalog.count, 0, "cash reserve")
+        XCTAssertEqual(try run({ $0.cashReserve = 3_000_000 }, cash: 3_200_000).catalog.count, 0, "cash reserve")
         XCTAssertEqual(try run { $0.targetCatalogSize = 1 }.catalog.count, 1, "target catalog size")
         XCTAssertEqual(try run { $0.enabled = false }.catalog.count, 0, "paused")
         XCTAssertEqual(try run { $0.allowMovies = false }.catalog.count, 0, "movies off")

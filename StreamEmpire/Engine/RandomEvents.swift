@@ -40,6 +40,8 @@ enum RandomEvents {
         case "merger":
             let index = s.rng.nextInt(in: 0...(s.rivals.count - 1))
             s.rivals[index].catalogStrength = min(100, s.rivals[index].catalogStrength + 8)
+            s.addNews(.industry, "\(s.rivals[index].name) buys a studio",
+                      "A production house joins \(s.rivals[index].name), and its catalog just got stronger.", rival: s.rivals[index].id)
             return s.makeEvent(.news, "\(s.rivals[index].name) buys a studio",
                                "\(s.rivals[index].name) merged with a production house and its catalog just got stronger.")
         case "outage":
@@ -160,9 +162,11 @@ enum RandomEvents {
         case ("recession", "promo"):
             spend(&s, 2 * u)
             s.recessionWeeksLeft = 12
+            s.addNews(.industry, "A recession hits streaming", "Subscriptions are slowing across the industry.")
             (headline, detail) = ("Promo softens the blow", "The downturn should last about 12 weeks.")
         default:
             s.recessionWeeksLeft = 26
+            s.addNews(.industry, "A recession hits streaming", "Subscriptions are slowing across the industry for about 26 weeks.")
             (headline, detail) = ("Recession begins", "Expect slower growth and more churn for about 26 weeks.")
         }
 

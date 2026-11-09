@@ -3,11 +3,12 @@ import Foundation
 /// A hired licensing manager who buys titles for you every week, within the limits you set.
 struct Curator: Codable, Equatable {
     var enabled = true                       // pause without firing
-    var weeklyBudget = 500_000.0             // most they may spend per week
-    var maxPricePerTitle = 2_000_000.0
-    var minQuality = 60
-    var targetCatalogSize = 25               // stop buying once your catalog is this big
-    var cashReserve = 3_000_000.0            // never spend below this cash balance
+    var weeklyBudget = 2_000_000.0           // spending allowance added each week
+    var carryBudget = 0.0                    // unspent allowance carried over (up to 3 weeks' worth)
+    var maxPricePerTitle = 3_000_000.0
+    var minQuality = 55
+    var targetCatalogSize = 30               // stop buying once your catalog is this big
+    var cashReserve = 2_000_000.0            // never spend below this cash balance
     var allowExclusive = true
     var maxYears = 3                         // longest license they'll sign
     var allowMovies = true
@@ -27,16 +28,36 @@ struct TierBuild: Codable, Equatable {
 }
 
 extension Curator {
+    /// Why a listing fails your rules, or nil if it passes them all.
+    func rejectReason(_ title: Title, languages: Set<Language>) -> String? {
+        guard let license = title.license else { return "format" }
+        if title.quality < minQuality { return "quality" }
+        if license.years > maxYears { return "years" }
+        if license.exclusive && !allowExclusive { return "exclusive" }
+        if title.kind == .movie && !allowMovies { return "format" }
+        if title.kind == .series && !allowSeries { return "format" }
+        if !genres.isEmpty && !genres.contains(title.genre) { return "genre" }
+        if onlyMyLanguages && !languages.contains(title.language) { return "language" }
+        return nil
+    }
+
     /// Does this listing pass every rule you set?
     func allows(_ title: Title, languages: Set<Language>) -> Bool {
-        guard let license = title.license else { return false }
-        if title.quality < minQuality { return false }
-        if license.years > maxYears { return false }
-        if license.exclusive && !allowExclusive { return false }
-        if title.kind == .movie && !allowMovies { return false }
-        if title.kind == .series && !allowSeries { return false }
-        if !genres.isEmpty && !genres.contains(title.genre) { return false }
-        if onlyMyLanguages && !languages.contains(title.language) { return false }
-        return true
+        rejectReason(title, languages: languages) == nil
+    }
+
+    func describe(reason: String) -> String {
+        switch reason {
+        case "quality": return "below quality \(minQuality)"
+        case "years": return "licenses longer than \(maxYears) yr"
+        case "exclusive": return "exclusive deals"
+        case "format": return "a format you turned off"
+        case "genre": return "outside your genres"
+        case "language": return "in languages you don't serve"
+        case "tooExpensive": return "above your max price"
+        case "overBudget": return "over the budget available"
+        case "reserve": return "would dip below your cash reserve"
+        default: return reason
+        }
     }
 }

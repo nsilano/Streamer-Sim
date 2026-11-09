@@ -446,3 +446,26 @@ extension Formulas {
         }
     }
 }
+
+
+// MARK: - Dollar prices
+
+extension Formulas {
+    /// Prices end in .49 or .99 like real subscription plans.
+    static func psychologicalPrice(_ value: Double) -> Double {
+        let whole = value.rounded(.down)
+        let fraction = value - whole
+        return max(0.99, whole + (fraction >= 0.5 ? 0.99 : 0.49))
+    }
+
+    /// What a rival charges in a country for a tier, in dollars: the fair price x brand level x current promotions.
+    static func rivalPrice(country: Country, priceFactor: Double, priceLevel: Double, tier: Tier) -> Double {
+        let tierMultiplier: Double
+        switch tier {
+        case .ad: tierMultiplier = 0.45
+        case .standard: tierMultiplier = 1.0
+        case .premium: tierMultiplier = 1.5
+        }
+        return psychologicalPrice(country.priceTolerance * priceFactor * priceLevel * tierMultiplier)
+    }
+}
