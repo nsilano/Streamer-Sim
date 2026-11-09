@@ -70,8 +70,14 @@ enum Formulas {
     // MARK: Pricing
 
     /// Tier-weighted price used for demand and churn.
-    static func blendedPrice(_ prices: TierSet) -> Double {
-        0.3 * prices.ad + 0.5 * prices.standard + 0.2 * prices.premium
+    static func blendedPrice(_ prices: TierSet, tiers: [Tier] = Tier.allCases) -> Double {
+        let weights: [Tier: Double] = [.ad: 0.3, .standard: 0.5, .premium: 0.2]
+        var total = 0.0, weighted = 0.0
+        for tier in Tier.allCases where tiers.contains(tier) {
+            total += weights[tier] ?? 0
+            weighted += (weights[tier] ?? 0) * prices[tier]
+        }
+        return total > 0 ? weighted / total : prices.standard
     }
 
     /// 1.0 when price equals tolerance; falls steeply above it, rises below it.
@@ -81,12 +87,15 @@ enum Formulas {
     }
 
     /// Share of NEW subscribers choosing each tier (sums to 1).
-    static func tierSplit(prices: TierSet) -> TierSet {
+    static func tierSplit(prices: TierSet, tiers: [Tier] = Tier.allCases) -> TierSet {
         func weight(_ price: Double, _ appeal: Double) -> Double { appeal / pow(max(price, 0) + 1, 1.2) }
-        let ad = weight(prices.ad, 1.0)
-        let standard = weight(prices.standard, 1.0)
-        let premium = weight(prices.premium, 0.6)
+        // Only tiers you've launched can take new sign-ups; with none live, everyone lands on Standard.
+        let live = tiers.isEmpty ? [Tier.standard] : tiers
+        let ad = live.contains(.ad) ? weight(prices.ad, 1.0) : 0
+        let standard = live.contains(.standard) ? weight(prices.standard, 1.0) : 0
+        let premium = live.contains(.premium) ? weight(prices.premium, 0.6) : 0
         let total = ad + standard + premium
+        guard total > 0 else { return TierSet(ad: 0, standard: 1, premium: 0) }
         return TierSet(ad: ad / total, standard: standard / total, premium: premium / total)
     }
 
@@ -405,5 +414,35 @@ extension Formulas {
     /// companies can carry more debt.
     static func bankruptcyFloor(annualRevenue: Double) -> Double {
         -(5_000_000 + 0.25 * max(0, annualRevenue))
+    }
+}
+
+
+// MARK: - Tiers
+
+extension Formulas {
+    /// Standard is always on; Ad-supported needs an ad sales team; Premium needs a higher-quality offering.
+    static func tierLaunchCost(_ tier: Tier, in country: Country) -> Double {
+        switch tier {
+        case .standard: return 0
+        case .ad: return 100_000 + country.households * 40_000
+        case .premium: return 80_000 + country.households * 25_000
+        }
+    }
+
+    static func tierLaunchWeeks(_ tier: Tier) -> Int {
+        switch tier {
+        case .standard: return 0
+        case .ad: return 3
+        case .premium: return 4
+        }
+    }
+
+    static func tierBlurb(_ tier: Tier) -> String {
+        switch tier {
+        case .ad: return "A cheap plan with ads. Brings in the most subscribers and ad revenue, but each one pays less."
+        case .standard: return "Your core plan. Always available."
+        case .premium: return "A pricey plan for superfans. Fewer subscribers, but each one pays much more."
+        }
     }
 }

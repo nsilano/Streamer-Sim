@@ -45,6 +45,7 @@ enum SimulationEngine {
 
         ageCatalog(&s, events: &events)
         refreshLicenseMarket(&s, events: &events)
+        runCurator(&s, events: &events)
         produceOriginals(&s, fin: &fin, events: &events)
         let recession = s.recessionWeeksLeft > 0
         progressPlatformBuilds(&s, events: &events)
@@ -94,6 +95,21 @@ enum SimulationEngine {
                 break
             }
 
+            // Tiers being set up in this market.
+            var finished: [Tier] = []
+            for i in market.tierBuilds.indices {
+                market.tierBuilds[i].weeksLeft -= 1
+                if market.tierBuilds[i].weeksLeft <= 0 { finished.append(market.tierBuilds[i].tier) }
+            }
+            if !finished.isEmpty {
+                market.tierBuilds.removeAll { finished.contains($0.tier) }
+                for tier in finished where !market.liveTiers.contains(tier) {
+                    market.liveTiers.append(tier)
+                    events.append(s.makeEvent(.news, "\(tier.displayName) tier live in \(country.name)",
+                                              "\(country.flag) Customers in \(country.name) can now choose the \(tier.displayName) plan."))
+                }
+            }
+
             let titles = s.catalog.filter { $0.isAvailable(in: code) }
             let appeal = Formulas.catalogAppeal(titles, in: country)
             let ceiling = country.subscriberCeiling
@@ -109,7 +125,7 @@ enum SimulationEngine {
             let penetration = ownSubs / ceiling
             let headroom = max(0, ceiling - ownSubs - rivalSubs)
 
-            let price = Formulas.blendedPrice(market.prices)
+            let price = Formulas.blendedPrice(market.prices, tiers: market.liveTiers)
             let quality = regionQuality[country.region] ?? 1.0
             let marketingSpend = market.marketingBudget * marketingBoost
             let noise = s.rng.nextDouble(in: 0.92...1.08)
@@ -126,7 +142,7 @@ enum SimulationEngine {
                                            tolerance: country.priceTolerance,
                                            serviceQuality: quality,
                                            rivalHeat: pressure.heat)
-            let split = Formulas.tierSplit(prices: market.prices)
+            let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 
             // Revenue is billed on subscribers at the start of the week.
             let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices)
@@ -309,6 +325,40 @@ enum SimulationEngine {
         let decay = Formulas.studioExperienceDecay(pay: s.staff.studioPay)
         if decay > 0 {
             for i in s.studios.indices { s.studios[i].experience = max(0, s.studios[i].experience - decay) }
+        }
+    }
+
+    /// The hired licensing manager shops the market within the limits you set.
+    private static func runCurator(_ s: inout GameState, events: inout [GameEvent]) {
+        guard let curator = s.curator, curator.enabled, s.catalog.count < curator.targetCatalogSize else { return }
+        var languages: Set<Language> = [.english]
+        for code in s.markets.keys.sorted() where s.markets[code]?.status != .notLaunched {
+            if let language = CountryData.country(code)?.language { languages.insert(language) }
+        }
+        func value(_ title: Title) -> Double {
+            guard let license = title.license else { return 0 }
+            let price = max(1, s.licensePrice(title))
+            return s.marketFit(of: title) * (0.5 + Double(title.quality) / 100) * sqrt(Double(license.years)) / price
+        }
+        let candidates = s.licenseMarket
+            .filter { curator.allows($0, languages: languages) }
+            .sorted { value($0) != value($1) ? value($0) > value($1) : $0.id < $1.id }
+
+        var spent = 0.0
+        var names: [String] = []
+        for title in candidates {
+            if names.count >= Curator.maxPurchasesPerWeek || s.catalog.count >= curator.targetCatalogSize { break }
+            let price = s.licensePrice(title)
+            guard price <= curator.maxPricePerTitle, spent + price <= curator.weeklyBudget,
+                  s.finances.cash - price >= curator.cashReserve else { continue }
+            if (try? s.buyLicense(titleID: title.id)) != nil {
+                spent += price
+                names.append(title.name)
+            }
+        }
+        if !names.isEmpty {
+            events.append(s.makeEvent(.news, "Licensing manager signed \(names.count) title\(names.count == 1 ? "" : "s")",
+                                      "\(names.joined(separator: ", ")) for \(Format.money(spent)), within your limits."))
         }
     }
 

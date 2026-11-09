@@ -106,7 +106,7 @@ extension GameState {
         staff[department] -= 1
     }
 
-    var weeklySalaries: Double { staff.weeklySalaries }
+    var weeklySalaries: Double { staff.weeklySalaries + (curator != nil ? Curator.weeklySalary : 0) }
 
     /// License price after the Content department's discount.
     func licensePrice(_ title: Title) -> Double {

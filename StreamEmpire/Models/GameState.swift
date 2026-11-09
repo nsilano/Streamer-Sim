@@ -13,6 +13,8 @@ struct MarketState: Codable, Equatable {
     var subs: TierSet = .zero
     var awareness: Double = 0.02          // 0...1 brand awareness
     var marketingBudget: Double = 0       // $ per week
+    var liveTiers: [Tier] = [.standard]   // tiers open for sign-up (existing subscribers keep paying either way)
+    var tierBuilds: [TierBuild] = []      // tiers being set up
 
     var isLive: Bool { status == .live }
 }
@@ -29,10 +31,12 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 6
+    static let currentVersion = 7
 
     var version: Int = GameState.currentVersion
     var companyName: String
+    var startCountry = ""                     // for restarting the same playthrough
+    var startSeedText = "1"                   // the seed as text (JSON-safe)
     var week: Int = 1
     var rng: SeededRNG
     var nextID: Int = 1
@@ -64,6 +68,7 @@ struct GameState: Codable, Equatable {
     var surges: [String: Int] = [:]            // Region.rawValue -> weeks of extra traffic (viral shows, premieres)
     var staff = Staff()
     var studios: [Studio] = []
+    var curator: Curator?                      // hired licensing manager (nil = not hired)
 
     /// Reach multiplier from the platforms you ship on (web only = 0.70, everything = 1.0).
     var platformReach: Double { Formulas.platformReach(platforms) }
@@ -153,6 +158,8 @@ struct GameState: Codable, Equatable {
             rivals: RivalData.initialRivals(),
             finances: Finances(cash: GameState.startingCash)
         )
+        state.startCountry = startCountry
+        state.startSeedText = String(seed)
         // Seed the licensing market.
         while state.licenseMarket.count < GameState.targetListings {
             let id = state.takeID()
