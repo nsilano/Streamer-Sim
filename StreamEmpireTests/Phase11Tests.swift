@@ -265,7 +265,7 @@ final class Phase11Tests: XCTestCase {
     }
 
     func testSuccessChanceDependsOnPremiumStakeAndDefences() {
-        func chance(_ premium: Double = 0.5, _ stake: Double = 0.1, pill: Bool = false, strength: Double = 60, antitrust: Bool = false) -> Double {
+        func chance(_ premium: Double = 0.5, stake: Double = 0.1, pill: Bool = false, strength: Double = 60, antitrust: Bool = false) -> Double {
             Formulas.takeoverSuccessChance(premium: premium, stake: stake, poisonPill: pill, catalogStrength: strength, antitrust: antitrust)
         }
         XCTAssertGreaterThan(chance(0.9), chance(0.3))
@@ -273,8 +273,8 @@ final class Phase11Tests: XCTestCase {
         XCTAssertLessThan(chance(pill: true), chance())
         XCTAssertLessThan(chance(antitrust: true), chance())
         XCTAssertLessThan(chance(strength: 95), chance(strength: 30))
-        XCTAssertTrue((0.05...0.95).contains(chance(5, 1)))
-        XCTAssertTrue((0.05...0.95).contains(chance(0, 0, pill: true, strength: 100, antitrust: true)))
+        XCTAssertTrue((0.05...0.95).contains(chance(5, stake: 1)))
+        XCTAssertTrue((0.05...0.95).contains(chance(0, stake: 0, pill: true, strength: 100, antitrust: true)))
     }
 
     func testAntitrustFlagsDominantCombinations() throws {
