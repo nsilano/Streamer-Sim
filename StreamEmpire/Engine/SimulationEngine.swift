@@ -43,9 +43,11 @@ enum SimulationEngine {
         let prepaid = s.finances.ledger.total
         s.finances.ledger = SpendLedger()
 
+        // The licensing manager shops the listings you can see now, before the weekly refresh.
+        runCurator(&s, events: &events)
+
         ageCatalog(&s, events: &events)
         refreshLicenseMarket(&s, events: &events)
-        runCurator(&s, events: &events)
         produceOriginals(&s, fin: &fin, events: &events)
         let recession = s.recessionWeeksLeft > 0
         progressPlatformBuilds(&s, events: &events)
