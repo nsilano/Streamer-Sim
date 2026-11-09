@@ -1,13 +1,14 @@
 # Stream Empire (working title)
 
-Native iOS 17+ SwiftUI management sim. No third-party dependencies. All brands and titles are
-fictional parodies (Netflux, Disnay+, PrimeStream, Hulo, MaxStream) - never use real brands or shows.
+Native iOS 17+ SwiftUI management sim. No third-party dependencies. Streaming brands are fictional
+parodies (Netflux, Disnay+, PrimeStream, Hulo, MaxStream...). Every licensable show/movie is a *parody title*
+of a real one ("The First of Us", "Breaking Better"; see `Data/ParodyTitles.swift`): never use real titles or brands verbatim.
 
 ## Concept
 Single player. Found a streaming service in one country and grow it into the #1 platform in the world by
 expanding into countries, building a catalog (licensed + originals) and winning subscribers and revenue.
 
-- **Start:** $25M seed cash, empty catalog, pick 1 starting country (Ireland, New Zealand, Netherlands, Canada are the starter picks).
+- **Start:** $25M seed cash, empty catalog, pick any of the 30 countries as your home market and a difficulty (Easy/Medium/Hard: costs x0.75 / x1.0 / x1.4, rivals slower/normal/faster).
 - **Win:** #1 in global subscribers, ahead of every rival (checked from week 52). Bonus goals: IPO, $10B annual revenue, all 30 markets.
 - **Lose:** cash below the overdraft limit ($5M + 25% of annual revenue), or below zero for 8 straight weeks with no funding available (hard cap 26 weeks).
 
@@ -55,6 +56,9 @@ Dashboard - Markets - Content - Rivals - Company.
 5. **Phase 5 (done):** employee pay (`Staff.pay`, `studioPay`, range 0.6-1.6 of market; scales salaries, effectiveness via `Formulas.payEffectiveness`, attrition below 90%), in-house studios (`Studio`, `Engine/Studios.swift`: found/upgrade, slots, cheaper in-house production, quality/popularity bonuses, experience, upkeep), global price tool (`applyPriceLevel`). Department effects use `staff.effectiveLevel(_:)` (level x pay effectiveness), not raw levels. Save version is 5.
 
 6. **Phase 6 (done): art + depth pass.** Dark cinematic theme (`Views/Theme.swift`), procedural poster covers (`Data/PosterSpec.swift` + `Views/PosterView.swift`), bars everywhere (`StatBar`), real world map (`Resources/world.json` from Natural Earth, public domain; `Views/WorldMapView.swift`) with a country sheet, all 30 countries selectable as the starting market, 12 rivals sized after real services (`Data/RivalData.swift`; world capacity = households x subscriptions per household, so Netflux starts near 325M), rivals retaliate against a dominant player (price wars + poaching, `Formulas.dominanceThreat`), datacenters + cloud + crashes + surges (`Engine/TechAndStaff.swift`, `Models/Datacenter.swift`), a hard bankruptcy overdraft limit (`Formulas.bankruptcyFloor`, `GameState.lossReason`), subscription tiers launched per market (`MarketState.liveTiers`), a hireable licensing manager (`Curator`) that auto-buys within rules, and Settings (restart / replay same seed / quit). Save version is 7.
+
+7. **Phase 7 (done): depth pass 2.** News feed (`Models/News.swift`, `Engine/NewsEngine.swift`; rival launches, subscriber and profit milestones, price moves, license wins, overtakes; lives in the Rivals tab), exact dollar prices + rival dollar prices per country (`Formulas.rivalPrice`, `PriceField`, `matchRival`), Finances screen (`FinanceView`, `GameState.costBreakdown/diagnosis/losingMarkets`, per-country P&L in `MarketReport.costs`, `Finances.history/lifetime`), licensing manager fixed + transparent (`Engine/Curating.swift`: carry-over allowance, status text, Shop now), parody title library, gentler regulation (quota fines only after week 40 and 20K subs, capped at 5% of country revenue; regulation event needs week 30, $2M revenue, 1/yr), shares and hostile takeovers (`Engine/Investing.swift`: market caps, 5% disclosure, 20% poison pill, 49% open-market limit, 4-week bid, success absorbs the rival), policies (`Models/Policy.swift`, `Data/PolicyData.swift`, `Engine/Policies.swift`: ~21 policies with good/bad reactions, brand trust, regulatory heat, shocks, cooldown) and difficulty (`Engine/Difficulty.swift`: all prices come from `GameState.*Price` helpers so the UI and the charge always match). Save version is 11.
+   **Rules:** any new cost must go through `scaled(...)` / a `*Price` helper in `Difficulty.swift`; defaults of every policy must be neutral (tested); keep news/policy logs capped.
 
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
