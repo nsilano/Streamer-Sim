@@ -20,6 +20,8 @@ targets:
       properties:
         CFBundleDisplayName: Stream Empire
         UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        UIRequiresFullScreen: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
@@ -28,6 +30,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.streamempire.app
         TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
   StreamEmpireTests:
     type: bundle.unit-test
     platform: iOS
