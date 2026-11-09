@@ -1,14 +1,26 @@
-# Manual TestFlight upload. NOT exercised in CI: see docs/TESTFLIGHT.md for the one-time setup
-# (App Store Connect app record, API key, repository secrets).
+# TestFlight upload: runs on every push to main, or manually from the Actions tab.
+# NOT yet exercised: see docs/TESTFLIGHT.md for the one-time setup (App Store Connect app, API key, secrets).
 name: TestFlight
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   upload:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Check secrets are set
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          for v in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64; do
+            if [ -z "${!v}" ]; then echo "::error::Repository secret $v is not set (see docs/TESTFLIGHT.md)"; exit 1; fi
+          done
       - run: brew install xcodegen
       - run: xcodegen generate
       - name: Write App Store Connect API key

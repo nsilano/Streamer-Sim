@@ -21,6 +21,15 @@ Everything here is prepared but **has not been run**: it needs your Apple Develo
    | `ASC_ISSUER_ID` | API issuer ID |
    | `ASC_KEY_P8_BASE64` | `base64 -i AuthKey_XXXX.p8` output |
 
+## Automatic uploads (push -> your phone)
+The `TestFlight` workflow runs on **every push to `main`** (and on demand from the Actions tab). So once setup is done:
+1. Merge the working branch into `main` (a pull request, or `git merge`). Workflows triggered by push or run manually
+   only exist for GitHub once the file is on the default branch.
+2. GitHub builds, signs (cloud-managed), and uploads. About 10-30 min later the build appears in the TestFlight app.
+3. Every upload gets a new build number (the workflow run number), so nothing collides.
+Use an **Admin**-role API key if the first run fails with a certificate/provisioning error: cloud signing needs it
+to create the distribution certificate.
+
 ## Uploading a build
 - **From GitHub:** Actions > *TestFlight* > Run workflow. It generates the project with XcodeGen, archives with
   cloud-managed signing, and uploads. The build number is the workflow run number.
