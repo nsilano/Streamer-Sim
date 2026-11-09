@@ -1,10 +1,8 @@
-# TestFlight upload: runs on every push to main, or manually from the Actions tab.
-# NOT yet exercised: see docs/TESTFLIGHT.md for the one-time setup (App Store Connect app, API key, secrets).
+# TestFlight upload: MANUAL ONLY. Never runs automatically; start it from the Actions tab (Run workflow)
+# when you explicitly want a build uploaded. See docs/TESTFLIGHT.md for the one-time setup.
 name: TestFlight
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
   upload:

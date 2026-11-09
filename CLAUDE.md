@@ -12,6 +12,9 @@ expanding into countries, building a catalog (licensed + originals) and winning 
 - **Win:** #1 in global subscribers, ahead of every rival (checked from week 52). Bonus goals: IPO, $10B annual revenue, all 30 markets.
 - **Lose:** cash below the overdraft limit ($5M + 25% of annual revenue), or below zero for 8 straight weeks with no funding available (hard cap 26 weeks).
 
+## Release rule (important)
+**Never push to `main`, merge to `main`, or trigger the TestFlight workflow without the user's explicit permission.** Work on the feature branch only. The TestFlight workflow is manual (`workflow_dispatch`) and must stay that way.
+
 ## Core loop
 1 turn = 1 week. Player decides -> "Next Week" -> `SimulationEngine.advanceWeek` -> weekly report
 (new subs, churn, revenue, costs, events). Auto-advance toggle on the dashboard.
