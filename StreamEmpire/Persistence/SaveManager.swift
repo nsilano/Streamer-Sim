@@ -17,7 +17,9 @@ enum SaveManager {
     /// Returns nil if there is no save or it can't be read.
     static func load(from url: URL = defaultURL) -> GameState? {
         guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(GameState.self, from: data)
+        guard let state = try? JSONDecoder().decode(GameState.self, from: data),
+              state.version == GameState.currentVersion else { return nil }
+        return state
     }
 
     static func delete(at url: URL = defaultURL) {

@@ -29,7 +29,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 1
+    static let currentVersion = 2
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -44,6 +44,7 @@ struct GameState: Codable, Equatable {
     var finances: Finances
     var lastReport: WeeklyReport?
     var reportHistory: [WeeklyReport] = []     // last 26 weeks
+    var previousSubs: [String: Double] = [:]   // leaderboard subs a week ago ("player" or rival id)
 
     // Placeholders until Phase 4 (tech & infrastructure).
     var platformReach: Double = 0.8            // 0...1+, from unlocked platforms

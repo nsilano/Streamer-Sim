@@ -24,6 +24,13 @@ enum ActionError: Error, LocalizedError, Equatable {
 
 /// Player decisions. All pure state changes, usable from tests and UI alike.
 extension GameState {
+    /// Why a market can't be launched yet (nil if the unlock requirement is met or there is none).
+    func launchBlocker(code: String) -> String? {
+        guard let country = CountryData.country(code), let unlock = country.unlock else { return nil }
+        if totalSubscribers >= unlock.minGlobalSubs || catalog.count >= unlock.minCatalogSize { return nil }
+        return "\(country.name) unlocks at \(Format.count(unlock.minGlobalSubs)) global subscribers or \(unlock.minCatalogSize) titles in your catalog."
+    }
+
     mutating func buyLicense(titleID: Int) throws {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = licenseMarket.firstIndex(where: { $0.id == titleID }),
@@ -45,11 +52,7 @@ extension GameState {
             throw ActionError.countryNotFound
         }
         guard market.status == .notLaunched else { throw ActionError.alreadyLaunched }
-        if let unlock = country.unlock,
-           totalSubscribers < unlock.minGlobalSubs, catalog.count < unlock.minCatalogSize {
-            throw ActionError.locked(
-                "\(country.name) unlocks at \(Format.count(unlock.minGlobalSubs)) subscribers or \(unlock.minCatalogSize) titles.")
-        }
+        if let reason = launchBlocker(code: code) { throw ActionError.locked(reason) }
         guard finances.cash >= country.launchCost else {
             throw ActionError.insufficientFunds(needed: country.launchCost)
         }

@@ -105,6 +105,45 @@ enum Formulas {
 
     static func rivalFactor(rivalShare: Double) -> Double { max(0.2, 1.0 - 0.6 * rivalShare) }
 
+    /// One rival's footprint in a single country.
+    struct RivalPresence: Equatable {
+        var share: Double          // share of the country's subscriber ceiling
+        var strength: Double       // catalog strength 0...100
+        var priceLevel: Double     // 1.0 normal, <1 price cuts
+    }
+
+    /// Strength-weighted rival share (feeds `rivalFactor`) and price-cut heat 0...1 (feeds churn).
+    static func rivalPressure(_ rivals: [RivalPresence]) -> (effectiveShare: Double, heat: Double) {
+        let totalShare = rivals.reduce(0) { $0 + $1.share }
+        guard totalShare > 0 else { return (0, 0) }
+        let effective = rivals.reduce(0) { $0 + $1.share * (0.7 + 0.6 * $1.strength / 100) }
+        let heat = rivals.reduce(0) { $0 + $1.share * min(1, max(0, 1 - $1.priceLevel) * 3) } / totalShare
+        return (effective, heat)
+    }
+
+    /// Weekly chance a given rival outbids you for a listing.
+    static func bidChance(personality: RivalPersonality, quality: Int) -> Double {
+        let base: Double
+        switch personality {
+        case .aggressiveBidder: base = 0.025
+        case .globalExpander: base = 0.012
+        case .balanced: base = 0.012
+        case .originalsHeavy: base = 0.008
+        case .priceCutter: base = 0.008
+        }
+        return base * (0.5 + Double(quality) / 100)
+    }
+
+    /// Weekly chance a rival opens a new country.
+    static func expansionChance(personality: RivalPersonality) -> Double {
+        switch personality {
+        case .globalExpander: return 0.03
+        case .aggressiveBidder: return 0.015
+        case .originalsHeavy, .balanced: return 0.012
+        case .priceCutter: return 0.01
+        }
+    }
+
     // MARK: Subscribers
 
     /// Gross new subscribers this week, before the headroom cap.

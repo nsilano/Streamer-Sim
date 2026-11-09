@@ -45,8 +45,8 @@ Dashboard - Markets - Content - Rivals - Company.
 - Cloud Linux sessions have no Swift toolchain: rely on CI results for compile/test status and say so honestly.
 
 ## Build phases
-1. **Phase 1 (done):** models, engine, 1 country playable, licensing, subscribers, finances, dashboard, save/load, tests.
-2. **Phase 2:** all 30 countries (replace `Rival.legacySubs` with per-country rival subs), expansion/unlock rules, per-country pricing polish, rival AI (expand, price changes, license bidding), richer leaderboard.
+1. **Phase 1 (done, CI green):** models, engine, 1 country playable, licensing, subscribers, finances, dashboard, save/load, tests.
+2. **Phase 2 (done):** all 30 countries, unlock rules (`GameState.launchBlocker`), per-country pricing UI hints, rival AI (expansion, price cuts/raises, personality-based license bidding, cash), rival pressure feeding sign-ups and churn (`Formulas.rivalPressure`), richer leaderboard. Save version is 2 (older saves are ignored).
 3. **Phase 3:** originals, dubbing/subtitles, events (incl. choices), loans, investor rounds, IPO.
 4. **Phase 4:** tech platforms, CDN infrastructure, staff departments, balancing pass, polish, app icon, TestFlight setup.
 

@@ -20,10 +20,10 @@ struct Rival: Codable, Identifiable, Equatable {
     var personality: RivalPersonality
     var cash: Double
     var catalogStrength: Double       // 0...100
-    var subs: [String: Double]        // country code -> subscribers (modeled markets)
-    /// Subscribers in markets not yet modeled. Replaced by per-country data in Phase 2.
-    var legacySubs: Double
-    var weeklyGrowth: Double          // fractional weekly growth
+    var subs: [String: Double]        // country code -> subscribers
+    var priceLevel: Double            // 1.0 = normal; below 1 = price cuts (0.7...1.15)
+    var weeklyGrowth: Double          // fractional weekly growth in existing markets
 
-    var totalSubs: Double { legacySubs + subs.values.reduce(0, +) }
+    var totalSubs: Double { subs.values.reduce(0, +) }
+    var countryCount: Int { subs.values.filter { $0 > 0 }.count }
 }

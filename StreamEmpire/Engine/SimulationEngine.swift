@@ -54,6 +54,12 @@ enum SimulationEngine {
             let startSubs = market.subs
             let ownSubs = startSubs.total
             let rivalSubs = s.rivals.reduce(0) { $0 + ($1.subs[code] ?? 0) }
+            let presences = s.rivals.compactMap { rival -> Formulas.RivalPresence? in
+                guard let subs = rival.subs[code], subs > 0 else { return nil }
+                return Formulas.RivalPresence(share: subs / ceiling, strength: rival.catalogStrength,
+                                              priceLevel: rival.priceLevel)
+            }
+            let pressure = Formulas.rivalPressure(presences)
             let penetration = ownSubs / ceiling
             let headroom = max(0, ceiling - ownSubs - rivalSubs)
 
@@ -65,12 +71,13 @@ enum SimulationEngine {
                 awareness: market.awareness,
                 marketingFactor: Formulas.marketingFactor(spend: market.marketingBudget, households: country.households),
                 wordOfMouth: Formulas.wordOfMouth(penetration: penetration),
-                rivalFactor: Formulas.rivalFactor(rivalShare: rivalSubs / ceiling),
+                rivalFactor: Formulas.rivalFactor(rivalShare: pressure.effectiveShare),
                 reach: s.platformReach, noise: noise)
             let adds = min(gross, headroom)
             let churn = Formulas.churnRate(appeal: appeal, price: price,
                                            tolerance: country.priceTolerance,
-                                           serviceQuality: s.serviceQuality)
+                                           serviceQuality: s.serviceQuality,
+                                           rivalHeat: pressure.heat)
             let split = Formulas.tierSplit(prices: market.prices)
 
             // Revenue is billed on subscribers at the start of the week.
@@ -101,7 +108,9 @@ enum SimulationEngine {
         fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek
         fin.staff = Formulas.baseStaffCostPerWeek
 
-        advanceRivals(&s)
+        let leaderboardBefore = Dictionary(uniqueKeysWithValues: input.leaderboard.map { ($0.id, $0.subs) })
+        advanceRivals(&s, events: &events)
+        s.previousSubs = leaderboardBefore
 
         // Cash: licensing and launch costs were already deducted when paid.
         s.finances.cash += fin.profit + fin.licensing + fin.launch
@@ -166,20 +175,22 @@ enum SimulationEngine {
         }
         s.licenseMarket.removeAll { $0.listingWeeksLeft <= 0 }
 
-        // Rivals occasionally snap up listings before you do.
-        let rivalNames = s.rivals.map { $0.name }
+        // Rivals bid on listings before you do; aggressive bidders win more often.
         var kept: [Title] = []
         var announced = 0
         for title in s.licenseMarket {
-            if s.rng.chance(0.05) {
-                if title.quality >= 65, announced < 2, !rivalNames.isEmpty {
-                    let rival = s.rng.pick(rivalNames)
-                    events.append(s.makeEvent(.licenseLost, "\(rival) outbid you",
-                                              "\"\(title.name)\" was licensed by \(rival)."))
-                    announced += 1
-                }
-            } else {
-                kept.append(title)
+            var winner: Int?
+            for index in s.rivals.indices {
+                let chance = Formulas.bidChance(personality: s.rivals[index].personality, quality: title.quality)
+                if s.rng.chance(chance) { winner = index; break }
+            }
+            guard let w = winner else { kept.append(title); continue }
+            s.rivals[w].catalogStrength = min(100, s.rivals[w].catalogStrength + 0.3)
+            if title.quality >= 65, announced < 2 {
+                let name = s.rivals[w].name
+                events.append(s.makeEvent(.licenseLost, "\(name) outbid you",
+                                          "\"\(title.name)\" was licensed by \(name)."))
+                announced += 1
             }
         }
         s.licenseMarket = kept
@@ -193,20 +204,65 @@ enum SimulationEngine {
         }
     }
 
-    private static func advanceRivals(_ s: inout GameState) {
+    private static func advanceRivals(_ s: inout GameState, events: inout [GameEvent]) {
+        let allCodes = CountryData.all.map { $0.code }
+        var announcedExpansion = false
+        var announcedPriceCut = false
+
         for i in s.rivals.indices {
             var rival = s.rivals[i]
             let noise = s.rng.nextDouble(in: 0.8...1.2)
-            rival.legacySubs *= 1 + rival.weeklyGrowth * noise
+
+            // Income and slow catalog improvement.
+            rival.cash += rival.totalSubs * 0.12
+            rival.catalogStrength = min(100, rival.catalogStrength + 0.02)
+
+            // Growth in existing markets, squeezed by the ceiling.
             for code in rival.subs.keys.sorted() {
                 guard let country = CountryData.country(code) else { continue }
                 let own = s.markets[code]?.subs.total ?? 0
-                let others = s.rivals.enumerated().reduce(0.0) { $0 + ($1.offset == i ? 0 : ($1.element.subs[code] ?? 0)) }
-                let occupied = own + others + (rival.subs[code] ?? 0)
-                let room = max(0, country.subscriberCeiling * 0.95 - occupied)
-                let growth = (rival.subs[code] ?? 0) * rival.weeklyGrowth * noise
-                rival.subs[code, default: 0] += min(growth, room)
+                var others = 0.0
+                for (j, other) in s.rivals.enumerated() where j != i { others += other.subs[code] ?? 0 }
+                let current = rival.subs[code] ?? 0
+                let room = max(0, country.subscriberCeiling * 0.95 - (own + others + current))
+                rival.subs[code] = current + min(current * rival.weeklyGrowth * noise, room)
             }
+
+            // Expansion into a new country.
+            if s.rng.chance(Formulas.expansionChance(personality: rival.personality)) {
+                let absent = allCodes.filter { (rival.subs[$0] ?? 0) <= 0 }
+                if !absent.isEmpty {
+                    let choices = absent.map { ($0, CountryData.country($0)?.subscriberCeiling ?? 1) }
+                    let code = s.rng.pickWeighted(choices)
+                    if let country = CountryData.country(code), rival.cash >= country.launchCost * 0.5 {
+                        rival.cash -= country.launchCost * 0.5
+                        rival.subs[code] = country.subscriberCeiling * 0.005
+                        if !announcedExpansion, s.markets[code]?.isLive == true {
+                            announcedExpansion = true
+                            events.append(s.makeEvent(.news, "\(rival.name) enters \(country.name)",
+                                                      "\(rival.name) just launched in \(country.flag) \(country.name), where you operate."))
+                        }
+                    }
+                }
+            }
+
+            // Pricing moves; cuts fade back toward normal.
+            let previousLevel = rival.priceLevel
+            if s.rng.chance(0.04) {
+                let cutting = s.rng.chance(rival.personality == .priceCutter ? 0.75 : 0.45)
+                let step = s.rng.nextDouble(in: 0.04...0.10)
+                rival.priceLevel = Formulas.clamp(rival.priceLevel + (cutting ? -step : step), 0.7, 1.15)
+            }
+            rival.priceLevel += (1 - rival.priceLevel) * 0.01
+            if !announcedPriceCut, previousLevel - rival.priceLevel >= 0.05 {
+                let overlap = s.markets.contains { $0.value.isLive && (rival.subs[$0.key] ?? 0) > 0 }
+                if overlap {
+                    announcedPriceCut = true
+                    events.append(s.makeEvent(.news, "\(rival.name) slashes prices",
+                                              "Expect extra churn in markets where \(rival.name) competes with you."))
+                }
+            }
+
             s.rivals[i] = rival
         }
     }
