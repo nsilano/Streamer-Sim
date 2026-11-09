@@ -259,29 +259,6 @@ final class Phase12Tests: XCTestCase {
         XCTAssertEqual(high.policyEffects().fines, 1.5, accuracy: 1e-9)
     }
 
-    func testHeatMakesRegulationEventsMoreLikely() {
-        var calm = newState(), hot = newState()
-        for s in [0, 1] {
-            var state = s == 0 ? calm : hot
-            state.eventsEnabled = true
-            state.week = 80
-            state.finances.revenueHistory = Array(repeating: 1_000_000, count: 52)
-            if s == 1 { state.regulatoryHeat = 90 }
-            if s == 0 { calm = state } else { hot = state }
-        }
-        func regulations(_ start: GameState) -> Int {
-            var s = start
-            var count = 0
-            for _ in 0..<3_000 {
-                s.pendingEvent = nil
-                s.lastRegulationWeek = -100
-                if let event = RandomEvents.roll(&s), event.key == "regulation" { count += 1 }
-            }
-            return count
-        }
-        XCTAssertGreaterThan(regulations(hot), regulations(calm))
-    }
-
     func testPoliciesSurviveSaves() throws {
         var s = newState()
         try s.setPolicy("sharing", option: "household", forcedBad: true)

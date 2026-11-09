@@ -123,40 +123,15 @@ final class Phase11Tests: XCTestCase {
         XCTAssertEqual(early.finances.lastWeek.fines, 0, accuracy: 1e-9)
     }
 
-    func testRegulationEventsAreRareAndLate() {
-        var early = newState()
-        early.eventsEnabled = true
-        early.week = 10
-        early.finances.revenueHistory = Array(repeating: 1_000_000, count: 52)
-        for _ in 0..<400 {
-            early.pendingEvent = nil
-            if let event = RandomEvents.roll(&early) { XCTAssertNotEqual(event.key, "regulation") }
-        }
-        var poor = newState()
-        poor.eventsEnabled = true
-        poor.week = 80
-        for _ in 0..<400 {
-            poor.pendingEvent = nil
-            if let event = RandomEvents.roll(&poor) { XCTAssertNotEqual(event.key, "regulation", "tiny companies are ignored") }
-        }
-        var established = newState()
-        established.eventsEnabled = true
-        established.week = 80
-        established.finances.revenueHistory = Array(repeating: 1_000_000, count: 52)
-        var happened = false
-        for _ in 0..<600 {
-            established.pendingEvent = nil
-            if let event = RandomEvents.roll(&established), event.key == "regulation" {
-                happened = true
-                XCTAssertEqual(established.lastRegulationWeek, 80)
-                break
-            }
-        }
-        XCTAssertTrue(happened, "established companies still face regulation sometimes")
-        // Cooldown: no second regulation event within a year.
-        for _ in 0..<400 {
-            established.pendingEvent = nil
-            if let event = RandomEvents.roll(&established) { XCTAssertNotEqual(event.key, "regulation") }
+    func testRegulationIsNeverARandomPopUp() {
+        var s = newState()
+        s.eventsEnabled = true
+        s.week = 80
+        s.finances.revenueHistory = Array(repeating: 1_000_000, count: 52)
+        for _ in 0..<1_000 {
+            s.pendingEvent = nil
+            s.lastEventWeek = -100
+            if let event = RandomEvents.roll(&s) { XCTAssertNotEqual(event.key, "regulation") }
         }
         XCTAssertLessThan(RandomEvents.regulationUnit(newState()), 200_000, "regulation costs are modest early on")
     }

@@ -9,6 +9,7 @@ struct RootView: View {
                 TabView {
                     DashboardView()
                         .tabItem { Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis") }
+                        .badge(state.pendingEvent == nil ? 0 : 1)
                     MarketsView()
                         .tabItem { Label("Markets", systemImage: "globe.europe.africa.fill") }
                     ContentTabView()
@@ -20,12 +21,6 @@ struct RootView: View {
                         .tabItem { Label("Company", systemImage: "building.2.fill") }
                 }
                 .tint(Theme.magenta)
-                .sheet(isPresented: Binding(get: { state.pendingEvent != nil && state.outcome == .playing },
-                                            set: { _ in })) {
-                    if let event = store.state?.pendingEvent {
-                        DecisionView(event: event).interactiveDismissDisabled()
-                    }
-                }
                 .fullScreenCover(isPresented: Binding(get: { state.outcome != .playing }, set: { _ in })) {
                     if let current = store.state { GameOverView(state: current) }
                 }

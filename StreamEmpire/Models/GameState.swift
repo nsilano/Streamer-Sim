@@ -31,7 +31,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 13
+    static let currentVersion = 14
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -89,6 +89,7 @@ struct GameState: Codable, Equatable {
     var takeover: TakeoverBid?                 // hostile bid in progress (one at a time)
     var acquiredRivals: [String] = []          // rivals you have taken over
     var quotaWarned: [String] = []             // countries already warned about the local-content quota
+    var lastEventWeek = -100                   // when the last random event happened
     var lastRegulationWeek = -100              // when the last regulation event happened
     var milestonesReached: [String] = []       // rival milestones already reported ("netflux-subs-300")
     var previousRanking: [String] = []         // leaderboard order last week, for "overtakes" stories

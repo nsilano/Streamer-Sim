@@ -18,4 +18,6 @@ struct GameEvent: Codable, Identifiable, Equatable {
     var detail: String
     var choices: [EventChoice] = []
     var key: String = ""          // identifies the event type for choice resolution
+    var expiresWeek = 0            // an unanswered alert settles itself with its default at this week
+    var defaultChoice = ""
 }

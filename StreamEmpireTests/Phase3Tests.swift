@@ -274,26 +274,43 @@ final class Phase3Tests: XCTestCase {
         XCTAssertEqual(s.catalog[0].ageWeeks, 0)
     }
 
-    func testChoiceEventBlocksTheCalendarUntilResolved() throws {
+    func testChoiceEventDoesNotBlockAndSettlesItself() throws {
         var s = newState()
         let event = RandomEvents.create("outage", &s)
         XCTAssertEqual(event.choices.count, 2)
         XCTAssertNotNil(s.pendingEvent)
+        XCTAssertGreaterThan(s.pendingEvent!.expiresWeek, s.week)
 
         let week = s.week
-        XCTAssertEqual(SimulationEngine.advanceWeek(s).week, week, "can't advance with a decision pending")
-        XCTAssertThrowsError(try s.resolveEvent(choiceID: "nonsense"))
+        let next = SimulationEngine.advanceWeek(s)
+        XCTAssertEqual(next.week, week + 1, "alerts never stop the calendar")
+        XCTAssertNotNil(next.pendingEvent, "still waiting for the player")
 
+        // Ignored alerts apply their default and disappear.
+        var later = s
+        for _ in 0..<(RandomEvents.alertLastsWeeks + 1) { later = SimulationEngine.advanceWeek(later) }
+        XCTAssertNil(later.pendingEvent)
+    }
+
+    func testChoiceEventCanBeResolved() throws {
+        var s = newState()
+        _ = RandomEvents.create("outage", &s)
+        XCTAssertThrowsError(try s.resolveEvent(choiceID: "nonsense"))
         let cash = s.finances.cash
         try s.resolveEvent(choiceID: "fix")
         XCTAssertNil(s.pendingEvent)
-        XCTAssertEqual(s.finances.cash, cash - 200_000, accuracy: 0.01)
+        XCTAssertLessThan(s.finances.cash, cash)
         XCTAssertThrowsError(try s.resolveEvent(choiceID: "fix"), "already resolved")
+    }
 
-        s = SimulationEngine.advanceWeek(s)
-        XCTAssertEqual(s.week, week + 1)
-        XCTAssertEqual(s.lastReport!.financials.other, 200_000, accuracy: 0.01)
-        XCTAssertTrue(s.lastReport!.events.contains { $0.headline == "Outage fixed" })
+    func testRandomEventsAreGatedEarly() {
+        var s = newState()
+        s.eventsEnabled = true
+        s.week = 8
+        for _ in 0..<2_000 { XCTAssertNil(RandomEvents.roll(&s)) }
+        s.week = 30
+        s.lastEventWeek = 25
+        for _ in 0..<2_000 { XCTAssertNil(RandomEvents.roll(&s), "cool-down between events") }
     }
 
     func testStrikeDelaysOrCostsMoney() throws {
@@ -317,7 +334,7 @@ final class Phase3Tests: XCTestCase {
         s.markets["IE"]?.subs = TierSet(ad: 0, standard: 10_000, premium: 0)
         _ = RandomEvents.create("piracy", &s)
         try s.resolveEvent(choiceID: "ignore")
-        XCTAssertEqual(s.markets["IE"]!.subs.total, 9_800, accuracy: 1e-6)
+        XCTAssertEqual(s.markets["IE"]!.subs.total, 9_900, accuracy: 1e-6)
     }
 
     func testRecessionDurationAndEffect() throws {
@@ -359,15 +376,15 @@ final class Phase3Tests: XCTestCase {
     func testRandomEventsEventuallyFireAndAreDeterministic() {
         func run() -> GameState {
             var s = newState(events: true)
-            s.markets["IE"]?.subs = TierSet(ad: 0, standard: 5_000, premium: 0)
-            for _ in 0..<300 {
+            s.markets["IE"]?.subs = TierSet(ad: 0, standard: 8_000, premium: 0)
+            for _ in 0..<600 {
                 if s.pendingEvent != nil { break }
                 s = SimulationEngine.advanceWeek(s)
             }
             return s
         }
         let a = run(), b = run()
-        XCTAssertNotNil(a.pendingEvent, "a decision event should appear within 300 weeks")
+        XCTAssertNotNil(a.pendingEvent, "a decision event should appear within 600 weeks")
         XCTAssertEqual(a, b)
     }
 

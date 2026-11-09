@@ -102,11 +102,10 @@ struct DashboardView: View {
                 Label("Next week", systemImage: "forward.fill")
             }
             .buttonStyle(GlowButtonStyle())
-            .disabled(store.autoAdvance || state.pendingEvent != nil)
+            .disabled(store.autoAdvance)
 
             if let event = state.pendingEvent {
-                Label("Decision needed: \(event.headline)", systemImage: "exclamationmark.bubble.fill")
-                    .font(.footnote).foregroundStyle(Theme.amber)
+                AlertCard(event: event, week: state.week)
             }
             Toggle("Auto-advance", isOn: $store.autoAdvance).tint(Theme.magenta)
         }

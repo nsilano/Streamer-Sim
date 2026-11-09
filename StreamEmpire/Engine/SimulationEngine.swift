@@ -29,8 +29,9 @@ enum SimulationEngine {
     /// Runs one week: content aging, market refresh, subscribers, rivals, money, win/lose checks.
     static func advanceWeek(_ input: GameState) -> GameState {
         var s = input
-        // The game waits for the player to settle any pending decision.
-        guard s.outcome == .playing, s.pendingEvent == nil else { return s }
+        // Alerts never block the game; an ignored one settles itself after a few weeks.
+        guard s.outcome == .playing else { return s }
+        RandomEvents.resolveExpired(&s)
 
         NewsEngine.publishPlayerPrices(&s)
         var events: [GameEvent] = s.queuedEvents

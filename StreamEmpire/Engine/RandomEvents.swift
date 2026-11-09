@@ -1,8 +1,12 @@
 import Foundation
 
-/// Random weekly events. Some apply immediately; most pause the game for a player decision.
+/// Random weekly events. They are rare, never block the game, and appear as a red alert you can act on or ignore.
 enum RandomEvents {
-    static let weeklyChance = 0.10
+    static let weeklyChance = 0.03
+    static let firstEventWeek = 12          // nothing happens in the first quarter
+    static let firstNegativeWeek = 24       // and nothing costly for the first half year
+    static let minGapWeeks = 12             // at least this long between any two events
+    static let alertLastsWeeks = 6          // an ignored alert resolves itself (mildly) after this
 
     /// One week of revenue (min $200k): the scale for event costs.
     static func unit(_ s: GameState) -> Double { max(200_000, s.finances.lastWeek.revenue) }
@@ -14,19 +18,27 @@ enum RandomEvents {
 
     /// Maybe starts an event. Returns it so it shows up in the weekly report.
     static func roll(_ s: inout GameState) -> GameEvent? {
-        guard s.eventsEnabled, s.pendingEvent == nil, s.week >= 4, s.rng.chance(weeklyChance) else { return nil }
+        guard s.eventsEnabled, s.pendingEvent == nil, s.week >= firstEventWeek,
+              s.week - s.lastEventWeek >= minGapWeeks, s.rng.chance(weeklyChance) else { return nil }
         var options: [(String, Double)] = [("merger", 6)]
-        // New regulations only bother established services, and not more than once a year.
-        if s.week >= Formulas.regulationEventMinWeek,
-           s.finances.annualizedRevenue >= Formulas.regulationEventMinAnnualRevenue,
-           s.week - s.lastRegulationWeek >= Formulas.regulationEventCooldownWeeks {
-            options.append(("regulation", 3 + s.regulatoryHeat / 15))     // regulators target high-profile offenders
-        }
         if !s.catalog.isEmpty { options.append(("viral", 10)) }
-        if s.totalSubscribers > 1_000 { options += [("outage", 10), ("password", 8), ("piracy", 8)] }
-        if !s.projects.isEmpty { options.append(("strike", 6)) }
-        if s.recessionWeeksLeft == 0 { options.append(("recession", 4)) }
-        return create(s.rng.pickWeighted(options), &s)
+        // Costly events only happen to services that are established and can afford to respond.
+        let canAfford = s.finances.cash >= 3 * unit(s)
+        if s.week >= firstNegativeWeek, canAfford, s.totalSubscribers > 5_000 {
+            options += [("outage", 10), ("password", 6), ("piracy", 8)]
+            if !s.projects.isEmpty { options.append(("strike", 5)) }
+            if s.recessionWeeksLeft == 0, s.week >= 40 { options.append(("recession", 3)) }
+        }
+        let event = create(s.rng.pickWeighted(options), &s)
+        s.lastEventWeek = s.week
+        return event
+    }
+
+    /// An alert nobody dealt with settles itself with its mild default.
+    static func resolveExpired(_ s: inout GameState) {
+        guard let event = s.pendingEvent, event.expiresWeek > 0, s.week >= event.expiresWeek,
+              !event.defaultChoice.isEmpty else { return }
+        try? resolve(&s, choiceID: event.defaultChoice)
     }
 
     static func create(_ key: String, _ s: inout GameState) -> GameEvent {
@@ -53,7 +65,7 @@ enum RandomEvents {
         case "outage":
             return decide(key, &s, .warning, "Major outage",
                           "Streams are failing worldwide and social media is furious.",
-                          [("fix", "Emergency fix (\(Format.money(u)))"), ("wait", "Ride it out")])
+                          [("fix", "Emergency fix (\(Format.money(u / 2)))"), ("wait", "Ride it out (lose ~1% of subscribers)")])
         case "password":
             return decide(key, &s, .news, "Password-sharing crackdown?",
                           "Your team proposes cracking down on shared accounts.",
@@ -72,11 +84,11 @@ enum RandomEvents {
         case "piracy":
             return decide(key, &s, .warning, "Piracy spike",
                           "Your hit shows are all over pirate sites.",
-                          [("fight", "Fund anti-piracy (\(Format.money(u)))"), ("ignore", "Ignore it (lose ~2% of subscribers)")])
+                          [("fight", "Fund anti-piracy (\(Format.money(u / 2)))"), ("ignore", "Ignore it (lose ~1% of subscribers)")])
         default: // recession
             return decide(key, &s, .warning, "Recession",
                           "Consumers are cutting subscriptions. Sign-ups slow and churn rises until it passes.",
-                          [("promo", "Run a retention promo (\(Format.money(2 * u)), shorter downturn)"),
+                          [("promo", "Run a retention promo (\(Format.money(u)), shorter downturn)"),
                            ("hold", "Hold the line (26-week downturn)")])
         }
     }
@@ -86,8 +98,22 @@ enum RandomEvents {
         var event = s.makeEvent(kind, headline, detail)
         event.key = key
         event.choices = choices.map { EventChoice(id: $0.0, label: $0.1) }
+        event.expiresWeek = s.week + alertLastsWeeks
+        event.defaultChoice = defaultChoice(for: key)
         s.pendingEvent = event
         return event
+    }
+
+    /// What happens if you never respond: always the free, mild option.
+    static func defaultChoice(for key: String) -> String {
+        switch key {
+        case "outage": return "wait"
+        case "password": return "friendly"
+        case "strike": return "wait"
+        case "piracy": return "ignore"
+        case "regulation": return "comply"
+        default: return "hold"
+        }
     }
 
     private static func spend(_ s: inout GameState, _ amount: Double) {
@@ -121,11 +147,11 @@ enum RandomEvents {
 
         switch (event.key, choiceID) {
         case ("outage", "fix"):
-            spend(&s, u)
-            (headline, detail) = ("Outage fixed", "Engineers restored service quickly. Cost \(Format.money(u)).")
+            spend(&s, u / 2)
+            (headline, detail) = ("Outage fixed", "Engineers restored service quickly. Cost \(Format.money(u / 2)).")
         case ("outage", _):
-            scaleSubs(&s, 0.98); shiftAwareness(&s, -0.03)
-            (headline, detail) = ("Outage hurt the brand", "About 2% of subscribers left and awareness dipped.")
+            scaleSubs(&s, 0.99); shiftAwareness(&s, -0.02)
+            (headline, detail) = ("Outage hurt the brand", "About 1% of subscribers left and awareness dipped.")
         case ("password", "crack"):
             if s.rng.chance(0.7) {
                 scaleSubs(&s, 1.04)
@@ -161,13 +187,13 @@ enum RandomEvents {
             }
             (headline, detail) = ("Productions delayed", "Every production slips six weeks.")
         case ("piracy", "fight"):
-            spend(&s, u)
-            (headline, detail) = ("Piracy contained", "Anti-piracy efforts cost \(Format.money(u)).")
+            spend(&s, u / 2)
+            (headline, detail) = ("Piracy contained", "Anti-piracy efforts cost \(Format.money(u / 2)).")
         case ("piracy", _):
-            scaleSubs(&s, 0.98)
-            (headline, detail) = ("Piracy bites", "About 2% of subscribers moved to pirate sites.")
+            scaleSubs(&s, 0.99)
+            (headline, detail) = ("Piracy bites", "About 1% of subscribers moved to pirate sites.")
         case ("recession", "promo"):
-            spend(&s, 2 * u)
+            spend(&s, u)
             s.recessionWeeksLeft = 12
             s.addNews(.industry, "A recession hits streaming", "Subscriptions are slowing across the industry.")
             (headline, detail) = ("Promo softens the blow", "The downturn should last about 12 weeks.")
