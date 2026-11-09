@@ -278,14 +278,58 @@ extension Formulas {
     }
 
     // Department effects (level 0...5)
-    static func licenseDiscount(contentLevel: Int) -> Double { 0.02 * Double(contentLevel) }
-    static func originalQualityBonus(contentLevel: Int) -> Double { 2.0 * Double(contentLevel) }
-    static func marketingBoost(marketingLevel: Int) -> Double { 1.0 + 0.06 * Double(marketingLevel) }
-    static func buildWeeks(base: Int, engineeringLevel: Int) -> Int { max(2, base - engineeringLevel) }
-    static func cdnCostMultiplier(engineeringLevel: Int) -> Double { 1.0 - 0.05 * Double(engineeringLevel) }
-    static func fineMultiplier(legalLevel: Int) -> Double { 1.0 - 0.15 * Double(legalLevel) }
-    static func regulationCostMultiplier(legalLevel: Int) -> Double { 1.0 - 0.10 * Double(legalLevel) }
-    static func lobbySuccessChance(legalLevel: Int) -> Double { 0.6 + 0.05 * Double(legalLevel) }
-    static func loanRateDiscount(financeLevel: Int) -> Double { 0.005 * Double(financeLevel) }
-    static func valuationBoost(financeLevel: Int) -> Double { 1.0 + 0.03 * Double(financeLevel) }
+    static func licenseDiscount(contentLevel: Double) -> Double { 0.02 * contentLevel }
+    static func originalQualityBonus(contentLevel: Double) -> Double { 2.0 * contentLevel }
+    static func marketingBoost(marketingLevel: Double) -> Double { 1.0 + 0.06 * marketingLevel }
+    static func buildWeeks(base: Int, engineeringLevel: Double) -> Int { max(2, base - Int(engineeringLevel.rounded())) }
+    static func cdnCostMultiplier(engineeringLevel: Double) -> Double { max(0.3, 1.0 - 0.05 * engineeringLevel) }
+    static func fineMultiplier(legalLevel: Double) -> Double { max(0.1, 1.0 - 0.15 * legalLevel) }
+    static func regulationCostMultiplier(legalLevel: Double) -> Double { max(0.2, 1.0 - 0.10 * legalLevel) }
+    static func lobbySuccessChance(legalLevel: Double) -> Double { min(0.95, 0.6 + 0.05 * legalLevel) }
+    static func loanRateDiscount(financeLevel: Double) -> Double { 0.005 * financeLevel }
+    static func valuationBoost(financeLevel: Double) -> Double { 1.0 + 0.03 * financeLevel }
+}
+
+// MARK: - Pay & studios
+
+extension Formulas {
+    static let payRange = 0.6...1.6
+
+    /// Output of a team relative to its level: 1.0 at market pay, +/-60% of the pay difference.
+    static func payEffectiveness(_ pay: Double) -> Double {
+        1 + (clamp(pay, payRange.lowerBound, payRange.upperBound) - 1) * 0.6
+    }
+
+    /// Weekly chance of a department level (or studio talent) walking out when pay is under 90% of market.
+    static func attritionChance(pay: Double) -> Double { max(0, 0.9 - pay) * 0.04 }
+
+    static let studioFoundingCost = 3_000_000.0
+    static let maxStudios = 3
+    static let maxStudioLevel = 5
+    static func studioUpgradeCost(currentLevel: Int) -> Double { 2_000_000 * Double(currentLevel) }
+    static func studioUpkeep(level: Int) -> Double { 25_000 * Double(level) }
+
+    /// In-house productions cost less than outsourced ones; bigger studios are more efficient.
+    static func inHouseCostFactor(level: Int) -> Double { 0.85 - 0.04 * Double(level) }
+
+    /// Extra quality from a studio: level, accumulated experience, a genre specialty and well-paid crews.
+    static func studioQualityBonus(level: Int, experience: Double, specialtyMatch: Bool, payEffect: Double) -> Double {
+        (3.0 * Double(level) + experience * 0.1 + (specialtyMatch ? 5 : 0)) * payEffect
+    }
+
+    static func studioPopularityBonus(experience: Double) -> Int { Int(experience * 0.08) }
+
+    static func studioExperienceGain(quality: Int) -> Double { 8 + Double(quality) / 10 }
+
+    /// Experience lost per week when crews are underpaid.
+    static func studioExperienceDecay(pay: Double) -> Double { max(0, 0.9 - pay) * 10 }
+
+    // MARK: Global pricing
+
+    /// Price for each tier at `level` x the country's fair prices, rounded to 50 cents.
+    static func prices(for country: Country, level: Double) -> TierSet {
+        let base = CountryData.defaultPrices(for: country)
+        func scaled(_ v: Double) -> Double { min(100, max(0, (v * level * 2).rounded() / 2)) }
+        return TierSet(ad: scaled(base.ad), standard: scaled(base.standard), premium: scaled(base.premium))
+    }
 }

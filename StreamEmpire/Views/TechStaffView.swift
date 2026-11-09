@@ -10,6 +10,7 @@ struct TechStaffView: View {
                 platformSection(state)
                 cdnSection(state)
                 staffSection(state)
+                studioPaySection
             }
         }
         .navigationTitle("Tech & staff")
@@ -48,7 +49,7 @@ struct TechStaffView: View {
 
     private func platformDetail(_ platform: Platform, _ state: GameState) -> String {
         if platform == .web { return "Included" }
-        let weeks = Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: state.staff.engineering)
+        let weeks = Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: state.staff.effectiveLevel(.engineering))
         return "+\(Int(platform.reachBonus * 100)) pts reach · \(weeks) wk build · \(Format.money(platform.weeklyUpkeep))/wk"
     }
 
@@ -100,6 +101,9 @@ struct TechStaffView: View {
                         Text("Level \(level)/\(Formulas.maxDepartmentLevel)").foregroundStyle(.secondary)
                     }
                     Text(department.effectText).font(.caption).foregroundStyle(.secondary)
+                    payRow(label: "Pay", value: state.staff.payScale(department)) { newValue in
+                        store.perform { try $0.setPay(department, scale: newValue) }
+                    }
                     HStack {
                         Button("Hire (\(Format.money(Formulas.hireCost(currentLevel: level))))") {
                             store.perform { try $0.hire(department) }
@@ -120,7 +124,33 @@ struct TechStaffView: View {
         } header: {
             Text("Staff")
         } footer: {
-            Text("Each level costs \(Format.money(Formulas.salaryPerLevelPerWeek)) a week plus a one-time hiring fee.")
+            Text("Each level costs \(Format.money(Formulas.salaryPerLevelPerWeek)) a week at market pay, plus a one-time hiring fee. Pay above market makes a team more effective; below 90% staff start quitting.")
+        }
+    }
+
+    private var studioPaySection: some View {
+        Section {
+            if let state = store.state {
+                payRow(label: "Studio crew pay", value: state.staff.studioPay) { newValue in
+                    store.perform { try $0.setStudioPay(scale: newValue) }
+                }
+                LabeledValue(label: "Studio upkeep", value: Format.money(state.weeklyStudioCost) + "/wk")
+            }
+        } header: {
+            Text("Studio crews")
+        } footer: {
+            Text("Better-paid crews raise in-house quality. Underpaid crews lose experience every week.")
+        }
+    }
+
+    private func payRow(label: String, value: Double, set: @escaping (Double) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Stepper(value: Binding(get: { value }, set: { set($0) }), in: Formulas.payRange, step: 0.1) {
+                LabeledValue(label: label, value: Format.percent(value) + " of market")
+            }
+            let effect = Formulas.payEffectiveness(value)
+            Text("Effectiveness \(Format.percent(effect))" + (value < 0.9 ? " · staff may quit" : ""))
+                .font(.caption2).foregroundStyle(value < 0.9 ? .orange : .secondary)
         }
     }
 }

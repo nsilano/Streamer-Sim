@@ -11,6 +11,7 @@ struct OriginalProject: Codable, Identifiable, Equatable {
     var weeksTotal: Int
     var weeksLeft: Int
     var weeklyCost: Double
+    var studioID: Int? = nil       // nil = outsourced; otherwise produced in-house at that studio
 
     var progress: Double { 1 - Double(weeksLeft) / Double(max(1, weeksTotal)) }
 }

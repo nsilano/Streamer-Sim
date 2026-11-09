@@ -55,6 +55,7 @@ struct CompanyView: View {
             LabeledValue(label: "Regulatory fines", value: "-" + Format.money(week.fines))
             LabeledValue(label: "Hiring, tech builds & events", value: "-" + Format.money(week.other))
             LabeledValue(label: "Platform upkeep & CDN", value: "-" + Format.money(week.tech))
+            LabeledValue(label: "Studio upkeep", value: "-" + Format.money(week.studios))
         }
     }
 

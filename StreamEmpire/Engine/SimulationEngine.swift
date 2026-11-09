@@ -59,7 +59,7 @@ enum SimulationEngine {
                                           "Servers are at \(Format.percent(load)) of capacity. Subscribers are churning; expand the CDN in the Company tab."))
             }
         }
-        let marketingBoost = Formulas.marketingBoost(marketingLevel: s.staff.marketing)
+        let marketingBoost = Formulas.marketingBoost(marketingLevel: s.staff.effectiveLevel(.marketing))
 
         // Markets
         var marketReports: [MarketReport] = []
@@ -138,7 +138,7 @@ enum SimulationEngine {
             let compliance = Formulas.quotaCompliance(localCount: localCount, total: titles.count, quota: country.localQuota)
             fin.fines += Formulas.quotaFine(revenue: subRevenue + adRevenue, risk: country.regulatoryRisk,
                                             compliance: compliance)
-                * Formulas.fineMultiplier(legalLevel: s.staff.legal)
+                * Formulas.fineMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
 
             fin.subscriptionRevenue += subRevenue
             fin.adRevenue += adRevenue
@@ -152,6 +152,8 @@ enum SimulationEngine {
         }
 
         fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek
+        fin.studios = s.weeklyStudioCost
+        applyAttrition(&s, events: &events)
         fin.staff = Formulas.baseStaffCostPerWeek + s.weeklySalaries + Formulas.overheadRate * fin.revenue
         let mobileApps = [Platform.ios, .android].filter { s.platforms.contains($0) }.count
         fin.tech = s.weeklyTechCost + Double(mobileApps) * Formulas.appStoreFeeRate * fin.subscriptionRevenue
@@ -245,6 +247,22 @@ enum SimulationEngine {
         }
     }
 
+    /// Underpaid departments lose people; underpaid studio crews lose experience.
+    private static func applyAttrition(_ s: inout GameState, events: inout [GameEvent]) {
+        for department in Department.allCases where s.staff[department] > 0 {
+            let chance = Formulas.attritionChance(pay: s.staff.payScale(department))
+            if chance > 0, s.rng.chance(chance) {
+                s.staff[department] -= 1
+                events.append(s.makeEvent(.warning, "\(department.displayName) team member quit",
+                                          "Low pay is costing you talent. \(department.displayName) dropped to level \(s.staff[department])."))
+            }
+        }
+        let decay = Formulas.studioExperienceDecay(pay: s.staff.studioPay)
+        if decay > 0 {
+            for i in s.studios.indices { s.studios[i].experience = max(0, s.studios[i].experience - decay) }
+        }
+    }
+
     private static func progressPlatformBuilds(_ s: inout GameState, events: inout [GameEvent]) {
         var remaining: [PlatformBuild] = []
         for var build in s.builds {
@@ -268,21 +286,34 @@ enum SimulationEngine {
             project.weeksLeft -= 1
             guard project.weeksLeft <= 0 else { remaining.append(project); continue }
 
+            let studioIndex = project.studioID.flatMap { id in s.studios.firstIndex { $0.id == id } }
+            var studioBonus = 0.0
+            var popularityBonus = 0
+            if let si = studioIndex {
+                studioBonus = s.studioBonus(for: s.studios[si], genre: project.genre)
+                popularityBonus = Formulas.studioPopularityBonus(experience: s.studios[si].experience)
+            }
             let expected = Formulas.expectedOriginalQuality(kind: project.kind, budget: project.budget,
                                                             weeks: project.weeksTotal)
-                + Formulas.originalQualityBonus(contentLevel: s.staff.content)
+                + Formulas.originalQualityBonus(contentLevel: s.staff.effectiveLevel(.content))
+                + studioBonus
             let u1 = s.rng.nextDouble(), u2 = s.rng.nextDouble(), u3 = s.rng.nextDouble()
             let breakout = s.rng.chance(0.05)
             let quality = Formulas.rolledOriginalQuality(expected: expected, u1: u1, u2: u2, u3: u3, breakout: breakout)
-            let popularity = Formulas.originalPopularity(quality: quality, u: s.rng.nextDouble())
+            let popularity = min(100, Formulas.originalPopularity(quality: quality, u: s.rng.nextDouble()) + popularityBonus)
             let title = Title(id: s.takeID(), name: project.name, kind: project.kind, genre: project.genre,
                               language: project.language, quality: quality, popularity: popularity,
                               ageWeeks: 0, isOriginal: true, license: nil, weeksRemaining: nil,
                               listingWeeksLeft: 0)
             s.catalog.append(title)
             let verdict = breakout ? "A runaway hit!" : quality >= 75 ? "Critics love it." : quality <= 40 ? "A flop." : "A solid addition."
+            var origin = ""
+            if let si = studioIndex {
+                s.studios[si].experience = min(100, s.studios[si].experience + Formulas.studioExperienceGain(quality: quality))
+                origin = " from \(s.studios[si].name)"
+            }
             events.append(s.makeEvent(.news, "\"\(project.name)\" premieres",
-                                      "Your original (quality \(quality), popularity \(popularity)) is live worldwide. \(verdict)"))
+                                      "Your original\(origin) (quality \(quality), popularity \(popularity)) is live worldwide. \(verdict)"))
         }
         s.projects = remaining
     }

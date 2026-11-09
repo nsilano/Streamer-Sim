@@ -16,13 +16,13 @@ extension GameState {
         finances.ledger.other += platform.unlockCost
         builds.append(PlatformBuild(
             platform: platform,
-            weeksLeft: Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: staff.engineering)))
+            weeksLeft: Formulas.buildWeeks(base: platform.buildWeeks, engineeringLevel: staff.effectiveLevel(.engineering))))
     }
 
     // MARK: Infrastructure
 
     var cdnStepPrice: Double {
-        Formulas.cdnStepCost * Formulas.cdnCostMultiplier(engineeringLevel: staff.engineering)
+        Formulas.cdnStepCost * Formulas.cdnCostMultiplier(engineeringLevel: staff.effectiveLevel(.engineering))
     }
 
     mutating func expandCDN(region: Region) throws {
@@ -39,7 +39,7 @@ extension GameState {
     /// Weekly CDN + platform upkeep.
     var weeklyTechCost: Double {
         let cdn = cdnSteps.keys.sorted().reduce(0.0) { $0 + Double(cdnSteps[$1] ?? 0) } * Formulas.cdnStepUpkeepPerWeek
-            * Formulas.cdnCostMultiplier(engineeringLevel: staff.engineering)
+            * Formulas.cdnCostMultiplier(engineeringLevel: staff.effectiveLevel(.engineering))
         let apps = platforms.reduce(0.0) { $0 + $1.weeklyUpkeep }
         return cdn + apps
     }
@@ -64,17 +64,17 @@ extension GameState {
         staff[department] -= 1
     }
 
-    var weeklySalaries: Double { Double(staff.totalLevels) * Formulas.salaryPerLevelPerWeek }
+    var weeklySalaries: Double { staff.weeklySalaries }
 
     /// License price after the Content department's discount.
     func licensePrice(_ title: Title) -> Double {
         guard let license = title.license else { return 0 }
-        return license.cost * (1 - Formulas.licenseDiscount(contentLevel: staff.content))
+        return license.cost * (1 - Formulas.licenseDiscount(contentLevel: staff.effectiveLevel(.content)))
             * Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers)
     }
 
     var loanRate: Double {
         max(0.04, Formulas.loanRate(profitable: finances.recentWeeklyProfit >= 0)
-            - Formulas.loanRateDiscount(financeLevel: staff.finance))
+            - Formulas.loanRateDiscount(financeLevel: staff.effectiveLevel(.finance)))
     }
 }

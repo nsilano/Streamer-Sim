@@ -9,7 +9,7 @@ enum RandomEvents {
 
     /// Regulation costs shrink with the Legal department.
     static func regulationUnit(_ s: GameState) -> Double {
-        unit(s) * Formulas.regulationCostMultiplier(legalLevel: s.staff.legal)
+        unit(s) * Formulas.regulationCostMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
     }
 
     /// Maybe starts an event. Returns it so it shows up in the weekly report.
@@ -126,7 +126,7 @@ enum RandomEvents {
             (headline, detail) = ("Goodwill gained", "Staying friendly earned some positive press.")
         case ("regulation", "lobby"):
             let ru = regulationUnit(s)
-            if s.rng.chance(Formulas.lobbySuccessChance(legalLevel: s.staff.legal)) {
+            if s.rng.chance(Formulas.lobbySuccessChance(legalLevel: s.staff.effectiveLevel(.legal))) {
                 spend(&s, 2 * ru)
                 (headline, detail) = ("Lobbying worked", "The rules were softened. Cost \(Format.money(2 * ru)).")
             } else {

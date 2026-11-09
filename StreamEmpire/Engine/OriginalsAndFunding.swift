@@ -4,11 +4,23 @@ import Foundation
 extension GameState {
     // MARK: Originals
 
+    /// Commissions an original. `studioID == nil` outsources it; otherwise it is produced in-house.
     mutating func commissionOriginal(kind: TitleKind, genre: Genre, language: Language,
-                                     budget: Double, weeks: Int) throws {
+                                     budget: Double, weeks: Int, studioID: Int? = nil) throws {
         guard outcome == .playing else { throw ActionError.gameOver }
-        guard projects.count < Formulas.maxConcurrentProjects else {
-            throw ActionError.invalidProject("You can run at most \(Formulas.maxConcurrentProjects) productions at once.")
+        var costFactor = 1.0
+        if let studioID {
+            guard let studio = studios.first(where: { $0.id == studioID }) else {
+                throw ActionError.invalidProject("That studio doesn't exist.")
+            }
+            guard freeSlots(at: studio) > 0 else {
+                throw ActionError.invalidProject("\(studio.name) has no free production slots. Upgrade it or wait.")
+            }
+            costFactor = Formulas.inHouseCostFactor(level: studio.level)
+        } else {
+            guard projects.filter({ $0.studioID == nil }).count < Formulas.maxConcurrentProjects else {
+                throw ActionError.invalidProject("You can outsource at most \(Formulas.maxConcurrentProjects) productions at once.")
+            }
         }
         guard Formulas.budgetRange(kind).contains(budget) else {
             throw ActionError.invalidProject("Budget for a \(kind.displayName.lowercased()) must be \(Format.money(Formulas.budgetRange(kind).lowerBound))-\(Format.money(Formulas.budgetRange(kind).upperBound)).")
@@ -16,12 +28,13 @@ extension GameState {
         guard Formulas.productionWeeksRange.contains(weeks) else {
             throw ActionError.invalidProject("Production takes 6 to 52 weeks.")
         }
-        let weekly = budget / Double(weeks)
+        let weekly = budget * costFactor / Double(weeks)
         guard finances.cash >= weekly * 4 else { throw ActionError.insufficientFunds(needed: weekly * 4) }
         let id = takeID()
         let name = TitleGenerator.makeName(genre: genre, rng: &rng)
         projects.append(OriginalProject(id: id, name: name, kind: kind, genre: genre, language: language,
-                                        budget: budget, weeksTotal: weeks, weeksLeft: weeks, weeklyCost: weekly))
+                                        budget: budget, weeksTotal: weeks, weeksLeft: weeks, weeklyCost: weekly,
+                                        studioID: studioID))
     }
 
     // MARK: Localization
@@ -54,7 +67,7 @@ extension GameState {
 
     var valuation: Double {
         Formulas.valuation(annualRevenue: finances.annualizedRevenue, subscribers: totalSubscribers)
-            * Formulas.valuationBoost(financeLevel: staff.finance)
+            * Formulas.valuationBoost(financeLevel: staff.effectiveLevel(.finance))
     }
 
     /// nil if an investor round is available now, otherwise why not.

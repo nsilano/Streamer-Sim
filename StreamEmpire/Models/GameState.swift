@@ -29,7 +29,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 4
+    static let currentVersion = 5
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -59,6 +59,7 @@ struct GameState: Codable, Equatable {
     var builds: [PlatformBuild] = []
     var cdnSteps: [String: Int] = [:]          // Region.rawValue -> capacity expansions bought
     var staff = Staff()
+    var studios: [Studio] = []
 
     /// Reach multiplier from the platforms you ship on (web only = 0.70, everything = 1.0).
     var platformReach: Double { Formulas.platformReach(platforms) }

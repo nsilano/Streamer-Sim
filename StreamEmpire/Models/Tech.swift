@@ -77,6 +77,19 @@ struct Staff: Codable, Equatable {
     var engineering = 0
     var legal = 0
     var finance = 0
+    /// Pay relative to the market rate (1.0 = market) per department; missing = 1.0.
+    var pay: [String: Double] = [:]
+    /// Pay for in-house studio crews.
+    var studioPay = 1.0
+
+    func payScale(_ department: Department) -> Double { pay[department.rawValue] ?? 1.0 }
+
+    mutating func setPay(_ department: Department, _ value: Double) { pay[department.rawValue] = value }
+
+    /// Level adjusted for pay: well-paid teams outperform, underpaid ones don't.
+    func effectiveLevel(_ department: Department) -> Double {
+        Double(self[department]) * Formulas.payEffectiveness(payScale(department))
+    }
 
     subscript(department: Department) -> Int {
         get {
@@ -100,4 +113,11 @@ struct Staff: Codable, Equatable {
     }
 
     var totalLevels: Int { content + marketing + engineering + legal + finance }
+
+    /// Weekly salary bill, scaled by each department's pay setting.
+    var weeklySalaries: Double {
+        Department.allCases.reduce(0) {
+            $0 + Double(self[$1]) * Formulas.salaryPerLevelPerWeek * payScale($1)
+        }
+    }
 }

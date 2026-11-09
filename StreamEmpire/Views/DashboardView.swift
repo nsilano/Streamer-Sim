@@ -136,6 +136,7 @@ struct WeeklyReportView: View {
                     if f.fines > 0 { LabeledValue(label: "Regulatory fines", value: "-" + Format.money(f.fines)) }
                     if f.other > 0 { LabeledValue(label: "Hiring, tech builds & events", value: "-" + Format.money(f.other)) }
                     if f.tech > 0 { LabeledValue(label: "Platform upkeep & CDN", value: "-" + Format.money(f.tech)) }
+                    if f.studios > 0 { LabeledValue(label: "Studio upkeep", value: "-" + Format.money(f.studios)) }
                     LabeledValue(label: "Profit / loss", value: Format.money(f.profit), tint: f.profit.profitColor)
                     LabeledValue(label: "Cash", value: Format.money(report.cashEnd))
                 }

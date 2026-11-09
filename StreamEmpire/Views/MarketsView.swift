@@ -2,11 +2,24 @@ import SwiftUI
 
 struct MarketsView: View {
     @EnvironmentObject var store: GameStore
+    @State private var priceLevel = 1.0
 
     var body: some View {
         NavigationStack {
             List {
                 if let state = store.state {
+                    Section {
+                        Stepper(value: $priceLevel, in: 0.4...2.0, step: 0.1) {
+                            LabeledValue(label: "Price level", value: Format.percent(priceLevel) + " of fair")
+                        }
+                        Button("Apply to all my markets") {
+                            store.perform { try $0.applyPriceLevel(priceLevel) }
+                        }
+                    } header: {
+                        Text("Subscription prices")
+                    } footer: {
+                        Text("Sets every launched market to this multiple of its fair price for all three tiers. Fine-tune each country on its own page.")
+                    }
                     Section {
                         let live = state.liveMarketCodes.count
                         LabeledValue(label: "Live markets", value: "\(live) / \(CountryData.all.count)")
