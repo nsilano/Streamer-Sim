@@ -43,7 +43,7 @@ final class Phase2Tests: XCTestCase {
     }
 
     func testStarterPicksAndBigMarketUnlocks() {
-        XCTAssertEqual(Set(CountryData.starters.map(\.code)), ["IE", "NZ", "NL", "CA"])
+        XCTAssertEqual(CountryData.starters.count, 30, "any country can be your starting market")
         for code in ["US", "IN", "JP"] {
             XCTAssertNotNil(CountryData.country(code)?.unlock, code)
         }

@@ -328,10 +328,12 @@ enum SimulationEngine {
         // Rivals bid on listings before you do; aggressive bidders win more often.
         var kept: [Title] = []
         var announced = 0
+        let threats = s.rivals.map { s.threat(from: $0) }     // rivals bid harder against a dominant player
         for title in s.licenseMarket {
             var winner: Int?
             for index in s.rivals.indices {
                 let chance = Formulas.bidChance(personality: s.rivals[index].personality, quality: title.quality)
+                    * (1 + 0.5 * threats[index])
                 if s.rng.chance(chance) { winner = index; break }
             }
             guard let w = winner else { kept.append(title); continue }
@@ -358,14 +360,19 @@ enum SimulationEngine {
         let allCodes = CountryData.all.map { $0.code }
         var announcedExpansion = false
         var announcedPriceCut = false
+        var announcedPriceWar = false
 
         for i in s.rivals.indices {
             var rival = s.rivals[i]
             let noise = s.rng.nextDouble(in: 0.8...1.2)
 
-            // Income and slow catalog improvement.
+            // How threatened is this rival by your market share where they compete?
+            let threat = s.threat(from: rival)
+
+            // Income and slow catalog improvement (originals-heavy rivals invest harder when threatened).
             rival.cash += rival.totalSubs * 0.12
-            rival.catalogStrength = min(100, rival.catalogStrength + 0.02)
+            let investment = rival.personality == .originalsHeavy ? 0.15 : 0.05
+            rival.catalogStrength = min(100, rival.catalogStrength + 0.02 + investment * threat)
 
             // Growth in existing markets, squeezed by the ceiling.
             for code in rival.subs.keys.sorted() {
@@ -396,21 +403,42 @@ enum SimulationEngine {
                 }
             }
 
-            // Pricing moves; cuts fade back toward normal.
+            // Pricing moves. A dominant player triggers price wars; ordinary promotions fade back to normal.
             let previousLevel = rival.priceLevel
-            if s.rng.chance(0.04) {
-                let cutting = s.rng.chance(rival.personality == .priceCutter ? 0.75 : 0.45)
-                let step = s.rng.nextDouble(in: 0.04...0.10)
-                rival.priceLevel = Formulas.clamp(rival.priceLevel + (cutting ? -step : step), 0.7, 1.15)
+            var warCut = false
+            if s.rng.chance(Formulas.retaliationChance(personality: rival.personality, threat: threat)) {
+                let cutting = threat > 0.15 ? true : s.rng.chance(rival.personality == .priceCutter ? 0.75 : 0.45)
+                let step = s.rng.nextDouble(in: 0.04...0.10) * (1 + threat)
+                rival.priceLevel = Formulas.clamp(rival.priceLevel + (cutting ? -step : step),
+                                                  Formulas.priceFloor(threat: threat), 1.15)
+                warCut = cutting && threat >= 0.3
             }
-            rival.priceLevel += (1 - rival.priceLevel) * 0.01
-            if !announcedPriceCut, previousLevel - rival.priceLevel >= 0.05 {
-                let overlap = s.markets.contains { $0.value.isLive && (rival.subs[$0.key] ?? 0) > 0 }
-                if overlap {
-                    announcedPriceCut = true
-                    events.append(s.makeEvent(.news, "\(rival.name) slashes prices",
-                                              "Expect extra churn in markets where \(rival.name) competes with you."))
+            // While you're a threat, discounts stick instead of fading.
+            rival.priceLevel += (1 - rival.priceLevel) * (threat > 0.3 ? 0.002 : 0.01)
+
+            // Customers swing back: a discounting rival pulls subscribers out of markets you dominate.
+            if rival.priceLevel < 0.95 {
+                for code in rival.subs.keys.sorted() {
+                    guard var market = s.markets[code], market.isLive else { continue }
+                    let rate = Formulas.poachRate(priceLevel: rival.priceLevel, threat: s.countryThreat(code))
+                    guard rate > 0 else { continue }
+                    let defected = market.subs.total * rate
+                    for tier in Tier.allCases { market.subs[tier] *= (1 - rate) }
+                    s.markets[code] = market
+                    rival.subs[code, default: 0] += defected
                 }
+            }
+
+            let overlap = s.markets.contains { $0.value.isLive && (rival.subs[$0.key] ?? 0) > 0 }
+            if warCut, !announcedPriceWar, overlap {
+                announcedPriceWar = true
+                announcedPriceCut = true
+                events.append(s.makeEvent(.warning, "\(rival.name) declares a price war",
+                                          "Your growing share has \(rival.name) slashing prices to win customers back. Expect churn and defections where you compete. Consider matching with better content or sharper prices."))
+            } else if !announcedPriceCut, previousLevel - rival.priceLevel >= 0.05, overlap {
+                announcedPriceCut = true
+                events.append(s.makeEvent(.news, "\(rival.name) slashes prices",
+                                          "Expect extra churn in markets where \(rival.name) competes with you."))
             }
 
             s.rivals[i] = rival

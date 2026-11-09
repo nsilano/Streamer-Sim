@@ -59,6 +59,39 @@ enum Department: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String { rawValue.capitalized }
 
+    var icon: String {
+        switch self {
+        case .content: return "film.stack"
+        case .marketing: return "megaphone.fill"
+        case .engineering: return "gearshape.2.fill"
+        case .legal: return "building.columns.fill"
+        case .finance: return "chart.line.uptrend.xyaxis"
+        }
+    }
+
+    /// Plain-language description of what the team does for you.
+    var summary: String {
+        switch self {
+        case .content: return "Finds better deals on shows and helps your own productions turn out better."
+        case .marketing: return "Makes every marketing dollar bring in more subscribers."
+        case .engineering: return "Builds apps faster and keeps your servers cheaper."
+        case .legal: return "Keeps regulators happy so fines and compliance costs shrink."
+        case .finance: return "Gets you cheaper loans and a higher company valuation."
+        }
+    }
+
+    /// What this department gives you at a given (pay-adjusted) level.
+    func benefit(at level: Double) -> String {
+        func n(_ v: Double) -> String { String(format: "%.0f", v) }
+        switch self {
+        case .content: return "\(n(2 * level))% cheaper licenses, +\(n(2 * level)) original quality"
+        case .marketing: return "+\(n(6 * level))% marketing power"
+        case .engineering: return "Apps built \(n(level)) weeks faster, \(n(5 * level))% cheaper servers"
+        case .legal: return "\(n(15 * level))% smaller fines, \(n(10 * level))% cheaper regulation costs"
+        case .finance: return "\(String(format: "%.1f", 0.5 * level)) pts lower loan rates, +\(n(3 * level))% valuation"
+        }
+    }
+
     var effectText: String {
         switch self {
         case .content: return "-2% license prices and +2 original quality per level"
@@ -119,5 +152,32 @@ struct Staff: Codable, Equatable {
         Department.allCases.reduce(0) {
             $0 + Double(self[$1]) * Formulas.salaryPerLevelPerWeek * payScale($1)
         }
+    }
+}
+
+
+/// Friendly pay presets shown instead of raw percentages.
+enum PayLevel: String, CaseIterable, Identifiable {
+    case low, fair, generous
+    var id: String { rawValue }
+
+    var scale: Double {
+        switch self {
+        case .low: return 0.8
+        case .fair: return 1.0
+        case .generous: return 1.3
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .low: return "Low"
+        case .fair: return "Fair"
+        case .generous: return "Generous"
+        }
+    }
+
+    static func closest(to scale: Double) -> PayLevel {
+        allCases.min { abs($0.scale - scale) < abs($1.scale - scale) } ?? .fair
     }
 }

@@ -333,3 +333,33 @@ extension Formulas {
         return TierSet(ad: scaled(base.ad), standard: scaled(base.standard), premium: scaled(base.premium))
     }
 }
+
+
+// MARK: - Rival reaction to dominance
+
+extension Formulas {
+    /// 0...1: how threatened rivals feel when you hold this share of a country's subscribers.
+    /// Nothing below 25%; maxes out around 60%.
+    static func dominanceThreat(playerShare: Double) -> Double {
+        clamp((playerShare - 0.25) / 0.35, 0, 1)
+    }
+
+    /// Weekly chance a rival changes its prices. Threat makes cuts far more likely.
+    static func retaliationChance(personality: RivalPersonality, threat: Double) -> Double {
+        let reaction: Double
+        switch personality {
+        case .priceCutter: reaction = 0.30
+        case .aggressiveBidder: reaction = 0.22
+        default: reaction = 0.15
+        }
+        return 0.04 + threat * reaction
+    }
+
+    /// Lowest price level a rival will go to; wars go deeper than ordinary promotions.
+    static func priceFloor(threat: Double) -> Double { 0.7 - 0.1 * threat }
+
+    /// Fraction of your subscribers a discounting rival pulls away each week in a market you dominate.
+    static func poachRate(priceLevel: Double, threat: Double) -> Double {
+        threat * max(0, 0.95 - priceLevel) * 0.04
+    }
+}

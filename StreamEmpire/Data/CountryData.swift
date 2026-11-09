@@ -141,7 +141,8 @@ enum CountryData {
 
     static func country(_ code: String) -> Country? { byCode[code] }
 
-    static var starters: [Country] { all.filter { $0.isStarterPick } }
+    /// Every country can be your starting market. `isStarterPick` marks the gentle ones for the start screen.
+    static var starters: [Country] { all }
 
     /// Sensible opening prices, rounded to the nearest 50 cents.
     static func defaultPrices(for country: Country) -> TierSet {

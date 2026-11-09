@@ -33,4 +33,19 @@ struct Country: Codable, Identifiable, Equatable {
     var subscriberCeiling: Double { households * 1_000_000 * Country.maxPenetration }
 
     func taste(_ genre: Genre) -> Double { genreTaste[genre] ?? 1.0 }
+
+    /// Short description of the market's size for the start screen.
+    var sizeHint: String {
+        if households < 5 { return "Small & cozy" }
+        if households < 20 { return "Mid-size" }
+        if households < 50 { return "Large" }
+        return "Huge market"
+    }
+
+    /// Short description of what people can afford.
+    var incomeHint: String {
+        if priceTolerance >= 10 { return "High income" }
+        if priceTolerance >= 5 { return "Middle income" }
+        return "Low prices, thin margins"
+    }
 }
