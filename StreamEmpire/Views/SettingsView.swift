@@ -77,9 +77,9 @@ struct SettingsView: View {
     private var gameplay: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: "Gameplay", icon: "slider.horizontal.3", tint: Theme.teal)
-            Text("Auto-advance speed").font(.subheadline).foregroundStyle(.white)
+            Text("Speed").font(.subheadline).foregroundStyle(.white)
             Picker("Speed", selection: $store.autoSpeed) {
-                Text("Slow").tag(1.5); Text("Normal").tag(0.7); Text("Fast").tag(0.25)
+                Text("1x").tag(1.0); Text("2x").tag(0.5); Text("4x").tag(0.25); Text("8x").tag(0.12)
             }
             .pickerStyle(.segmented)
             Button { showHelp = true } label: {

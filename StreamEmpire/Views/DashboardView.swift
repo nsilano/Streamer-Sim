@@ -9,11 +9,12 @@ struct DashboardView: View {
                 if let state = store.state {
                     VStack(alignment: .leading, spacing: 16) {
                         header(state)
+                        pausePanel()
+                        controls(state)
                         hero(state)
                         statGrid(state)
                         expiringCard(state)
                         ForEach(Array(state.advice().filter { $0.id != "expiring" }.prefix(2))) { AdviceBanner(advice: $0) }
-                        controls(state)
                         NavigationLink {
                             AdvisorView()
                         } label: {
@@ -131,19 +132,59 @@ struct DashboardView: View {
     private func controls(_ state: GameState) -> some View {
         VStack(spacing: 10) {
             Button {
-                store.nextWeek()
+                store.autoAdvance.toggle()
             } label: {
-                Label("Next week", systemImage: "forward.fill")
+                Label(store.autoAdvance ? "Pause" : "Play", systemImage: store.autoAdvance ? "pause.fill" : "play.fill")
+                    .font(.title3.weight(.bold))
             }
-            .buttonStyle(GlowButtonStyle())
-            .disabled(store.autoAdvance)
-
-            if let event = state.pendingEvent {
-                AlertCard(event: event, week: state.week)
+            .buttonStyle(GlowButtonStyle(tint: store.autoAdvance ? Theme.amber : Theme.magenta))
+            .disabled(state.outcome != .playing)
+            Picker("Speed", selection: $store.autoSpeed) {
+                Text("1x").tag(1.0); Text("2x").tag(0.5); Text("4x").tag(0.25); Text("8x").tag(0.12)
             }
-            Toggle("Auto-advance", isOn: $store.autoAdvance).tint(Theme.magenta)
+            .pickerStyle(.segmented)
+            HStack {
+                Text(store.autoAdvance ? "Running. It pauses by itself when something needs you." : "Paused at week \(state.week).")
+                    .font(.caption).foregroundStyle(Theme.text2)
+                Spacer()
+                if !store.autoAdvance {
+                    Button("Step 1 week") { store.nextWeek() }.font(.caption.weight(.semibold))
+                }
+            }
         }
         .artCard()
+    }
+
+    /// Why the sim stopped. Stays until you dismiss it or press Play.
+    @ViewBuilder
+    private func pausePanel() -> some View {
+        if !store.pauseReasons.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label("Paused: needs your attention", systemImage: "pause.circle.fill")
+                        .font(.headline).foregroundStyle(Theme.danger)
+                    Spacer()
+                    Button("Dismiss") { store.dismissPause() }.font(.caption.weight(.semibold))
+                }
+                ForEach(store.pauseReasons) { reason in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: reason.icon).foregroundStyle(Theme.danger).frame(width: 22)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(reason.title).font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                            Text(reason.detail).font(.caption).foregroundStyle(Theme.text2)
+                        }
+                    }
+                }
+                if store.pauseReasons.contains(where: { $0.id == "expiring" }) {
+                    Button("Review expiring licenses") { store.showExpiring = true }
+                        .buttonStyle(SoftButtonStyle(tint: Theme.danger))
+                }
+                Button("Resume") { store.autoAdvance = true }.buttonStyle(SoftButtonStyle(tint: Theme.magenta))
+            }
+            .padding(14)
+            .background(Theme.danger.opacity(0.15), in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.danger.opacity(0.8), lineWidth: 1.5))
+        }
     }
 
     private func topFive(_ state: GameState) -> some View {

@@ -5,6 +5,10 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Play/Pause instead of Next week; the sim stops for anything major
+- The Dashboard's main control is now a big Play/Pause button with 1x/2x/4x/8x speed (a small "Step 1 week" stays for when you're paused).
+- The sim pauses by itself and shows a red "Paused: needs your attention" panel that stays until you dismiss it or press Resume when: licenses hit 12 or 4 weeks left, a license expires, servers in a region pass 90% or 100% of capacity, servers crash, cash goes negative or runway drops under 8 weeks, a rival declares a price war or pulls one of your shows, or the game ends.
+
 ### Expiring licenses can't slip by anymore (save v23)
 - When any license crosses 12 weeks left, and again at 4 weeks, auto-advance stops and an "Expiring licenses" sheet opens with every expiring title, a Renew button on each, and Renew all (choose 1-5 years; with limited cash it keeps the cheapest first).
 - New "Always auto-renew" switch (in that sheet and at the top of Content > Catalog): every license is renewed for 2 years two weeks before it expires, if you have the cash. No licensing manager needed.

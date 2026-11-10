@@ -7,10 +7,14 @@ final class GameStore: ObservableObject {
     @Published var showReport = false
     @Published var showSettings = false
     @Published var showExpiring = false
+    @Published var pauseReasons: [PauseReason] = []   // why auto-advance stopped; stays until dismissed or resumed
     @Published var errorMessage: String?
-    @Published var autoSpeed: Double = 0.7        // seconds per week
+    @Published var autoSpeed: Double = 0.5        // seconds per week (2x)
     @Published var autoAdvance = false {
-        didSet { autoAdvance ? startAutoAdvance() : stopAutoAdvance() }
+        didSet {
+            if autoAdvance { pauseReasons = [] }
+            autoAdvance ? startAutoAdvance() : stopAutoAdvance()
+        }
     }
 
     private var autoTask: Task<Void, Never>?
@@ -37,6 +41,8 @@ final class GameStore: ObservableObject {
         persist()
     }
 
+    func dismissPause() { pauseReasons = [] }
+
     func resetGame() {
         autoAdvance = false
         showSettings = false
@@ -47,15 +53,17 @@ final class GameStore: ObservableObject {
 
     func nextWeek(showReport: Bool = true) {
         guard let current = state, current.outcome == .playing else { return }
-        let hadAlert = current.pendingEvent?.id
         defer { recordBestScore() }
-        state = SimulationEngine.advanceWeek(current)
+        let next = SimulationEngine.advanceWeek(current)
+        state = next
         persist()
-        // Stop auto-advance when the game ends or a NEW alert appears.
-        let newAlert = state?.pendingEvent != nil && state?.pendingEvent?.id != hadAlert
-        // Licenses crossing the 12- or 4-week line stop the sim and open the renewal sheet.
-        let expiring = !(state?.newlyExpiring.isEmpty ?? true)
-        if state?.outcome != .playing || newAlert || expiring { autoAdvance = false }
+        // Anything major stops the sim and stays on screen until you react.
+        let reasons = PauseCheck.reasons(before: current, after: next)
+        if !reasons.isEmpty {
+            autoAdvance = false
+            pauseReasons = reasons
+        }
+        let expiring = !next.newlyExpiring.isEmpty
         if expiring {
             self.showReport = false
             showExpiring = true

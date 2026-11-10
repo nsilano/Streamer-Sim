@@ -87,6 +87,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 19. **Phase 19 (done): expiring licenses, for real this time.** The user sims fast and asked three times. `GameStore.nextWeek` stops auto-advance and opens `ExpiringSheet` when `newlyExpiring` is non-empty (licenses at exactly 12 or 4 weeks left). `renewAll(years:)` (cheapest first), `autoRenewAll` flag + `autoRenewEverything` (2 years at <=2 weeks left, before ageing). Never make this quieter. Save version is 23.
 
+20. **Phase 20 (done): Play/Pause + stop-on-major-events.** The user always plays on auto-advance. Dashboard control = Play/Pause + speed (1x-8x). `PauseCheck.reasons(before:after:)` (pure, tested) decides what stops the sim: expiring licenses (12/4 weeks), expired licenses, server load crossing 90%/100%, crashes, cash < 0, runway < 8 weeks, price wars, recalls, game over. `GameStore.pauseReasons` stays on screen until dismissed or resumed. Add new major situations to `PauseCheck` rather than as transient messages.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.
