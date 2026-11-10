@@ -131,9 +131,9 @@ final class Phase19Tests: XCTestCase {
         s.catalog = [original(quality: 100, popularity: 100)]
         s.week = 44
         var plays = 0
-        for _ in 0..<40 {
+        for i in 0..<40 {
             var copy = s
-            copy.rng = SeededRNG(seed: UInt64(100 + plays))
+            copy.rng = SeededRNG(seed: UInt64(100 + i))
             copy = SimulationEngine.advanceWeek(copy)
             if copy.catalog[0].awards > 0 { plays += 1 }
         }

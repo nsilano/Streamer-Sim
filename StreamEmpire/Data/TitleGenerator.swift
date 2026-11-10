@@ -85,7 +85,7 @@ enum TitleGenerator {
         var cost = sought ? baseCost * Formulas.soughtPremium : baseCost
         // Rights are often sold by territory: cheaper, but only some regions.
         var regions: [String] = []
-        if rng.chance(0.35) {
+        if rng.chance(0.25) {
             let count = rng.chance(0.5) ? 1 : 2
             var picked: [Region] = []
             while picked.count < count { let r = rng.pick(Region.allCases); if !picked.contains(r) { picked.append(r) } }

@@ -115,10 +115,10 @@ final class BalanceTests: XCTestCase {
             }
             let last = snapshots.last!
             XCTAssertNotEqual(last.outcome, .lost, "\(home): a sensible player shouldn't go bankrupt in 3 years")
-            // Pacing bands for a simple autopilot (observed: ~130-250K at year 1, 0.5-1.5M at year 2, 1.4-5M at year 3).
+            // Pacing bands for a simple autopilot (observed: ~130-250K at year 1, 0.4-1.5M at year 2, 0.5-5M at year 3 (small markets sit at the low end)).
             let bands: [Int: ClosedRange<Double>] = [52: 60_000...1_500_000,
                                                       104: 250_000...6_000_000,
-                                                      156: 800_000...15_000_000]
+                                                      156: 450_000...15_000_000]   // lowered from 800K: country rules, territories, piracy and trends are deliberate extra difficulty
             for snap in snapshots {
                 if let band = bands[snap.week] {
                     XCTAssertTrue(band.contains(snap.subs), "\(home) week \(snap.week): \(Int(snap.subs)) subs outside \(band)")

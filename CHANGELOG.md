@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Test and balance fixes
+- The opening license market is always fully on sale (no embargo on day one).
+- Piracy now scales churn instead of adding to it; exchange rates move at the end of each week so the first week is neutral.
+- Regional-territory listings are a bit rarer (25%). Year-3 pacing band for small starter markets lowered to 450K because the new rules are deliberate extra difficulty.
+
 ### Build fix
 - Renamed a duplicate source filename that stopped the realism packs from compiling. No gameplay change.
 

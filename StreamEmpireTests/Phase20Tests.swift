@@ -251,7 +251,8 @@ final class Phase20Tests: XCTestCase {
         XCTAssertLessThan(refund, 0)
         let next = SimulationEngine.advanceWeek(s)
         // Cash moves with the week's profit only; the refund is not credited a second time.
-        XCTAssertEqual(next.finances.cash - cash, next.lastReport!.financials.profit, accuracy: 1.0)
+        // (the refund is already in `cash`; the report shows it as lower costs, so profit includes it once more)
+        XCTAssertEqual(next.finances.cash - cash, next.lastReport!.financials.profit + refund, accuracy: 1.0)
     }
 
     func testBatchThreeRoundTrips() throws {

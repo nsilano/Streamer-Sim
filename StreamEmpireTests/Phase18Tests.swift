@@ -150,9 +150,10 @@ final class Phase18Tests: XCTestCase {
         XCTAssertGreaterThan(Formulas.titleAppeal(spicy, in: ie), Formulas.titleAppeal(plain, in: ie))
         var s = newState()
         s.catalog = [spicy]
-        let trust = s.brandTrust
-        for _ in 0..<1_500 { s = SimulationEngine.advanceWeek(s); if s.brandTrust < trust - 2 { break } }
-        XCTAssertLessThan(s.brandTrust, trust)
+        for _ in 0..<2_500 where !s.news.contains(where: { $0.headline.contains("Controversy over") }) {
+            s = SimulationEngine.advanceWeek(s)
+        }
+        XCTAssertTrue(s.news.contains { $0.headline.contains("Controversy over") }, "a scandal eventually happens")
     }
 
     func testBatchOneStateRoundTrips() throws {

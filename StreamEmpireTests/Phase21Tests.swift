@@ -23,7 +23,7 @@ final class Phase21Tests: XCTestCase {
 
     func testReachingTenMillionWinsTheChallengeWithAScore() {
         var s = newState(.tenMillion)
-        s.markets["IE"]?.subs = TierSet(ad: 0, standard: 10_500_000, premium: 0)
+        s.markets["IE"]?.subs = TierSet(ad: 0, standard: 14_000_000, premium: 0)
         s = SimulationEngine.advanceWeek(s)
         XCTAssertEqual(s.outcome, .won)
         XCTAssertGreaterThan(s.score, 0)

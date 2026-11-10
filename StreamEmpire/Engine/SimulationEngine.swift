@@ -54,7 +54,6 @@ enum SimulationEngine {
         runCurator(&s, events: &events)
 
         Trends.announce(&s)
-        s.driftCurrencies()
         s.refreshSportsOffers()
         s.progressPartnerships()
         s.refreshAcquisitionOffers()
@@ -172,7 +171,7 @@ enum SimulationEngine {
                                                serviceQuality: quality,
                                                rivalHeat: pressure.heat)
             let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn * trend.churn
-                            * feats.churn * sports.churn * (1 + 0.12 * (s.adLoad - 1)) + 0.005 * piracy)
+                            * feats.churn * sports.churn * (1 + 0.12 * (s.adLoad - 1)) * (1 + 0.5 * piracy))
             let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 
             // Revenue is billed on subscribers at the start of the week.
@@ -226,6 +225,7 @@ enum SimulationEngine {
         }
 
         s.finalizeTitleStats()
+        s.driftCurrencies()          // rates move after this week's revenue is booked
         fin.originals += s.talentShares()
 
         // Overloaded servers can crash: subscribers leave and the region limps for two weeks.

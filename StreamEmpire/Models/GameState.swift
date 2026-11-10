@@ -217,7 +217,9 @@ struct GameState: Codable, Equatable {
         while state.licenseMarket.count < GameState.targetListings {
             let id = state.takeID()
             let taken = Set(state.licenseMarket.map(\.name))
-            state.licenseMarket.append(TitleGenerator.generate(id: id, rng: &state.rng, avoiding: taken))
+            var starter = TitleGenerator.generate(id: id, rng: &state.rng, avoiding: taken)
+            starter.embargoWeeks = 0          // the opening market is fully on sale
+            state.licenseMarket.append(starter)
         }
         state.previousRanking = state.leaderboard.map { $0.id }
         state.addNews(.industry, "The streaming wars begin",
