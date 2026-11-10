@@ -166,7 +166,9 @@ extension GameState {
         if let top = lines.first, top.shareOfCosts > 0.4 {
             items.append(Advice(id: "top-cost", icon: top.category.icon, urgent: false,
                                 title: "\(top.category.displayName) is \(Int(top.shareOfCosts * 100))% of your spending",
-                                detail: "That's \(Format.money(top.amount)) last week, equal to \(Int(top.shareOfRevenue * 100))% of your revenue."))
+                                detail: top.category == .staff && staff.employees.isEmpty
+                                    ? "That's your core team: you, a small founding crew, an office and tools, \(Format.money(scaled(Formulas.baseStaffCostPerWeek)))/wk even before you hire anyone. Hires add salaries; overhead adds 4% of revenue."
+                                    : "That's \(Format.money(top.amount)) last week\(last.revenue > 0 ? ", equal to \(Int(top.shareOfRevenue * 100))% of your revenue" : "")."))
         }
         for line in lines where line.previous > 0 && line.amount > line.previous * 1.5 && line.amount > 20_000 {
             items.append(Advice(id: "jump-\(line.id)", icon: "chart.line.uptrend.xyaxis", urgent: false,

@@ -51,7 +51,7 @@ enum CostCategory: String, CaseIterable, Identifiable {
         case .originals: return "Making originals"
         case .localization: return "Dubbing & subtitles"
         case .streaming: return "Streaming & hosting"
-        case .staff: return "Staff & overhead"
+        case .staff: return "Core team, staff & overhead"
         case .marketing: return "Marketing"
         case .operations: return "Running countries"
         case .tech: return "Servers & apps"

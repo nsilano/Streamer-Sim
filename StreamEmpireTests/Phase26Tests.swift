@@ -56,10 +56,12 @@ final class Phase26Tests: XCTestCase {
     func testAutoRenewKeepsReasonablyPricedTitlesWithoutStoppingYou() {
         var s = newState()
         s.renewalMode = .standard
-        s.catalog = [owned(id: 1, left: 14)]
+        var kept = owned(id: 1, left: 14)
+        kept.license?.exclusive = true          // rivals can't recall exclusives, so only renewal matters here
+        s.catalog = [kept]
         for _ in 0..<5 { s = SimulationEngine.advanceWeek(s) }
         XCTAssertEqual(s.catalog.count, 1)
-        XCTAssertGreaterThan(s.catalog[0].weeksRemaining ?? 0, 100, "renewed before the 12-week warning")
+        XCTAssertGreaterThan(s.catalog.first?.weeksRemaining ?? 0, 100, "renewed before the 12-week warning")
         var off = newState()
         off.catalog = [owned(id: 1, left: 5)]
         for _ in 0..<10 { off = SimulationEngine.advanceWeek(off) }

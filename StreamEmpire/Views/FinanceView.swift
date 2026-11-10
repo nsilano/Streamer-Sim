@@ -66,7 +66,7 @@ struct FinanceView: View {
                         Spacer()
                         Text(Format.money(line.amount)).font(Theme.number(15)).foregroundStyle(.white)
                     }
-                    StatBar(label: "\(Int(line.shareOfCosts * 100))% of spending · \(Int(line.shareOfRevenue * 100))% of revenue",
+                    StatBar(label: "\(Int(line.shareOfCosts * 100))% of spending" + (state.finances.lastWeek.revenue > 0 ? " · \(Int(line.shareOfRevenue * 100))% of revenue" : ""),
                             value: line.amount / biggest, text: changeText(line), tint: changeTint(line), height: 5, compact: true)
                 }
             }

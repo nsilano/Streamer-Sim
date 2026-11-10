@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Clearer finances early on
+- The staff cost line is now called "Core team, staff & overhead", and with nobody hired it explains the base cost: you, a small founding crew, an office and tools, even before your first hire.
+- No more nonsense like "2000000% of revenue" while you have no revenue: revenue percentages only show once you earn something.
+- (Test fix for auto-renew: a rival could recall the test title mid-run.)
+
 ### Tidier licensing screen
 - "Refresh listings" and "More listings" are now two equal tiles with the price underneath, and the long explanation is a short status line.
 - The licensing manager hire card now describes the shopping styles instead of the old manual controls.
