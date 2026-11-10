@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Build fix
+- Renamed a duplicate source filename that stopped the realism packs from compiling. No gameplay change.
+
 ### Challenges and advisor (save v19)
 - Pick a challenge on the new-game screen: Sandbox, 10M subscribers in 3 years, profit in 2 years, or become #1 within 8 years. Deadlines, a score (audience, cash, time left), and your best score per challenge on this device.
 - "What should I do next?" advisor on the Dashboard: urgent warnings first, then expiring titles, new markets worth opening, catalog gaps, blocked titles, piracy hot spots, auctions and offers.
