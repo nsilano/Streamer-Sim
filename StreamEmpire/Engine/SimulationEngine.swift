@@ -54,6 +54,11 @@ enum SimulationEngine {
         runCurator(&s, events: &events)
 
         Trends.announce(&s)
+        s.driftCurrencies()
+        s.refreshSportsOffers()
+        s.progressPartnerships()
+        s.refreshAcquisitionOffers()
+        RivalRecalls.run(&s, events: &events)
         if s.week % 52 == Awards.week { Awards.season(&s, events: &events) }
         progressLoans(&s, events: &events)
         ageCatalog(&s, events: &events)
@@ -127,7 +132,11 @@ enum SimulationEngine {
             }
 
             let titles = s.catalog.filter { $0.isAvailable(in: code) }
-            let appeal = Formulas.catalogAppeal(titles, in: country)
+            let feats = s.featureEffects(for: country)
+            let sports = s.sportsEffects(region: country.region)
+            let partner = s.partnerEffects(for: code)
+            let appeal = min(0.98, Formulas.catalogAppeal(titles, in: country) * feats.appeal + sports.appealBonus)
+            let fxIndex = s.fxIndex(country.region)
             let ceiling = country.subscriberCeiling
             let startSubs = market.subs
             let ownSubs = startSubs.total
@@ -156,18 +165,19 @@ enum SimulationEngine {
             let promo = s.promoEffects(for: code)
             let piracy = Formulas.piracy(price: price, tolerance: country.priceTolerance, appeal: appeal)
             let trend = Trends.effects(week: s.week)
-            let adds = min(gross * policy.adds * promo.adds * trend.adds * (1 - 0.2 * piracy), headroom)
+            let adds = min(gross * policy.adds * promo.adds * trend.adds * feats.adds * sports.adds * partner.adds
+                           * (1 - 0.2 * piracy), headroom)
             let baseChurn = Formulas.churnRate(appeal: appeal, price: price,
                                                tolerance: country.priceTolerance,
                                                serviceQuality: quality,
                                                rivalHeat: pressure.heat)
             let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn * trend.churn
-                            + 0.005 * piracy)
+                            * feats.churn * sports.churn * (1 + 0.12 * (s.adLoad - 1)) + 0.005 * piracy)
             let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 
             // Revenue is billed on subscribers at the start of the week.
-            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu * promo.arpu * trend.arpu
-            let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength) * policy.adRevenue * trend.ads
+            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu * promo.arpu * trend.arpu * partner.arpu * fxIndex
+            let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength) * policy.adRevenue * trend.ads * s.adLoad * fxIndex
 
             var newSubs = startSubs
             for tier in Tier.allCases {
@@ -199,16 +209,18 @@ enum SimulationEngine {
             }
             fin.fines += marketFine
 
+            let tax = CountryRules.taxRate(code) * (subRevenue + adRevenue)
+            fin.taxes += tax
             fin.subscriptionRevenue += subRevenue
             fin.adRevenue += adRevenue
             fin.marketing += market.marketingBudget
             fin.operations += Formulas.operatingCost(for: country) * s.costScale
-            billedSubs += ownSubs * promo.streaming
+            billedSubs += ownSubs * promo.streaming * feats.streaming
             totalNew += adds
             totalChurned += ownSubs * churn
             let marketCosts = ownSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost * promo.streaming * s.costScale
                 + Formulas.operatingCost(for: country) * s.costScale
-                + market.marketingBudget + marketFine
+                + market.marketingBudget + marketFine + tax
             marketReports.append(MarketReport(id: code, newSubs: adds, churned: ownSubs * churn,
                                               subs: newSubs.total, revenue: subRevenue + adRevenue, costs: marketCosts))
         }
@@ -247,7 +259,7 @@ enum SimulationEngine {
         applyAttrition(&s, events: &events)
         fin.staff = Formulas.baseStaffCostPerWeek * s.costScale + s.weeklySalaries + Formulas.overheadRate * fin.revenue
         let mobileApps = [Platform.ios, .android].filter { s.platforms.contains($0) }.count
-        fin.tech = s.weeklyTechCost + Double(mobileApps) * Formulas.appStoreFeeRate * fin.subscriptionRevenue
+        fin.tech = s.weeklyTechCost + s.featureUpkeep + Double(mobileApps) * Formulas.appStoreFeeRate * fin.subscriptionRevenue
 
         // Loans: interest is a cost; scheduled principal is a cash outflow only.
         var principalPaid = 0.0
@@ -347,6 +359,7 @@ enum SimulationEngine {
                                   rank: s.rank, markets: marketReports, events: events)
         s.lastReport = report
         s.reportHistory.append(report)
+        Earnings.report(&s)
         if s.reportHistory.count > 26 { s.reportHistory.removeFirst() }
         s.week += 1
         return s

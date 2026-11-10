@@ -32,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 17
+    static let currentVersion = 18
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -46,6 +46,16 @@ struct GameState: Codable, Equatable {
     var lossReason: String?                    // why the game ended in a loss (shown to the player)
     var markets: [String: MarketState]
     var catalog: [Title] = []
+    var quarterReports: [QuarterReport] = []
+    var earningsSentiment = 1.0                // investors' mood after earnings (0.7...1.35); moves your valuation
+    var fx: [String: Double] = [:]             // region -> currency strength against the dollar
+    var adLoad = 1.0                           // ads per hour: more ad revenue, more irritated viewers
+    var features: [String: Int] = [:]          // product features built (name -> level)
+    var sportsOffers: [SportsOffer] = []
+    var sportsHeld: [SportsRight] = []
+    var partnerships: [Partnership] = []
+    var acquisitionOffers: [AcquisitionOffer] = []
+    var lastSportsResult = ""
     var loanedOut: [LoanedTitle] = []          // titles licensed out to others for a fee
     var titleStats: [Int: TitleStats] = [:]    // per-title viewers and revenue (keyed by title id)
     var licenseMarket: [Title] = []

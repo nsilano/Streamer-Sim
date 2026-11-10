@@ -100,7 +100,7 @@ extension GameState {
 
     var valuation: Double {
         Formulas.valuation(annualRevenue: finances.annualizedRevenue, subscribers: totalSubscribers)
-            * Formulas.valuationBoost(financeLevel: staff.effectiveLevel(.finance))
+            * Formulas.valuationBoost(financeLevel: staff.effectiveLevel(.finance)) * earningsSentiment
     }
 
     /// nil if an investor round is available now, otherwise why not.

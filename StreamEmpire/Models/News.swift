@@ -42,7 +42,7 @@ struct NewsItem: Codable, Identifiable, Equatable {
 
 /// Where your spending goes, for the Finances screen.
 enum CostCategory: String, CaseIterable, Identifiable {
-    case licensing, originals, localization, streaming, staff, marketing, operations, tech, studios, policies, promotions, launch, interest, fines, other
+    case licensing, originals, localization, streaming, staff, marketing, operations, tech, studios, policies, promotions, launch, interest, fines, other, taxes
     var id: String { rawValue }
 
     var displayName: String {
@@ -62,6 +62,7 @@ enum CostCategory: String, CaseIterable, Identifiable {
         case .interest: return "Loan interest"
         case .fines: return "Regulatory fines"
         case .other: return "Hiring, builds & events"
+        case .taxes: return "Digital taxes"
         }
     }
 
@@ -82,6 +83,7 @@ enum CostCategory: String, CaseIterable, Identifiable {
         case .interest: return "percent"
         case .fines: return "exclamationmark.triangle.fill"
         case .other: return "wrench.and.screwdriver.fill"
+        case .taxes: return "building.columns"
         }
     }
 
@@ -102,6 +104,7 @@ enum CostCategory: String, CaseIterable, Identifiable {
         case .interest: return week.interest
         case .fines: return week.fines
         case .other: return week.other
+        case .taxes: return week.taxes
         }
     }
 }

@@ -49,6 +49,21 @@ struct CompanyView: View {
                             .artCard(tint: Theme.teal)
                         }
                         NavigationLink {
+                            BusinessView()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "briefcase.fill").font(.title2).foregroundStyle(Theme.amber)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Business").font(.headline).foregroundStyle(.white)
+                                    Text("Earnings, product features, sports rights, bundles, acquisitions, ads")
+                                        .font(.caption).foregroundStyle(Theme.text2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
+                            }
+                            .artCard(tint: Theme.amber)
+                        }
+                        NavigationLink {
                             PromotionsView()
                         } label: {
                             HStack(spacing: 12) {

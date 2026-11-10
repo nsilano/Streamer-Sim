@@ -5,6 +5,17 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Realism pack 3: the business side (save v18)
+- New Company > Business screen.
+- Quarterly earnings every 13 weeks: profit on the books (content spending spread over two years) vs analysts' expectations. Beat or miss moves your investor mood and your valuation.
+- Digital services taxes in some countries (new "Digital taxes" cost line) and exchange rates that drift and pull revenue up or down by region.
+- Ad load slider: more ads earn more but wear viewers out.
+- Product features: kids profiles, offline downloads (strongest in low-income markets), 4K (cancels the later 4K-expectation trend, costs more to stream) and a 3-level recommendation engine.
+- Live sports rights: yearly auctions; bid above asking to win more often (you pay only if you win). A year of sport lifts appeal and sign-ups and cuts churn in its region.
+- Bundles and partnerships: carrier or rival bundles for a year in one country (more sign-ups, lower revenue per customer).
+- Acquisitions: yearly offers to buy a film library (titles yours forever) or a small level 2 studio.
+- Rivals can pull good non-exclusive licensed shows back to their own service, with a partial refund.
+
 ### Realism pack 2: seasons, release style, stars, awards
 - Order the next season of a series (refreshes the same show) or a sequel to a movie (a new title that inherits fans). Returning casts cost 12% more per season already made; quality blends the last release with new luck.
 - Release style: binge drop (bigger launch, fades faster) or weekly episodes (smaller launch, stays fresh longer).

@@ -28,6 +28,17 @@ enum CountryRules {
         }
     }
 
+    /// Digital services tax on a country's revenue.
+    static func taxRate(_ code: String) -> Double {
+        switch code {
+        case "FR", "ES", "IT", "GB": return 0.03
+        case "TR": return 0.075
+        case "IN", "ID", "KE", "NG": return 0.02
+        case "PL", "AT", "DE": return 0.015
+        default: return 0
+        }
+    }
+
     static func isStrict(_ code: String) -> Bool { strictness(code) >= matureThreshold }
 
     /// How tempting piracy is: higher where prices bite harder.
