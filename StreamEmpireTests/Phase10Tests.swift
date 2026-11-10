@@ -26,7 +26,7 @@ final class Phase10Tests: XCTestCase {
         // (A rival may legitimately cross a fresh threshold in week one; what must stay quiet are already-passed ones.)
         let reached = s.milestonesReached
         XCTAssertFalse(after.news.contains { $0.kind == .subscribers && $0.rivalID == nil }, "your own milestones stay quiet")
-        XCTAssertTrue(reached.isSubset(of: after.milestonesReached))
+        XCTAssertTrue(Set(reached).isSubset(of: Set(after.milestonesReached)))
     }
 
     func testSubscriberMilestoneIsReported() {
