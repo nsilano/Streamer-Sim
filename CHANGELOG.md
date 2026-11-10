@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Project notes
+- CLAUDE.md now documents phases 11-15 (realism packs, business, challenges, 50 countries, named employees). No gameplay change.
+
 ### Named employees (save v20)
 - Departments are now staffed by real people. A job board offers six named applicants (new ones every 4 weeks), each with a department, a skill of 1-3 stars, a trait and an asking salary.
 - Traits: steady (rarely quits), prodigy (+15% output, pricier), ambitious (works harder, leaves if underpaid), frugal (cheaper), veteran (+10%), rookie (cheaper, learns twice as fast).
