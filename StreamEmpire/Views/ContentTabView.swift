@@ -414,26 +414,14 @@ struct CuratorSheet: View {
                     Text("Each week your manager buys the best-value titles that pass every rule below, up to 3 purchases.")
                 }
                 Section("Spending") {
-                    Stepper(value: $draft.weeklyBudget, in: 0...20_000_000, step: 100_000) {
-                        LabeledValue(label: "Max per week", value: Format.money(draft.weeklyBudget))
-                    }
-                    Stepper(value: $draft.maxPricePerTitle, in: 100_000...50_000_000, step: 100_000) {
-                        LabeledValue(label: "Max price per title", value: Format.money(draft.maxPricePerTitle))
-                    }
-                    Stepper(value: $draft.cashReserve, in: 0...100_000_000, step: 500_000) {
-                        LabeledValue(label: "Always keep in the bank", value: Format.money(draft.cashReserve))
-                    }
+                    NumberFieldRow(label: "Max per week", value: $draft.weeklyBudget, range: 0...1_000_000_000, isMoney: true)
+                    NumberFieldRow(label: "Max price per title", value: $draft.maxPricePerTitle, range: 0...1_000_000_000, isMoney: true)
+                    NumberFieldRow(label: "Always keep in the bank", value: $draft.cashReserve, range: 0...10_000_000_000, isMoney: true)
                 }
                 Section("What to buy") {
-                    Stepper(value: $draft.minQuality, in: 0...100, step: 5) {
-                        LabeledValue(label: "Minimum quality", value: "\(draft.minQuality)")
-                    }
-                    Stepper(value: $draft.maxYears, in: 1...5) {
-                        LabeledValue(label: "Longest license", value: "\(draft.maxYears) yr")
-                    }
-                    Stepper(value: $draft.targetCatalogSize, in: 0...200, step: 5) {
-                        LabeledValue(label: "Stop at catalog size", value: "\(draft.targetCatalogSize)")
-                    }
+                    IntFieldRow(label: "Minimum quality (0-100)", value: $draft.minQuality, range: 0...100)
+                    IntFieldRow(label: "Longest license (1-5)", value: $draft.maxYears, range: 1...5, suffix: "yr")
+                    IntFieldRow(label: "Stop at catalog size", value: $draft.targetCatalogSize, range: 0...1_000, suffix: "titles")
                     Toggle("Movies", isOn: $draft.allowMovies)
                     Toggle("Series", isOn: $draft.allowSeries)
                     Toggle("Allow exclusives", isOn: $draft.allowExclusive)
@@ -441,12 +429,8 @@ struct CuratorSheet: View {
                 }
                 Section {
                     Toggle("Renew expiring titles automatically", isOn: $draft.autoRenew).tint(Theme.magenta)
-                    Stepper(value: $draft.renewMaxPrice, in: 100_000...50_000_000, step: 100_000) {
-                        LabeledValue(label: "Max price per renewal", value: Format.money(draft.renewMaxPrice))
-                    }
-                    Stepper(value: $draft.renewYears, in: 1...5) {
-                        LabeledValue(label: "Renewal length", value: "\(draft.renewYears) yr")
-                    }
+                    NumberFieldRow(label: "Max price per renewal", value: $draft.renewMaxPrice, range: 0...1_000_000_000, isMoney: true)
+                    IntFieldRow(label: "Renewal length (1-5)", value: $draft.renewYears, range: 1...5, suffix: "yr")
                 } header: {
                     Text("Renewals")
                 } footer: {
@@ -473,6 +457,7 @@ struct CuratorSheet: View {
                     Text(draft.genres.isEmpty ? "None selected means any genre." : "Only these genres.")
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .artScreen()
             .navigationTitle("Manager rules")
             .navigationBarTitleDisplayMode(.inline)

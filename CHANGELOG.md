@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Type your numbers
+- Licensing manager rules (budget, max price, cash reserve, quality, years, catalog size, renewals) are typed number fields instead of +/- steppers. Values are clamped to sensible limits when you finish typing; dragging the list dismisses the keyboard.
+
 ### TestFlight signing cleanup
 - The manual TestFlight workflow now revokes old "Created via API" signing certificates before archiving, so it doesn't hit Apple's certificate limit. Certificates you created yourself are never touched. (Runs in a Python virtualenv; the runner blocks system pip.)
 
