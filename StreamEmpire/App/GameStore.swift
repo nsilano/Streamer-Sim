@@ -51,7 +51,8 @@ final class GameStore: ObservableObject {
         persist()
         // Stop auto-advance when the game ends or a NEW alert appears.
         let newAlert = state?.pendingEvent != nil && state?.pendingEvent?.id != hadAlert
-        if state?.outcome != .playing || newAlert { autoAdvance = false }
+        let expiringNow = state?.catalog.contains { $0.weeksRemaining == 4 && $0.license != nil } ?? false
+        if state?.outcome != .playing || newAlert || expiringNow { autoAdvance = false }
         if showReport { self.showReport = true }
     }
 

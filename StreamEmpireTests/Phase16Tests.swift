@@ -69,6 +69,8 @@ final class Phase16Tests: XCTestCase {
         XCTAssertTrue(s.news.contains { $0.headline.contains("expires in 12 weeks") })
         XCTAssertTrue(s.advice().contains { $0.id == "expiring" })
         XCTAssertEqual(s.expiringTitles.count, 1)
+        XCTAssertTrue(s.lastReport!.events.contains { $0.headline == "License expiring in 12 weeks" },
+                      "the weekly report warns at 12 weeks too")
     }
 
     func testBoughtTitlesRememberWhatYouPaid() throws {

@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Expiring titles are hard to miss
+- A red "about to expire" card on the Dashboard (always shown, not one of the two advice slots) lists titles with 12 weeks or less left, each with a one-tap Renew.
+- The weekly report now warns at 12 weeks as well as 4 weeks.
+- Auto-advance pauses when a license reaches 4 weeks left (unless your manager already renewed it).
+
 ### Type your numbers
 - Licensing manager rules (budget, max price, cash reserve, quality, years, catalog size, renewals) are typed number fields instead of +/- steppers. Values are clamped to sensible limits when you finish typing; dragging the list dismisses the keyboard.
 

@@ -359,10 +359,8 @@ enum SimulationEngine {
                 let title = s.catalog[i]
                 s.addNews(.licensing, "\"\(title.name)\" expires in \(left) weeks",
                           "Renew it from the Content tab for \(Format.money(s.renewalPrice(title, years: 2))) (2 years), or it leaves your catalog.")
-                if left == 4 {
-                    events.append(s.makeEvent(.warning, "License expiring soon",
-                                              "\"\(title.name)\" leaves in 4 weeks. Renew it in the Content tab."))
-                }
+                events.append(s.makeEvent(.warning, left == 4 ? "License expiring in 4 weeks" : "License expiring in 12 weeks",
+                                          "\"\(title.name)\" leaves in \(left) weeks. Renew it from the Dashboard or the Content tab."))
             }
         }
         let expired = s.catalog.filter { ($0.weeksRemaining ?? 1) <= 0 }

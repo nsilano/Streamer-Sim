@@ -11,7 +11,8 @@ struct DashboardView: View {
                         header(state)
                         hero(state)
                         statGrid(state)
-                        ForEach(Array(state.advice().prefix(2))) { AdviceBanner(advice: $0) }
+                        expiringCard(state)
+                        ForEach(Array(state.advice().filter { $0.id != "expiring" }.prefix(2))) { AdviceBanner(advice: $0) }
                         controls(state)
                         NavigationLink {
                             PromotionsView()
@@ -52,6 +53,24 @@ struct DashboardView: View {
             Button { store.showSettings = true } label: {
                 Image(systemName: "gearshape.fill").font(.title3).foregroundStyle(.white.opacity(0.85))
                     .padding(10).background(Circle().fill(Color.white.opacity(0.10)))
+            }
+        }
+    }
+
+    /// Always visible: licenses about to run out, with a one-tap renewal.
+    @ViewBuilder
+    private func expiringCard(_ state: GameState) -> some View {
+        let soon = state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 12 }
+        if !soon.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("\(soon.count) title\(soon.count == 1 ? "" : "s") about to expire", systemImage: "clock.badge.exclamationmark.fill")
+                    .font(.headline).foregroundStyle(Theme.danger)
+                ForEach(soon.prefix(3)) { title in
+                    RenewCard(title: title, state: state, onDone: nil)
+                }
+                if soon.count > 3 {
+                    Text("+\(soon.count - 3) more in Content > Catalog").font(.caption).foregroundStyle(Theme.text2)
+                }
             }
         }
     }
