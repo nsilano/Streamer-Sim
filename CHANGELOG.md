@@ -5,6 +5,13 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Named employees (save v20)
+- Departments are now staffed by real people. A job board offers six named applicants (new ones every 4 weeks), each with a department, a skill of 1-3 stars, a trait and an asking salary.
+- Traits: steady (rarely quits), prodigy (+15% output, pricier), ambitious (works harder, leaves if underpaid), frugal (cheaper), veteran (+10%), rookie (cheaper, learns twice as fast).
+- Set each person's salary. Pay drives morale; morale and pay decide how well they work. Underpaid or miserable people may quit (shown in the weekly report by name).
+- Long service earns promotions (more skill). Letting someone go costs 4 weeks' severance and dents their colleagues' morale.
+- A department's level is its people's combined skill (max 5). Departments stay fixed: no teams to build or assign.
+
 ### 20 more countries (50 in total)
 - New markets: Portugal, Belgium, Switzerland, Austria, Denmark, Norway, Finland, Czechia, Greece, Romania, Vietnam, Philippines, Malaysia, Pakistan, Taiwan, Peru, Israel, Qatar, Morocco and Ghana. All are on the map and the list, can be your starting market, and have their own size, prices, language and rules (Qatar and Pakistan ban reality shows; Pakistan, Qatar, Malaysia and Vietnam are strict about mature titles).
 - Eight new languages for dubbing and subtitles (Danish, Norwegian, Finnish, Czech, Greek, Romanian, Hebrew, Vietnamese).

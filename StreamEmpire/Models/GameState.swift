@@ -32,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 19
+    static let currentVersion = 20
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -58,6 +58,7 @@ struct GameState: Codable, Equatable {
     var partnerships: [Partnership] = []
     var acquisitionOffers: [AcquisitionOffer] = []
     var lastSportsResult = ""
+    var candidates: [Employee] = []            // people looking for a job with you
     var loanedOut: [LoanedTitle] = []          // titles licensed out to others for a fee
     var titleStats: [Int: TitleStats] = [:]    // per-title viewers and revenue (keyed by title id)
     var licenseMarket: [Title] = []
@@ -221,6 +222,7 @@ struct GameState: Codable, Equatable {
             starter.embargoWeeks = 0          // the opening market is fully on sale
             state.licenseMarket.append(starter)
         }
+        state.refreshCandidates()
         state.previousRanking = state.leaderboard.map { $0.id }
         state.addNews(.industry, "The streaming wars begin",
                       "\(state.rivals.count) services already fight for viewers, led by \(state.rivals.first?.name ?? "the incumbents"). Watch this feed for their moves.")

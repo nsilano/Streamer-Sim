@@ -104,55 +104,65 @@ enum Department: String, Codable, CaseIterable, Identifiable {
 }
 
 /// Staff level (0...5) per department.
+/// Your people, grouped into fixed departments. A department's level is the combined skill of the
+/// people in it (capped at 5); its effect also depends on their pay, morale and traits.
 struct Staff: Codable, Equatable {
-    var content = 0
-    var marketing = 0
-    var engineering = 0
-    var legal = 0
-    var finance = 0
-    /// Pay relative to the market rate (1.0 = market) per department; missing = 1.0.
+    var employees: [Employee] = []
+    /// Default pay per department (applied to new hires and by the department-wide pay setting).
     var pay: [String: Double] = [:]
     /// Pay for in-house studio crews.
     var studioPay = 1.0
 
-    func payScale(_ department: Department) -> Double { pay[department.rawValue] ?? 1.0 }
+    func members(_ department: Department) -> [Employee] { employees.filter { $0.department == department } }
 
-    mutating func setPay(_ department: Department, _ value: Double) { pay[department.rawValue] = value }
+    /// Average pay in a department (by skill), or its default when nobody works there.
+    func payScale(_ department: Department) -> Double {
+        let team = members(department)
+        let skill = team.reduce(0) { $0 + $1.skill }
+        guard skill > 0 else { return pay[department.rawValue] ?? 1.0 }
+        return team.reduce(0.0) { $0 + $1.pay * Double($1.skill) } / Double(skill)
+    }
 
-    /// Level adjusted for pay: well-paid teams outperform, underpaid ones don't.
+    /// Sets the department default and everyone's pay in it.
+    mutating func setPay(_ department: Department, _ value: Double) {
+        pay[department.rawValue] = value
+        for i in employees.indices where employees[i].department == department { employees[i].pay = value }
+    }
+
+    /// Combined output of the department (skill x pay x morale x trait), scaled down if over the size cap.
     func effectiveLevel(_ department: Department) -> Double {
-        Double(self[department]) * Formulas.payEffectiveness(payScale(department))
+        let team = members(department)
+        let raw = Double(team.reduce(0) { $0 + $1.skill })
+        guard raw > 0 else { return 0 }
+        let output = team.reduce(0.0) { $0 + $1.output }
+        let cap = Double(Formulas.maxDepartmentLevel)
+        return raw > cap ? output * cap / raw : output
     }
 
+    /// Department level: combined skill, capped at 5. Setting it replaces the department with
+    /// that many generic, steady, skill-1 staff (used by tests and simple setups).
     subscript(department: Department) -> Int {
-        get {
-            switch department {
-            case .content: return content
-            case .marketing: return marketing
-            case .engineering: return engineering
-            case .legal: return legal
-            case .finance: return finance
-            }
-        }
+        get { min(Formulas.maxDepartmentLevel, members(department).reduce(0) { $0 + $1.skill }) }
         set {
-            switch department {
-            case .content: content = newValue
-            case .marketing: marketing = newValue
-            case .engineering: engineering = newValue
-            case .legal: legal = newValue
-            case .finance: finance = newValue
+            employees.removeAll { $0.department == department }
+            let start = (employees.map(\.id).min() ?? 0) - 1
+            for n in 0..<max(0, newValue) {
+                employees.append(Employee(id: start - n, name: "\(department.displayName) staffer \(n + 1)", department: department,
+                                          skill: 1, pay: pay[department.rawValue] ?? 1.0))
             }
         }
     }
 
-    var totalLevels: Int { content + marketing + engineering + legal + finance }
+    var content: Int { get { self[.content] } set { self[.content] = newValue } }
+    var marketing: Int { get { self[.marketing] } set { self[.marketing] = newValue } }
+    var engineering: Int { get { self[.engineering] } set { self[.engineering] = newValue } }
+    var legal: Int { get { self[.legal] } set { self[.legal] = newValue } }
+    var finance: Int { get { self[.finance] } set { self[.finance] = newValue } }
 
-    /// Weekly salary bill, scaled by each department's pay setting.
-    var weeklySalaries: Double {
-        Department.allCases.reduce(0) {
-            $0 + Double(self[$1]) * Formulas.salaryPerLevelPerWeek * payScale($1)
-        }
-    }
+    var totalLevels: Int { Department.allCases.reduce(0) { $0 + self[$1] } }
+
+    /// Weekly salary bill before difficulty scaling.
+    var weeklySalaries: Double { employees.reduce(0) { $0 + $1.weeklySalary } }
 }
 
 

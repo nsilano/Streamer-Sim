@@ -100,12 +100,17 @@ extension GameState {
         guard finances.cash >= cost else { throw ActionError.insufficientFunds(needed: cost) }
         finances.cash -= cost
         finances.ledger.other += cost
-        staff[department] = level + 1
+        let start = (staff.employees.map(\.id).min() ?? 0) - 1
+        staff.employees.append(Employee(id: min(start, -1), name: "\(department.displayName) generalist", department: department,
+                                        skill: 1, pay: staff.pay[department.rawValue] ?? 1.0))
     }
 
+    /// Lets the least skilled (most recent) person in a department go, without severance.
     mutating func reduceStaff(_ department: Department) throws {
-        guard staff[department] > 0 else { throw ActionError.invalidAmount }
-        staff[department] -= 1
+        guard let index = staff.employees.indices.filter({ staff.employees[$0].department == department })
+            .min(by: { staff.employees[$0].skill != staff.employees[$1].skill ? staff.employees[$0].skill < staff.employees[$1].skill : $0 > $1 })
+        else { throw ActionError.invalidAmount }
+        staff.employees.remove(at: index)
     }
 
     var weeklySalaries: Double { scaled(staff.weeklySalaries + (curator != nil ? Curator.weeklySalary : 0)) }

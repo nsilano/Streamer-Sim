@@ -415,14 +415,7 @@ enum SimulationEngine {
 
     /// Underpaid departments lose people; underpaid studio crews lose experience.
     private static func applyAttrition(_ s: inout GameState, events: inout [GameEvent]) {
-        for department in Department.allCases where s.staff[department] > 0 {
-            let chance = Formulas.attritionChance(pay: s.staff.payScale(department))
-            if chance > 0, s.rng.chance(chance) {
-                s.staff[department] -= 1
-                events.append(s.makeEvent(.warning, "\(department.displayName) team member quit",
-                                          "Low pay is costing you talent. \(department.displayName) dropped to level \(s.staff[department])."))
-            }
-        }
+        People.weekly(&s, events: &events)
         let decay = Formulas.studioExperienceDecay(pay: s.staff.studioPay)
         if decay > 0 {
             for i in s.studios.indices { s.studios[i].experience = max(0, s.studios[i].experience - decay) }
