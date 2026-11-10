@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Random pop-up events removed
+- No more random events at all (outages, piracy, strikes, password crackdowns, recessions, viral/merger news). Nothing pops up or forces a choice. An old save's pending alert still settles itself. Server crashes from overloaded capacity are separate and still happen if you let load exceed capacity.
+
 ### Expiring titles are hard to miss
 - A red "about to expire" card on the Dashboard (always shown, not one of the two advice slots) lists titles with 12 weeks or less left, each with a one-tap Renew.
 - The weekly report now warns at 12 weeks as well as 4 weeks.

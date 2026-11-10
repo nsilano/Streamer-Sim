@@ -373,22 +373,21 @@ final class Phase3Tests: XCTestCase {
         XCTAssertTrue(s.lastReport!.events.contains { $0.headline == "Recession over" })
     }
 
-    func testRandomEventsEventuallyFireAndAreDeterministic() {
-        func run() -> GameState {
-            var s = newState(events: true)
-            s.markets["IE"]?.subs = TierSet(ad: 0, standard: 80_000, premium: 0)
-            s.finances.cash = 100_000_000
-            s.catalog = titles(3)
-            for week in 30..<2_000 {
-                s.week = week
-                s.pendingEvent = nil
-                if RandomEvents.roll(&s) != nil, s.pendingEvent != nil { break }
-            }
-            return s
+    func testRandomPopUpsAreOff() {
+        XCTAssertFalse(RandomEvents.popUpsEnabled)
+        var s = newState(events: true)
+        s.markets["IE"]?.subs = TierSet(ad: 0, standard: 80_000, premium: 0)
+        s.finances.cash = 100_000_000
+        s.catalog = titles(3)
+        for week in 30..<3_000 {
+            s.week = week
+            XCTAssertNil(RandomEvents.roll(&s))
         }
-        let a = run(), b = run()
-        XCTAssertNotNil(a.pendingEvent, "a decision event should appear eventually")
-        XCTAssertEqual(a, b)
+        XCTAssertNil(s.pendingEvent)
+        // A whole game with events "enabled" never raises an alert.
+        var game = newState(events: true)
+        game.finances.cash = 1e10
+        for _ in 0..<300 { game = SimulationEngine.advanceWeek(game); XCTAssertNil(game.pendingEvent) }
     }
 
     // MARK: Goals

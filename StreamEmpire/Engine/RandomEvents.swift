@@ -16,9 +16,13 @@ enum RandomEvents {
         max(50_000, s.finances.lastWeek.revenue) * Formulas.regulationCostMultiplier(legalLevel: s.staff.effectiveLevel(.legal))
     }
 
+    /// Random pop-up events (outages, piracy, strikes, recessions, ...) are switched off for good:
+    /// players found them annoying. The code stays so old saves with a pending alert still resolve.
+    static let popUpsEnabled = false
+
     /// Maybe starts an event. Returns it so it shows up in the weekly report.
     static func roll(_ s: inout GameState) -> GameEvent? {
-        guard s.eventsEnabled, s.pendingEvent == nil, s.week >= firstEventWeek,
+        guard popUpsEnabled, s.eventsEnabled, s.pendingEvent == nil, s.week >= firstEventWeek,
               s.week - s.lastEventWeek >= minGapWeeks, s.rng.chance(weeklyChance) else { return nil }
         var options: [(String, Double)] = [("merger", 6)]
         if !s.catalog.isEmpty { options.append(("viral", 10)) }
