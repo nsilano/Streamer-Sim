@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Localize a whole market in one tap
+- Each launched country's page has a "Localize for <country>" card: subtitle every title in the local language, dub your top 20 (best fit for that market first), or dub everything. Prices are shown up front; titles already in that language or already localized are skipped.
+
 ### Renewal styles: only absurd renewals interrupt you (save v26)
 - "Always auto-renew" is now an Auto-renew style: Off, Careful, Standard (new games start here) or Generous.
 - With a style on, every license 13 weeks from expiry renews for 2 years by itself, as long as the price is reasonable: no more per year than 1.0x / 1.3x / 2.0x what you paid, under 2% / 5% / 12% of your cash, and leaving 4 weeks of costs in the bank.

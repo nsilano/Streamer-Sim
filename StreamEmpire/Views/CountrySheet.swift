@@ -24,6 +24,7 @@ struct CountrySheet: View {
                         }
                         marketCard(country)
                         rivalsCard(country, state)
+                        if market.status != .notLaunched { localizeCard(country, state) }
                         if market.status != .notLaunched { exitCard(country, state) }
                     }
                     .padding(16)
@@ -259,6 +260,44 @@ struct CountrySheet: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
         .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.14)))
+    }
+
+    private func localizeCard(_ country: Country, _ state: GameState) -> some View {
+        let language = country.language.displayName
+        let subs = state.localizationTargets(code: country.code, dub: false)
+        let dubTop = state.localizationTargets(code: country.code, dub: true, limit: 20)
+        let dubAll = state.localizationTargets(code: country.code, dub: true)
+        return VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Localize for \(country.name)", icon: "character.bubble.fill", tint: Theme.violet)
+            Text("Viewers here watch in \(language). Subtitles make foreign titles much more appealing; dubbing even more. Titles are picked by how well they suit this market.")
+                .font(.caption).foregroundStyle(Theme.text2)
+            if subs.isEmpty && dubAll.isEmpty {
+                Label("Your whole catalog is already in \(language) here.", systemImage: "checkmark.circle.fill")
+                    .font(.caption).foregroundStyle(Theme.good)
+            }
+            if !subs.isEmpty {
+                let price = state.bulkLocalizePrice(code: country.code, dub: false)
+                Button("Subtitle all \(subs.count) titles in \(language) · \(Format.money(price))") {
+                    store.perform { _ = try $0.bulkLocalize(code: country.code, dub: false) }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.violet)).disabled(state.finances.cash < price)
+            }
+            if !dubTop.isEmpty, dubAll.count > dubTop.count {
+                let price = state.bulkLocalizePrice(code: country.code, dub: true, limit: 20)
+                Button("Dub the top \(dubTop.count) in \(language) · \(Format.money(price))") {
+                    store.perform { _ = try $0.bulkLocalize(code: country.code, dub: true, limit: 20) }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.magenta)).disabled(state.finances.cash < price)
+            }
+            if !dubAll.isEmpty {
+                let price = state.bulkLocalizePrice(code: country.code, dub: true)
+                Button("Dub all \(dubAll.count) titles in \(language) · \(Format.money(price))") {
+                    store.perform { _ = try $0.bulkLocalize(code: country.code, dub: true) }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.magenta)).disabled(state.finances.cash < price)
+            }
+        }
+        .artCard(tint: Theme.violet)
     }
 
     private func exitCard(_ country: Country, _ state: GameState) -> some View {
