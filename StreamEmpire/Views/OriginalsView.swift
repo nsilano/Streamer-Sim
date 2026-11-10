@@ -78,6 +78,8 @@ struct CommissionView: View {
     @State private var budget: Double = 10_000_000
     @State private var weeks: Int = 40
     @State private var studioID: Int?
+    @State private var release: ReleaseStyle = .binge
+    @State private var star: StarTier = .none
 
     private var range: ClosedRange<Double> { Formulas.budgetRange(kind) }
     private var chosenStudio: Studio? { store.state?.studios.first { $0.id == studioID } }
@@ -117,6 +119,15 @@ struct CommissionView: View {
                             .font(.footnote).foregroundStyle(Theme.text2)
                     }
                 }
+                Section("Style & talent") {
+                    Picker("Release", selection: $release) { ForEach(ReleaseStyle.allCases) { Text($0.displayName).tag($0) } }
+                    Text(release.blurb).font(.footnote).foregroundStyle(Theme.text2)
+                    Picker("Star", selection: $star) { ForEach(StarTier.allCases) { Text($0.displayName).tag($0) } }
+                    if star != .none {
+                        Text("Costs \(Format.percent(star.costFactor - 1))+ more, lifts quality and popularity, and takes \(Format.percent(star.profitShare)) of this title's revenue each week.")
+                            .font(.footnote).foregroundStyle(Theme.text2)
+                    }
+                }
                 Section("Budget & schedule") {
                     Stepper(value: $budget, in: range, step: kind == .movie ? 500_000 : 2_000_000) {
                         LabeledValue(label: "Budget", value: Format.money(budget))
@@ -134,7 +145,8 @@ struct CommissionView: View {
                     Button("Start production") {
                         store.perform {
                             try $0.commissionOriginal(kind: kind, genre: genre, language: language,
-                                                      budget: budget, weeks: weeks, studioID: studioID)
+                                                      budget: budget, weeks: weeks, studioID: studioID,
+                                                      release: release, star: star)
                         }
                         dismiss()
                     }
@@ -195,6 +207,54 @@ struct StudiosSection: View {
                     .disabled(state.finances.cash < state.studioFoundingPrice)
                 }
             }
+        }
+    }
+}
+
+/// Order the next season of a series, or a sequel to a movie.
+struct ContinueView: View {
+    @EnvironmentObject var store: GameStore
+    @Environment(\.dismiss) private var dismiss
+    let titleID: Int
+    @State private var budget: Double = 10_000_000
+    @State private var weeks = 36
+    @State private var release: ReleaseStyle = .weekly
+    @State private var star: StarTier = .none
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let state = store.state, let title = state.catalog.first(where: { $0.id == titleID }) {
+                    let range = Formulas.budgetRange(title.kind)
+                    let factor = Formulas.seasonCostFactor(seasons: title.seasons) * star.costFactor
+                    Section {
+                        LabeledValue(label: title.kind == .series ? "Next season" : "Sequel", value: "#\(title.seasons + 1)")
+                        Text("Returning casts want raises: \(Format.percent(Formulas.seasonCostFactor(seasons: title.seasons) - 1)) on top of the budget. Quality blends the last release with new luck; popularity carries over.")
+                            .font(.footnote).foregroundStyle(Theme.text2)
+                    }
+                    Section("Style & talent") {
+                        Picker("Release", selection: $release) { ForEach(ReleaseStyle.allCases) { Text($0.displayName).tag($0) } }
+                        Picker("Star", selection: $star) { ForEach(StarTier.allCases) { Text($0.displayName).tag($0) } }
+                    }
+                    Section("Budget & schedule") {
+                        NumberFieldRow(label: "Budget", value: $budget, range: range.lowerBound...range.upperBound, isMoney: true)
+                        IntFieldRow(label: "Production weeks", value: $weeks, range: Formulas.productionWeeksRange)
+                        LabeledValue(label: "Weekly cost", value: Format.money(budget * factor * state.costScale / Double(weeks)))
+                    }
+                    Section {
+                        Button("Start production") {
+                            store.perform { try $0.orderSeason(titleID: titleID, budget: budget, weeks: weeks, release: release, star: star) }
+                            dismiss()
+                        }
+                        .disabled(state.canContinue(title) != nil)
+                        if let reason = state.canContinue(title) { Text(reason).font(.footnote).foregroundStyle(Theme.amber) }
+                    }
+                }
+            }
+            .artScreen()
+            .navigationTitle("Continue the story")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Cancel") { dismiss() } }
         }
     }
 }

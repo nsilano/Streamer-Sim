@@ -33,6 +33,10 @@ struct Title: Codable, Identifiable, Equatable {
     var evergreen = false          // a classic that never fully goes stale
     var cleared: [String] = []     // strict countries where a local edit has been paid for
     var embargoWeeks = 0           // listing only: weeks until the rights can be bought
+    var seasons = 1                // seasons (or installments) made
+    var weeklyRelease = false      // released weekly instead of all at once
+    var star: StarTier = .none
+    var awards = 0
 
     /// Do the license territories cover this country?
     func inTerritory(_ countryCode: String) -> Bool {

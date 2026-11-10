@@ -6,7 +6,9 @@ extension GameState {
 
     /// Commissions an original. `studioID == nil` outsources it; otherwise it is produced in-house.
     mutating func commissionOriginal(kind: TitleKind, genre: Genre, language: Language,
-                                     budget: Double, weeks: Int, studioID: Int? = nil) throws {
+                                     budget: Double, weeks: Int, studioID: Int? = nil,
+                                     release: ReleaseStyle = .binge, star: StarTier = .none,
+                                     sequelOf: Int? = nil, name nameOverride: String? = nil) throws {
         guard outcome == .playing else { throw ActionError.gameOver }
         var costFactor = 1.0
         if let studioID {
@@ -28,15 +30,44 @@ extension GameState {
         guard Formulas.productionWeeksRange.contains(weeks) else {
             throw ActionError.invalidProject("Production takes 6 to 52 weeks.")
         }
-        let weekly = budget * costFactor * costScale / Double(weeks)
+        var seasonFactor = 1.0
+        if let sequelOf, let parent = catalog.first(where: { $0.id == sequelOf }) {
+            seasonFactor = Formulas.seasonCostFactor(seasons: parent.seasons)
+        }
+        let weekly = budget * costFactor * star.costFactor * seasonFactor * costScale / Double(weeks)
         guard finances.cash >= weekly * 4 else { throw ActionError.insufficientFunds(needed: weekly * 4) }
         let id = takeID()
-        let name = TitleGenerator.makeName(genre: genre, rng: &rng)
+        let name = nameOverride ?? TitleGenerator.makeName(genre: genre, rng: &rng)
         addNews(.you, "\(companyName) greenlights \"\(name)\"",
                 "A \(genre.displayName.lowercased()) \(kind.displayName.lowercased()) with a \(Format.money(budget)) budget, ready in \(weeks) weeks\(studioID == nil ? "" : " from your in-house studio").")
         projects.append(OriginalProject(id: id, name: name, kind: kind, genre: genre, language: language,
                                         budget: budget, weeksTotal: weeks, weeksLeft: weeks, weeklyCost: weekly,
-                                        studioID: studioID))
+                                        studioID: studioID, release: release, star: star, sequelOf: sequelOf))
+    }
+
+    // MARK: Seasons and sequels
+
+    /// Can this title get another season (series) or a sequel (movie)?
+    func canContinue(_ title: Title) -> String? {
+        guard title.isOriginal else { return "Only your own originals can continue." }
+        if projects.contains(where: { $0.sequelOf == title.id }) { return "A new season is already in production." }
+        if title.seasons >= 8 { return "It has run its course." }
+        return nil
+    }
+
+    mutating func orderSeason(titleID: Int, budget: Double, weeks: Int, studioID: Int? = nil,
+                              release: ReleaseStyle = .binge, star: StarTier = .none) throws {
+        guard let title = catalog.first(where: { $0.id == titleID }) else { throw ActionError.titleNotFound }
+        if let reason = canContinue(title) { throw ActionError.invalidProject(reason) }
+        let next = title.seasons + 1
+        let name = title.kind == .series ? title.name : "\(title.name.replacingOccurrences(of: #" [IVX]+$"#, with: "", options: .regularExpression)) \(GameState.roman(next))"
+        try commissionOriginal(kind: title.kind, genre: title.genre, language: title.language, budget: budget,
+                               weeks: weeks, studioID: studioID, release: release, star: star,
+                               sequelOf: titleID, name: name)
+    }
+
+    static func roman(_ n: Int) -> String {
+        ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][min(max(n, 0), 10)]
     }
 
     // MARK: Localization

@@ -5,6 +5,12 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Realism pack 2: seasons, release style, stars, awards
+- Order the next season of a series (refreshes the same show) or a sequel to a movie (a new title that inherits fans). Returning casts cost 12% more per season already made; quality blends the last release with new luck.
+- Release style: binge drop (bigger launch, fades faster) or weekly episodes (smaller launch, stays fresh longer).
+- Star talent on originals: rising star or A-list star. Costs more, lifts quality and popularity, and takes a weekly cut of the title's revenue.
+- Awards season every year (week 44): your best recent originals can win, boosting popularity and brand trust.
+
 ### Realism pack 1: restrictions, territories, piracy, trends (save v17)
 - Country content rules: Saudi Arabia, UAE, Egypt and Indonesia ban reality shows; strict countries (also India, Thailand) block mature titles until you pay for a local edit (the edit slightly lowers appeal). Blocked titles don't count toward that country's catalog.
 - Regional license territories: about a third of listings only cover one or two regions (cheaper); add worldwide rights later for the price difference.

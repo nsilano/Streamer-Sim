@@ -232,6 +232,7 @@ struct TitleDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     let titleID: Int
     @State private var showLocalize = false
+    @State private var showContinue = false
 
     var body: some View {
         NavigationStack {
@@ -267,6 +268,7 @@ struct TitleDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
             .sheet(isPresented: $showLocalize) { LocalizeView(titleID: titleID) }
+            .sheet(isPresented: $showContinue) { ContinueView(titleID: titleID) }
         }
     }
 
@@ -433,6 +435,14 @@ struct TitleDetailSheet: View {
             LabeledValue(label: "Rights", value: title.weeksRemaining.map { "\($0) weeks left" } ?? "Owned forever, worldwide")
             if !title.dubs.isEmpty { LabeledValue(label: "Dubbed", value: title.dubs.map(\.displayName).joined(separator: ", ")) }
             if !title.subtitles.isEmpty { LabeledValue(label: "Subtitled", value: title.subtitles.map(\.displayName).joined(separator: ", ")) }
+            if title.isOriginal {
+                LabeledValue(label: title.kind == .series ? "Seasons" : "Installments", value: "\(title.seasons)")
+                if title.awards > 0 { LabeledValue(label: "Awards won", value: "\(title.awards)", tint: Theme.amber) }
+                if title.star != .none { LabeledValue(label: "Star", value: title.star.displayName) }
+                LabeledValue(label: "Release", value: title.weeklyRelease ? "Weekly episodes" : "Binge drop")
+                Button(title.kind == .series ? "Order next season" : "Order a sequel") { showContinue = true }
+                    .buttonStyle(SoftButtonStyle(tint: Theme.magenta))
+            }
             Button("Add dubbing or subtitles") { showLocalize = true }.buttonStyle(SoftButtonStyle(tint: Theme.violet))
         }
         .artCard(tint: Theme.good)

@@ -64,10 +64,20 @@ enum Formulas {
     /// A regional license costs less than worldwide rights, but not in proportion to its size.
     static func territoryPriceFactor(share: Double) -> Double { 0.35 + 0.65 * min(1, max(0, share)) }
 
-    /// Freshness with the floor classics keep.
+    /// Freshness with the floor classics keep. Weekly releases fade more slowly.
     static func freshness(of title: Title) -> Double {
-        max(freshness(ageWeeks: title.ageWeeks), title.evergreen ? 0.6 : 0)
+        let age = title.weeklyRelease ? Int(Double(title.ageWeeks) * 0.75) : title.ageWeeks
+        return max(freshness(ageWeeks: age), title.evergreen ? 0.6 : 0)
     }
+
+    /// Launch boost: binge drops spike harder, weekly drops are gentler but last two months.
+    static func releaseBoost(of title: Title) -> Double {
+        if title.weeklyRelease { return title.ageWeeks < 8 ? 1.2 : 1.0 }
+        return releaseBoost(ageWeeks: title.ageWeeks)
+    }
+
+    /// Extra cost of each further season: cast and crew want raises.
+    static func seasonCostFactor(seasons: Int) -> Double { 1 + 0.12 * Double(max(0, seasons)) }
 
     /// Share of would-be customers who pirate instead: pricey service + thin catalog + low-income market.
     static func piracy(price: Double, tolerance: Double, appeal: Double) -> Double {
@@ -83,7 +93,7 @@ enum Formulas {
             * country.taste(title.genre)
             * languageMatch(title: title, country: country)
             * freshness(of: title)
-            * releaseBoost(ageWeeks: title.ageWeeks)
+            * releaseBoost(of: title)
         if title.controversial { appeal *= 1.15 }
         if title.mature, title.cleared.contains(country.code) { appeal *= 0.85 }
         if title.license?.exclusive == true { appeal *= 1.15 }

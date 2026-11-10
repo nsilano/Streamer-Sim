@@ -54,6 +54,7 @@ enum SimulationEngine {
         runCurator(&s, events: &events)
 
         Trends.announce(&s)
+        if s.week % 52 == Awards.week { Awards.season(&s, events: &events) }
         progressLoans(&s, events: &events)
         ageCatalog(&s, events: &events)
         s.resetWeeklyTitleStats()
@@ -213,6 +214,7 @@ enum SimulationEngine {
         }
 
         s.finalizeTitleStats()
+        fin.originals += s.talentShares()
 
         // Overloaded servers can crash: subscribers leave and the region limps for two weeks.
         for region in Region.allCases {
@@ -455,17 +457,45 @@ enum SimulationEngine {
             let expected = Formulas.expectedOriginalQuality(kind: project.kind, budget: project.budget,
                                                             weeks: project.weeksTotal)
                 + Formulas.originalQualityBonus(contentLevel: s.staff.effectiveLevel(.content))
-                + studioBonus
+                + studioBonus + project.star.qualityBonus
             let u1 = s.rng.nextDouble(), u2 = s.rng.nextDouble(), u3 = s.rng.nextDouble()
             let breakout = s.rng.chance(0.05)
-            let quality = Formulas.rolledOriginalQuality(expected: expected, u1: u1, u2: u2, u3: u3, breakout: breakout)
-            let popularity = min(100, Formulas.originalPopularity(quality: quality, u: s.rng.nextDouble()) + popularityBonus)
-            let title = Title(id: s.takeID(), name: project.name, kind: project.kind, genre: project.genre,
-                              language: project.language, quality: quality, popularity: popularity,
+            let rolledQuality = Formulas.rolledOriginalQuality(expected: expected, u1: u1, u2: u2, u3: u3, breakout: breakout)
+            let rolledPopularity = min(100, Formulas.originalPopularity(quality: rolledQuality, u: s.rng.nextDouble())
+                                 + popularityBonus + project.star.popularityBonus)
+            var title = Title(id: s.takeID(), name: project.name, kind: project.kind, genre: project.genre,
+                              language: project.language, quality: rolledQuality, popularity: rolledPopularity,
                               ageWeeks: 0, isOriginal: true, license: nil, weeksRemaining: nil,
                               listingWeeksLeft: 0, invested: project.budget,
                               mature: s.rng.chance(Formulas.matureChance(project.genre)))
-            s.catalog.append(title)
+            title.weeklyRelease = project.release == .weekly
+            title.star = project.star
+            var finalQuality = rolledQuality, finalPopularity = rolledPopularity
+            if let parentID = project.sequelOf, let pi = s.catalog.firstIndex(where: { $0.id == parentID }) {
+                let parent = s.catalog[pi]
+                finalQuality = (parent.quality + rolledQuality) / 2
+                finalPopularity = min(100, Int(Double(parent.popularity) * 0.9) + 8 + project.star.popularityBonus)
+                title.quality = finalQuality
+                title.popularity = finalPopularity
+                title.mature = parent.mature
+                title.seasons = parent.seasons + 1
+                title.awards = 0
+                s.catalog[pi].seasons = title.seasons
+                if project.kind == .series {
+                    // A new season refreshes the same show.
+                    s.catalog[pi].quality = finalQuality
+                    s.catalog[pi].popularity = finalPopularity
+                    s.catalog[pi].ageWeeks = 0
+                    s.catalog[pi].weeklyRelease = title.weeklyRelease
+                    s.catalog[pi].star = project.star
+                    s.catalog[pi].invested += project.budget
+                } else {
+                    s.catalog.append(title)
+                }
+            } else {
+                s.catalog.append(title)
+            }
+            let quality = finalQuality, popularity = finalPopularity
             if quality >= 80, let region = s.busiestRegion { s.surges[region.rawValue] = max(s.surges[region.rawValue] ?? 0, 1) }
             let verdict = breakout ? "A runaway hit!" : quality >= 75 ? "Critics love it." : quality <= 40 ? "A flop." : "A solid addition."
             var origin = ""
