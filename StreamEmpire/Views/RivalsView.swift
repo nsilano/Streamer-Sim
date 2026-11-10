@@ -47,7 +47,7 @@ struct RivalsView: View {
                     let total = max(1, board.reduce(0) { $0 + $1.subs })
                     let leader = board.first?.subs ?? 0
                     VStack(alignment: .leading, spacing: 12) {
-                        ScreenHeader(title: "Rivals", subtitle: "\(state.rivals.count) competitors · you are #\(state.rank)")
+                        ScreenHeader(title: "Rivals", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.rivals.count) competitors · you are #\(state.rank)")
                         Picker("View", selection: $mode) {
                             ForEach(Mode.allCases) { m in
                                 Text(m == .news && state.unreadNewsCount > 0 ? "News (\(state.unreadNewsCount))" : m.rawValue).tag(m)

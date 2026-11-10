@@ -45,7 +45,7 @@ struct MarketsView: View {
 
     private func header(_ state: GameState) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            ScreenHeader(title: "World", subtitle: "\(state.liveMarketCodes.count) of \(CountryData.all.count) markets live") {
+            ScreenHeader(title: "World", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.liveMarketCodes.count) of \(CountryData.all.count) markets live") {
                 Button { showPrices = true } label: {
                     Label("Prices", systemImage: "tag.fill")
                 }

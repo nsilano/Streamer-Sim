@@ -135,7 +135,7 @@ struct ReactionRow: View {
                 Text(reaction.headline).font(.subheadline.weight(.bold)).foregroundStyle(.white)
                 Text(reaction.detail).font(.caption).foregroundStyle(Theme.text2)
                 HStack(spacing: 6) {
-                    Text("Week \(reaction.week) · \(reaction.policyTitle): \(reaction.optionTitle)")
+                    Text("\(Format.stamp(week: reaction.week)) · \(reaction.policyTitle): \(reaction.optionTitle)")
                         .font(.caption2).foregroundStyle(Theme.text2)
                     if abs(reaction.subscribersChange) >= 1 {
                         Pill(text: "\(reaction.subscribersChange >= 0 ? "+" : "-")\(Format.count(abs(reaction.subscribersChange))) subs", tint: tint)

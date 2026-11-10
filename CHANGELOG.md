@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Dates and your-company news highlight
+- An in-game calendar: week 1 is Monday, Jan 5, 2026, and each turn is a week. Every tab's header shows the date and week number (the Dashboard also shows your company's age in years).
+- News items, weekly reports and policy reactions are stamped with the date and week.
+- News about your company (your own moves, or any story that names you) is highlighted in pink with a "YOUR COMPANY" tag, and the "You" filter catches them all.
+
 ### Play/Pause instead of Next week; the sim stops for anything major
 - The Dashboard's main control is now a big Play/Pause button with 1x/2x/4x/8x speed (a small "Step 1 week" stays for when you're paused).
 - The sim pauses by itself and shows a red "Paused: needs your attention" panel that stays until you dismiss it or press Resume when: licenses hit 12 or 4 weeks left, a license expires, servers in a region pass 90% or 100% of capacity, servers crash, cash goes negative or runway drops under 8 weeks, a rival declares a price war or pulls one of your shows, or the game ends.

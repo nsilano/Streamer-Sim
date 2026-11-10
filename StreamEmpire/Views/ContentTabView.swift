@@ -28,7 +28,7 @@ struct ContentTabView: View {
             ScrollView {
                 if let state = store.state {
                     VStack(alignment: .leading, spacing: 14) {
-                        ScreenHeader(title: "Content", subtitle: "\(state.catalog.count) titles · \(state.projects.count) in production")
+                        ScreenHeader(title: "Content", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.catalog.count) titles · \(state.projects.count) in production")
                         Picker("Section", selection: $section) {
                             ForEach(Section.allCases) { Text($0.rawValue).tag($0) }
                         }

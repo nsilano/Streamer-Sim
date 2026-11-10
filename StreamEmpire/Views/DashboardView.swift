@@ -65,7 +65,7 @@ struct DashboardView: View {
     // MARK: Pieces
 
     private func header(_ state: GameState) -> some View {
-        ScreenHeader(title: state.companyName, subtitle: "Week \(state.week) · Rank #\(state.rank) of \(state.rivals.count + 1)") {
+        ScreenHeader(title: state.companyName, subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) (year \(GameCalendar.companyYear(week: state.week))) · Rank #\(state.rank) of \(state.rivals.count + 1)") {
             Button { store.showSettings = true } label: {
                 Image(systemName: "gearshape.fill").font(.title3).foregroundStyle(.white.opacity(0.85))
                     .padding(10).background(Circle().fill(Color.white.opacity(0.10)))
@@ -219,7 +219,7 @@ struct ReportSummaryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionTitle(text: "Last week (week \(report.week))", icon: "doc.text.fill", tint: Theme.teal)
+            SectionTitle(text: "Last week (\(Format.stamp(week: report.week)))", icon: "doc.text.fill", tint: Theme.teal)
             LabeledValue(label: "New subscribers", value: "+\(Format.count(report.newSubs))", tint: Theme.good)
             LabeledValue(label: "Churned", value: "-\(Format.count(report.churned))", tint: Theme.danger)
             LabeledValue(label: "Revenue", value: Format.money(report.financials.revenue))
@@ -261,7 +261,7 @@ struct WeeklyReportView: View {
                 .padding(16)
             }
             .artScreen()
-            .navigationTitle("Week \(report.week)")
+            .navigationTitle(Format.stamp(week: report.week))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
         }

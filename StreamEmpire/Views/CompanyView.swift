@@ -11,7 +11,7 @@ struct CompanyView: View {
             ScrollView {
                 if let state = store.state {
                     VStack(alignment: .leading, spacing: 14) {
-                        ScreenHeader(title: "Company", subtitle: state.companyName) {
+                        ScreenHeader(title: "Company", subtitle: "\(state.companyName) · \(GameCalendar.dateText(week: state.week)) · Week \(state.week)") {
                             Button { store.showSettings = true } label: {
                                 Image(systemName: "gearshape.fill").font(.title3).foregroundStyle(.white.opacity(0.85))
                                     .padding(10).background(Circle().fill(Color.white.opacity(0.10)))
