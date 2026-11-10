@@ -19,7 +19,10 @@ enum PauseCheck {
         }
         let expiring = after.newlyExpiring
         if !expiring.isEmpty {
-            let names = expiring.prefix(3).map { "\"\($0.name)\" (\($0.weeksRemaining ?? 0) wks)" }.joined(separator: ", ")
+            let names = expiring.prefix(3).map { title -> String in
+                let why = after.renewalBlock(title).map { ": \($0.lowercased())" } ?? ""
+                return "\"\(title.name)\" (\(title.weeksRemaining ?? 0) wks\(why))"
+            }.joined(separator: ", ")
             out.append(PauseReason(id: "expiring", icon: "clock.badge.exclamationmark.fill",
                                    title: "\(expiring.count) license\(expiring.count == 1 ? "" : "s") expiring",
                                    detail: "\(names)\(expiring.count > 3 ? " and more" : ""). Renew them or they leave your catalog."))

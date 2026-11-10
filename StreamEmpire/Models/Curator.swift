@@ -92,3 +92,29 @@ enum CuratorMode: String, Codable, CaseIterable, Identifiable {
     var minQuality: Int { self == .passive ? 60 : self == .moderate ? 55 : 45 }
     var maxYears: Int { self == .aggressive ? 5 : 3 }
 }
+
+/// How freely expiring licenses are renewed without asking you. You're only stopped for the rest.
+enum RenewalMode: String, Codable, CaseIterable, Identifiable {
+    case off, careful, standard, generous
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+
+    /// Most a renewal may cost per year, relative to what you paid per year.
+    var maxPriceRatio: Double {
+        switch self { case .off: return 0; case .careful: return 1.0; case .standard: return 1.3; case .generous: return 2.0 }
+    }
+
+    /// Most a single renewal may cost as a share of your cash.
+    var cashShare: Double {
+        switch self { case .off: return 0; case .careful: return 0.02; case .standard: return 0.05; case .generous: return 0.12 }
+    }
+
+    var blurb: String {
+        switch self {
+        case .off: return "Nothing renews by itself. You're stopped at 12, 4 and 1 week left for every license."
+        case .careful: return "Renews when it costs no more per year than you paid and under 2% of your cash. Anything pricier stops the sim."
+        case .standard: return "Renews up to 1.3x what you paid per year and under 5% of your cash. Only unusually expensive renewals stop the sim."
+        case .generous: return "Renews up to 2x what you paid per year and under 12% of your cash. Only absurd prices stop the sim."
+        }
+    }
+}

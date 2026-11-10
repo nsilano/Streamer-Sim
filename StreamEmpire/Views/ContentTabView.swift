@@ -179,10 +179,7 @@ struct ContentTabView: View {
 
     @ViewBuilder
     private func catalog(_ state: GameState) -> some View {
-        Toggle(isOn: Binding(get: { state.autoRenewAll }, set: { on in store.perform { $0.autoRenewAll = on } })) {
-            Text("Always auto-renew licenses (2 yr)").font(.subheadline).foregroundStyle(.white)
-        }
-        .tint(Theme.good)
+        RenewalModePicker(state: state)
         if !state.expiringTitles.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(text: "Expiring soon", icon: "clock.badge.exclamationmark.fill", tint: Theme.danger)
@@ -767,5 +764,24 @@ struct NegotiateView: View {
                 loaded = true
             }
         }
+    }
+}
+
+/// Pick how freely expiring licenses renew on their own.
+struct RenewalModePicker: View {
+    @EnvironmentObject var store: GameStore
+    let state: GameState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Auto-renew licenses").font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+            Picker("Auto-renew", selection: Binding(get: { state.renewalMode },
+                                                    set: { mode in store.perform { $0.renewalMode = mode } })) {
+                ForEach(RenewalMode.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Text(state.renewalMode.blurb).font(.caption).foregroundStyle(Theme.text2)
+        }
+        .artCard(tint: Theme.good)
     }
 }

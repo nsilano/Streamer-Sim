@@ -32,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 25
+    static let currentVersion = 26
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -64,7 +64,7 @@ struct GameState: Codable, Equatable {
     var lastDividendWeek = -100
     var trend: [TrendPoint] = []               // weekly headline numbers for the charts (up to 10 years)
     var listingReach = 0
-    var autoRenewAll = false                   // renew every expiring license automatically (2 years)                       // content scouting level: more listings on the market            // people looking for a job with you
+    var renewalMode: RenewalMode = .off        // how freely expiring licenses renew by themselves (the app starts games on .standard)
     var loanedOut: [LoanedTitle] = []          // titles licensed out to others for a fee
     var titleStats: [Int: TitleStats] = [:]    // per-title viewers and revenue (keyed by title id)
     var licenseMarket: [Title] = []

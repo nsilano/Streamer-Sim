@@ -53,27 +53,51 @@ final class Phase26Tests: XCTestCase {
         XCTAssertEqual(s.catalog.first { $0.id == 1 }!.weeksRemaining, 10)
     }
 
-    func testAlwaysAutoRenewKeepsTheCatalogGrowing() {
+    func testAutoRenewKeepsReasonablyPricedTitlesWithoutStoppingYou() {
         var s = newState()
-        s.autoRenewAll = true
-        s.catalog = [owned(id: 1, left: 5)]
-        for _ in 0..<10 { s = SimulationEngine.advanceWeek(s) }
-        XCTAssertEqual(s.catalog.count, 1, "renewed instead of expiring")
-        XCTAssertGreaterThan(s.catalog[0].weeksRemaining ?? 0, 90)
+        s.renewalMode = .standard
+        s.catalog = [owned(id: 1, left: 14)]
+        for _ in 0..<5 { s = SimulationEngine.advanceWeek(s) }
+        XCTAssertEqual(s.catalog.count, 1)
+        XCTAssertGreaterThan(s.catalog[0].weeksRemaining ?? 0, 100, "renewed before the 12-week warning")
         var off = newState()
         off.catalog = [owned(id: 1, left: 5)]
         for _ in 0..<10 { off = SimulationEngine.advanceWeek(off) }
-        XCTAssertTrue(off.catalog.isEmpty, "without it, licenses still lapse")
+        XCTAssertTrue(off.catalog.isEmpty, "with auto-renew off, licenses still lapse")
+    }
+
+    func testOnlyAbsurdRenewalsReachYou() {
+        var s = newState()
+        s.renewalMode = .standard
+        var hot = owned(id: 2, left: 13)
+        hot.popularity = 100            // popularity jumped 40 points since you signed: renewal is far pricier
+        s.catalog = [owned(id: 1, left: 13), hot]
+        XCTAssertNil(s.renewalBlock(s.catalog[0]))
+        XCTAssertNotNil(s.renewalBlock(s.catalog[1]))
+        s = SimulationEngine.advanceWeek(s)
+        XCTAssertEqual(s.newlyExpiring.map(\.id), [2], "only the absurd one stops the sim")
+    }
+
+    func testStylesAreOrderedAndOffBlocksEverything() {
+        var s = newState()
+        let t = owned(id: 1, left: 10)
+        s.catalog = [t]
+        s.renewalMode = .off
+        XCTAssertNotNil(s.renewalBlock(t))
+        XCTAssertLessThan(RenewalMode.careful.maxPriceRatio, RenewalMode.standard.maxPriceRatio)
+        XCTAssertLessThan(RenewalMode.standard.maxPriceRatio, RenewalMode.generous.maxPriceRatio)
+        XCTAssertLessThan(RenewalMode.careful.cashShare, RenewalMode.generous.cashShare)
     }
 
     func testAutoRenewSkipsWhatYouCantAfford() {
         var s = newState()
-        s.autoRenewAll = true
+        s.renewalMode = .generous
         s.finances.cash = 10
         s.catalog = [owned(id: 1, left: 2)]
         var events: [GameEvent] = []
         s.autoRenewEverything(events: &events)
         XCTAssertEqual(s.catalog[0].weeksRemaining, 2)
         XCTAssertTrue(events.isEmpty)
+        XCTAssertNotNil(s.renewalBlock(s.catalog[0]))
     }
 }

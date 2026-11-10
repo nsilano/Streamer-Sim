@@ -14,7 +14,7 @@ struct ExpiringSheet: View {
                         let expiring = state.expiringTitles
                         Label("\(expiring.count) license\(expiring.count == 1 ? "" : "s") expiring", systemImage: "clock.badge.exclamationmark.fill")
                             .font(Theme.display(24)).foregroundStyle(Theme.danger)
-                        Text("The sim is paused. Renew now to keep these titles, or let them go.")
+                        Text("The sim is paused. These didn't renew automatically (too pricey for your auto-renew setting, or auto-renew is off). Renew now to keep them, or let them go.")
                             .font(.footnote).foregroundStyle(Theme.text2)
                         if !expiring.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
@@ -34,18 +34,14 @@ struct ExpiringSheet: View {
                             }
                             .artCard(tint: Theme.danger)
                         }
-                        Toggle(isOn: Binding(get: { state.autoRenewAll },
-                                             set: { on in store.perform { $0.autoRenewAll = on } })) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Always auto-renew").foregroundStyle(.white)
-                                Text("Every license is renewed for 2 years two weeks before it expires, if you have the cash.")
-                                    .font(.caption).foregroundStyle(Theme.text2)
-                            }
-                        }
-                        .tint(Theme.good)
-                        .artCard(tint: Theme.good)
+                        RenewalModePicker(state: state)
                         ForEach(expiring) { title in
-                            RenewCard(title: title, state: state, onDone: nil)
+                            VStack(alignment: .leading, spacing: 4) {
+                                if let reason = state.renewalBlock(title), state.renewalMode != .off {
+                                    Text("Not auto-renewed: \(reason).").font(.caption).foregroundStyle(Theme.amber)
+                                }
+                                RenewCard(title: title, state: state, onDone: nil)
+                            }
                         }
                     }
                     .padding(16)

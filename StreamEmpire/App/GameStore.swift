@@ -29,6 +29,7 @@ final class GameStore: ObservableObject {
         state = GameState.newGame(startCountry: country,
                                   companyName: name.isEmpty ? "Stream Empire" : name,
                                   seed: seed, difficulty: difficulty, scenario: scenario)
+        state?.renewalMode = .standard     // reasonable renewals happen by themselves; only pricey ones stop you
         persist()
     }
 

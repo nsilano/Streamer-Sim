@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Renewal styles: only absurd renewals interrupt you (save v26)
+- "Always auto-renew" is now an Auto-renew style: Off, Careful, Standard (new games start here) or Generous.
+- With a style on, every license 13 weeks from expiry renews for 2 years by itself, as long as the price is reasonable: no more per year than 1.0x / 1.3x / 2.0x what you paid, under 2% / 5% / 12% of your cash, and leaving 4 weeks of costs in the bank.
+- The sim only stops (at 12, 4 and 1 week left) for licenses your style refused, and the renewal sheet and pause panel say why (e.g. "price jumped to 2.4x what you paid per year").
+
 ### Better Dashboard charts (save v25)
 - The Dashboard chart now keeps your full history (up to 10 years) and shows the Past year or All time on a calendar axis (months), fitted to your data instead of a squashed week axis starting at 0.
 - Metrics: Subscribers, Revenue, Profit (green/red weekly bars) and Cash, with a zero line where it matters, the latest value, and the change over the period shown.

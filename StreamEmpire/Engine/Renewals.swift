@@ -45,7 +45,8 @@ extension GameState {
     /// Weeks-left marks at which the sim stops to warn you.
     static let expiryWarningWeeks: Set<Int> = [12, 4, 1]
 
-    /// Titles that just crossed a warning line this week (12, 4 or 1 week left).
+    /// Titles that just crossed a warning line this week (12, 4 or 1 week left). With a renewal style on,
+    /// reasonably priced ones were already renewed, so only the expensive or unaffordable ones remain.
     var newlyExpiring: [Title] {
         catalog.filter { $0.license != nil && GameState.expiryWarningWeeks.contains($0.weeksRemaining ?? -1) }
     }
@@ -70,14 +71,34 @@ extension GameState {
         return renewed
     }
 
-    /// With "always auto-renew" on, titles are renewed for 2 years two weeks before they expire (if you can pay).
+    /// Why a renewal can't happen automatically under your renewal style, or nil if it can.
+    func renewalBlock(_ title: Title) -> String? {
+        let mode = renewalMode
+        guard mode != .off else { return "Auto-renew is off" }
+        guard let license = title.license else { return nil }
+        let price = renewalPrice(title, years: 2)
+        let paidPerYear = max(1, (title.paidPrice > 0 ? title.paidPrice : licensePrice(title)) / Double(max(1, license.years)))
+        let ratio = price / 2 / paidPerYear
+        if ratio > mode.maxPriceRatio {
+            return "Price jumped to \(String(format: "%.1f", ratio))x what you paid per year"
+        }
+        if price > mode.cashShare * max(0, finances.cash) {
+            return "Costs \(Format.money(price)), over \(Format.percent(mode.cashShare)) of your cash"
+        }
+        let reserve = 4 * max(finances.lastWeek.costs, 100_000)
+        if finances.cash - price < reserve { return "Would leave less than 4 weeks of costs in the bank" }
+        return nil
+    }
+
+    /// Renews (2 years) every license 13 weeks or less from expiry whose price your renewal style accepts,
+    /// before the 12-week warning. Only the ones it refuses ever stop the sim.
     mutating func autoRenewEverything(events: inout [GameEvent]) {
-        guard autoRenewAll else { return }
+        guard renewalMode != .off else { return }
         var names: [String] = []
         var spent = 0.0
-        for title in catalog where title.license != nil && (title.weeksRemaining ?? 99) <= 2 {
+        for title in catalog where title.license != nil && (title.weeksRemaining ?? 99) <= 13 && renewalBlock(title) == nil {
             let price = renewalPrice(title, years: 2)
-            guard finances.cash >= price, (try? renewLicense(titleID: title.id, years: 2)) != nil else { continue }
+            guard (try? renewLicense(titleID: title.id, years: 2)) != nil else { continue }
             names.append(title.name)
             spent += price
         }
