@@ -59,6 +59,7 @@ enum SimulationEngine {
         s.refreshAcquisitionOffers()
         RivalRecalls.run(&s, events: &events)
         if s.week % 52 == Awards.week { Awards.season(&s, events: &events) }
+        s.autoRenewEverything(events: &events)
         progressLoans(&s, events: &events)
         fin.licensing += s.runOutputDeals(events: &events)
         ageCatalog(&s, events: &events)

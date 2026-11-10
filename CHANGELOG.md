@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Expiring licenses can't slip by anymore (save v23)
+- When any license crosses 12 weeks left, and again at 4 weeks, auto-advance stops and an "Expiring licenses" sheet opens with every expiring title, a Renew button on each, and Renew all (choose 1-5 years; with limited cash it keeps the cheapest first).
+- New "Always auto-renew" switch (in that sheet and at the top of Content > Catalog): every license is renewed for 2 years two weeks before it expires, if you have the cash. No licensing manager needed.
+- "Renew all (2 yr)" button on the Expiring soon section in Content.
+
 ### Refresh or expand the licensing market (save v22)
 - "Refresh listings": pay to swap every offer on the market for a fresh batch right away (price grows with your audience).
 - "More listings": a permanent upgrade (3 levels) that shows 6 more offers at a time and refills faster.

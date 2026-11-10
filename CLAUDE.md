@@ -85,6 +85,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 18. **Phase 18 (done): listing market controls** (`Engine/ListingMarket.swift`): `refreshListings` (paid, replaces all), `expandListings` (`listingReach` 0-3, `listingTarget` = 14 + 6/level), `fillListings` used by the weekly refresh. Save version is 22.
 
+19. **Phase 19 (done): expiring licenses, for real this time.** The user sims fast and asked three times. `GameStore.nextWeek` stops auto-advance and opens `ExpiringSheet` when `newlyExpiring` is non-empty (licenses at exactly 12 or 4 weeks left). `renewAll(years:)` (cheapest first), `autoRenewAll` flag + `autoRenewEverything` (2 years at <=2 weeks left, before ageing). Never make this quieter. Save version is 23.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

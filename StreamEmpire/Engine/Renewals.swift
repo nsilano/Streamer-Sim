@@ -42,6 +42,48 @@ extension GameState {
                 "Kept for \(years) more year\(years == 1 ? "" : "s") at \(Format.money(price)).")
     }
 
+    /// Titles that just crossed a warning line this week (12 or 4 weeks left).
+    var newlyExpiring: [Title] {
+        catalog.filter { $0.license != nil && ($0.weeksRemaining == 12 || $0.weeksRemaining == 4) }
+    }
+
+    /// Total to renew every expiring title for `years`.
+    func renewAllPrice(years: Int) -> Double {
+        expiringTitles.reduce(0) { $0 + renewalPrice($1, years: years) }
+    }
+
+    /// Renews every expiring title you can afford, cheapest first. Returns how many were renewed.
+    @discardableResult
+    mutating func renewAll(years: Int) throws -> Int {
+        guard outcome == .playing else { throw ActionError.gameOver }
+        let queue = expiringTitles.sorted { renewalPrice($0, years: years) < renewalPrice($1, years: years) }
+        guard !queue.isEmpty else { throw ActionError.invalidProject("Nothing is expiring.") }
+        var renewed = 0
+        for title in queue where finances.cash >= renewalPrice(title, years: years) {
+            try renewLicense(titleID: title.id, years: years)
+            renewed += 1
+        }
+        guard renewed > 0 else { throw ActionError.insufficientFunds(needed: renewalPrice(queue[0], years: years)) }
+        return renewed
+    }
+
+    /// With "always auto-renew" on, titles are renewed for 2 years two weeks before they expire (if you can pay).
+    mutating func autoRenewEverything(events: inout [GameEvent]) {
+        guard autoRenewAll else { return }
+        var names: [String] = []
+        var spent = 0.0
+        for title in catalog where title.license != nil && (title.weeksRemaining ?? 99) <= 2 {
+            let price = renewalPrice(title, years: 2)
+            guard finances.cash >= price, (try? renewLicense(titleID: title.id, years: 2)) != nil else { continue }
+            names.append(title.name)
+            spent += price
+        }
+        if !names.isEmpty {
+            events.append(makeEvent(.news, "Auto-renewed \(names.count) title\(names.count == 1 ? "" : "s")",
+                                    "\(names.prefix(3).joined(separator: ", "))\(names.count > 3 ? " and more" : "") kept for 2 more years (\(Format.money(spent)))."))
+        }
+    }
+
     /// The licensing manager renews expiring titles that still pass the quality bar and fit the price and budget.
     /// Returns the names renewed, the money spent and how many were skipped.
     mutating func curatorRenew(_ c: Curator, allowance: Double) -> (names: [String], spent: Double, skipped: Int) {

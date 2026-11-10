@@ -31,6 +31,7 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $store.showSettings) { SettingsView() }
+        .sheet(isPresented: $store.showExpiring) { ExpiringSheet() }
         .alert("Can't do that", isPresented: Binding(
             get: { store.errorMessage != nil },
             set: { if !$0 { store.errorMessage = nil } })) {

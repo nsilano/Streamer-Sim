@@ -174,9 +174,17 @@ struct ContentTabView: View {
 
     @ViewBuilder
     private func catalog(_ state: GameState) -> some View {
+        Toggle(isOn: Binding(get: { state.autoRenewAll }, set: { on in store.perform { $0.autoRenewAll = on } })) {
+            Text("Always auto-renew licenses (2 yr)").font(.subheadline).foregroundStyle(.white)
+        }
+        .tint(Theme.good)
         if !state.expiringTitles.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(text: "Expiring soon", icon: "clock.badge.exclamationmark.fill", tint: Theme.danger)
+                Button("Renew all (2 yr) · \(Format.money(state.renewAllPrice(years: 2)))") {
+                    store.perform { _ = try $0.renewAll(years: 2) }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.danger))
                 ForEach(state.expiringTitles) { title in
                     RenewCard(title: title, state: state, onDone: nil)
                 }

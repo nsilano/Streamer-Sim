@@ -6,6 +6,7 @@ final class GameStore: ObservableObject {
     @Published private(set) var state: GameState?
     @Published var showReport = false
     @Published var showSettings = false
+    @Published var showExpiring = false
     @Published var errorMessage: String?
     @Published var autoSpeed: Double = 0.7        // seconds per week
     @Published var autoAdvance = false {
@@ -52,9 +53,15 @@ final class GameStore: ObservableObject {
         persist()
         // Stop auto-advance when the game ends or a NEW alert appears.
         let newAlert = state?.pendingEvent != nil && state?.pendingEvent?.id != hadAlert
-        let expiringNow = state?.catalog.contains { $0.weeksRemaining == 4 && $0.license != nil } ?? false
-        if state?.outcome != .playing || newAlert || expiringNow { autoAdvance = false }
-        if showReport { self.showReport = true }
+        // Licenses crossing the 12- or 4-week line stop the sim and open the renewal sheet.
+        let expiring = !(state?.newlyExpiring.isEmpty ?? true)
+        if state?.outcome != .playing || newAlert || expiring { autoAdvance = false }
+        if expiring {
+            self.showReport = false
+            showExpiring = true
+        } else if showReport {
+            self.showReport = true
+        }
     }
 
     /// Remembers your best score per scenario on this device.
