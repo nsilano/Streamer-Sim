@@ -53,6 +53,7 @@ enum SimulationEngine {
         // The licensing manager shops the listings you can see now, before the weekly refresh.
         runCurator(&s, events: &events)
 
+        Trends.announce(&s)
         progressLoans(&s, events: &events)
         ageCatalog(&s, events: &events)
         s.resetWeeklyTitleStats()
@@ -152,23 +153,27 @@ enum SimulationEngine {
                 rivalFactor: Formulas.rivalFactor(rivalShare: pressure.effectiveShare),
                 reach: s.platformReach * (recession ? 0.85 : 1.0) * quality, noise: noise)
             let promo = s.promoEffects(for: code)
-            let adds = min(gross * policy.adds * promo.adds, headroom)
+            let piracy = Formulas.piracy(price: price, tolerance: country.priceTolerance, appeal: appeal)
+            let trend = Trends.effects(week: s.week)
+            let adds = min(gross * policy.adds * promo.adds * trend.adds * (1 - 0.2 * piracy), headroom)
             let baseChurn = Formulas.churnRate(appeal: appeal, price: price,
                                                tolerance: country.priceTolerance,
                                                serviceQuality: quality,
                                                rivalHeat: pressure.heat)
-            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn)
+            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn * trend.churn
+                            + 0.005 * piracy)
             let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 
             // Revenue is billed on subscribers at the start of the week.
-            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu * promo.arpu
-            let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength) * policy.adRevenue
+            let subRevenue = Formulas.subscriptionRevenue(subs: startSubs, prices: market.prices) * policy.arpu * promo.arpu * trend.arpu
+            let adRevenue = Formulas.adRevenue(adSubs: startSubs.ad, adStrength: country.adStrength) * policy.adRevenue * trend.ads
 
             var newSubs = startSubs
             for tier in Tier.allCases {
                 newSubs[tier] = max(0, startSubs[tier] * (1 - churn) + adds * split[tier])
             }
             market.subs = newSubs
+            market.piracy = piracy
             market.awareness = Formulas.clamp(Formulas.nextAwareness(
                 awareness: market.awareness, spend: marketingSpend,
                 households: country.households, penetration: penetration) + policy.awareness + promo.awareness, 0, 1)
@@ -355,6 +360,12 @@ enum SimulationEngine {
             if s.catalog[i].license != nil, s.rng.chance(0.01) {
                 s.catalog[i].popularity = min(100, s.catalog[i].popularity + s.rng.nextInt(in: 10...20))
             }
+            if s.catalog[i].controversial, s.rng.chance(0.006) {
+                s.catalog[i].popularity = min(100, s.catalog[i].popularity + 5)
+                s.brandTrust = max(0, s.brandTrust - 3)
+                s.addNews(.industry, "Controversy over \"\(s.catalog[i].name)\"",
+                          "Viewers are talking, and not everyone is happy. Brand trust dips a little.")
+            }
             if let left = s.catalog[i].weeksRemaining, left == 12 || left == 4 {
                 let title = s.catalog[i]
                 s.addNews(.licensing, "\"\(title.name)\" expires in \(left) weeks",
@@ -452,7 +463,8 @@ enum SimulationEngine {
             let title = Title(id: s.takeID(), name: project.name, kind: project.kind, genre: project.genre,
                               language: project.language, quality: quality, popularity: popularity,
                               ageWeeks: 0, isOriginal: true, license: nil, weeksRemaining: nil,
-                              listingWeeksLeft: 0, invested: project.budget)
+                              listingWeeksLeft: 0, invested: project.budget,
+                              mature: s.rng.chance(Formulas.matureChance(project.genre)))
             s.catalog.append(title)
             if quality >= 80, let region = s.busiestRegion { s.surges[region.rawValue] = max(s.surges[region.rawValue] ?? 0, 1) }
             let verdict = breakout ? "A runaway hit!" : quality >= 75 ? "Critics love it." : quality <= 40 ? "A flop." : "A solid addition."
@@ -471,6 +483,7 @@ enum SimulationEngine {
 
     private static func refreshLicenseMarket(_ s: inout GameState, events: inout [GameEvent]) {
         for i in s.licenseMarket.indices {
+            s.licenseMarket[i].embargoWeeks = max(0, s.licenseMarket[i].embargoWeeks - 1)
             s.licenseMarket[i].listingWeeksLeft -= 1
             s.licenseMarket[i].ageWeeks += 1
         }
@@ -482,6 +495,7 @@ enum SimulationEngine {
         var newsLicenses = 0
         let threats = s.rivals.map { s.threat(from: $0) }     // rivals bid harder against a dominant player
         for title in s.licenseMarket {
+            if title.embargoWeeks > 0 { kept.append(title); continue }   // rights not on sale yet
             var winner: Int?
             for index in s.rivals.indices {
                 let chance = Formulas.bidChance(personality: s.rivals[index].personality, quality: title.quality)

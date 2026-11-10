@@ -34,6 +34,7 @@ extension Curator {
     /// Why a listing fails your rules, or nil if it passes them all.
     func rejectReason(_ title: Title, languages: Set<Language>) -> String? {
         guard let license = title.license else { return "format" }
+        if title.embargoWeeks > 0 { return "embargo" }
         if title.quality < minQuality { return "quality" }
         if license.years > maxYears { return "years" }
         if license.exclusive && !allowExclusive { return "exclusive" }
@@ -51,6 +52,7 @@ extension Curator {
 
     func describe(reason: String) -> String {
         switch reason {
+        case "embargo": return "not on sale yet"
         case "quality": return "below quality \(minQuality)"
         case "years": return "licenses longer than \(maxYears) yr"
         case "exclusive": return "exclusive deals"

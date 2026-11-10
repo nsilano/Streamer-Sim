@@ -45,6 +45,9 @@ extension GameState {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = licenseMarket.firstIndex(where: { $0.id == titleID }),
               let license = licenseMarket[index].license else { throw ActionError.titleNotFound }
+        guard licenseMarket[index].embargoWeeks == 0 else {
+            throw ActionError.invalidProject("Rights go on sale in \(licenseMarket[index].embargoWeeks) weeks.")
+        }
         let price = licensePrice(licenseMarket[index])
         guard finances.cash >= price else {
             throw ActionError.insufficientFunds(needed: price)

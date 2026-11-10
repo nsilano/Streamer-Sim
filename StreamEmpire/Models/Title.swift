@@ -28,8 +28,26 @@ struct Title: Codable, Identifiable, Equatable {
     var invested = 0.0             // everything you have spent on it (license, renewals, production)
     var popularityAtPurchase = 0   // popularity when the term was signed (renewals get pricier if it jumped)
 
-    func isAvailable(in countryCode: String) -> Bool {
+    var mature = false             // adult themes: strict countries block it until you pay for a local edit
+    var controversial = false      // pulls an audience but can cause scandals
+    var evergreen = false          // a classic that never fully goes stale
+    var cleared: [String] = []     // strict countries where a local edit has been paid for
+    var embargoWeeks = 0           // listing only: weeks until the rights can be bought
+
+    /// Do the license territories cover this country?
+    func inTerritory(_ countryCode: String) -> Bool {
         guard let license = license else { return true }
         return license.regions.isEmpty || license.regions.contains(countryCode)
+    }
+
+    /// Why local rules keep this title off the service in a country, or nil if it is fine.
+    func blockReason(in countryCode: String) -> String? {
+        if CountryRules.bannedGenres(countryCode).contains(genre) { return "\(genre.displayName) is banned there" }
+        if mature, CountryRules.isStrict(countryCode), !cleared.contains(countryCode) { return "Needs a local edit" }
+        return nil
+    }
+
+    func isAvailable(in countryCode: String) -> Bool {
+        inTerritory(countryCode) && blockReason(in: countryCode) == nil
     }
 }

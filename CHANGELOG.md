@@ -5,6 +5,14 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Realism pack 1: restrictions, territories, piracy, trends (save v17)
+- Country content rules: Saudi Arabia, UAE, Egypt and Indonesia ban reality shows; strict countries (also India, Thailand) block mature titles until you pay for a local edit (the edit slightly lowers appeal). Blocked titles don't count toward that country's catalog.
+- Regional license territories: about a third of listings only cover one or two regions (cheaper); add worldwide rights later for the price difference.
+- Embargoed listings: some rights go on sale a few weeks after they appear (the licensing manager waits).
+- Piracy per market: rises with high prices, thin catalogs and low-income markets; costs sign-ups and adds churn. Shown on the country sheet.
+- Industry trends over the years (password sharing, ad boom, 4K expectations, streaming fatigue).
+- New title traits: mature, controversial (more appeal, occasional scandal that dents brand trust), evergreen (classics that never fully go stale).
+
 ### Random pop-up events removed
 - No more random events at all (outages, piracy, strikes, password crackdowns, recessions, viral/merger news). Nothing pops up or forces a choice. An old save's pending alert still settles itself. Server crashes from overloaded capacity are separate and still happen if you let load exceed capacity.
 

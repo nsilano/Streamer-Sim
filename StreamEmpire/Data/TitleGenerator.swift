@@ -82,17 +82,32 @@ enum TitleGenerator {
         let popularity2 = sought ? max(popularity, 85) : popularity
         let baseCost = Formulas.licenseCost(kind: kind, quality: quality2, popularity: popularity2,
                                             years: years, ageWeeks: age, exclusive: exclusive)
-        let cost = sought ? baseCost * Formulas.soughtPremium : baseCost
+        var cost = sought ? baseCost * Formulas.soughtPremium : baseCost
+        // Rights are often sold by territory: cheaper, but only some regions.
+        var regions: [String] = []
+        if rng.chance(0.35) {
+            let count = rng.chance(0.5) ? 1 : 2
+            var picked: [Region] = []
+            while picked.count < count { let r = rng.pick(Region.allCases); if !picked.contains(r) { picked.append(r) } }
+            regions = CountryRules.codes(in: picked)
+            let share = Double(regions.count) / Double(CountryData.all.count)
+            cost *= Formulas.territoryPriceFactor(share: share)
+        }
+        let mature = rng.chance(Formulas.matureChance(genre))
+        let controversial = rng.chance(0.08)
+        let evergreen = rng.chance(0.1)
+        let embargo = rng.chance(0.15) ? rng.nextInt(in: 2...6) : 0
         return Title(
             id: id,
             name: parody.name,
             kind: kind, genre: genre, language: language,
             quality: quality2, popularity: popularity2, ageWeeks: age,
             isOriginal: false,
-            license: LicenseTerms(cost: cost, years: years, regions: [], exclusive: exclusive),
+            license: LicenseTerms(cost: cost, years: years, regions: regions, exclusive: exclusive),
             weeksRemaining: nil,
-            listingWeeksLeft: rng.nextInt(in: 4...10),
-            sought: sought
+            listingWeeksLeft: embargo + rng.nextInt(in: 4...10),
+            sought: sought,
+            mature: mature, controversial: controversial, evergreen: evergreen, embargoWeeks: embargo
         )
     }
 }

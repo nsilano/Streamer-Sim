@@ -11,7 +11,7 @@ extension GameState {
     }
 
     /// 0...1: how fresh a title still feels (1 = brand new).
-    func freshness(of title: Title) -> Double { Formulas.freshness(ageWeeks: title.ageWeeks) }
+    func freshness(of title: Title) -> Double { Formulas.freshness(of: title) }
 
     /// 0...1: how well a title suits the countries you serve (genre taste, language, freshness, quality).
     func marketFit(of title: Title) -> Double {
@@ -19,7 +19,9 @@ extension GameState {
         guard !codes.isEmpty else { return 0 }
         var total = 0.0
         for code in codes {
-            if let country = CountryData.country(code) { total += Formulas.titleAppeal(title, in: country) }
+            if let country = CountryData.country(code), title.isAvailable(in: code) {
+                total += Formulas.titleAppeal(title, in: country)
+            }
         }
         return min(1, total / Double(codes.count) / 0.8)
     }

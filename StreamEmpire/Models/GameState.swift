@@ -15,6 +15,7 @@ struct MarketState: Codable, Equatable {
     var marketingBudget: Double = 0       // $ per week
     var liveTiers: [Tier] = [.standard]   // tiers open for sign-up (existing subscribers keep paying either way)
     var tierBuilds: [TierBuild] = []      // tiers being set up
+    var piracy = 0.0                      // 0...0.6: share of would-be customers lost to piracy (last week)
 
     var isLive: Bool { status == .live }
 }
@@ -31,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 16
+    static let currentVersion = 17
 
     var version: Int = GameState.currentVersion
     var companyName: String

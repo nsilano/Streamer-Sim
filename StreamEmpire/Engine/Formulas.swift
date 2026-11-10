@@ -57,14 +57,35 @@ enum Formulas {
     /// Weekly "titles started" per subscriber that a catalog spreads across its shows.
     static let viewingPerSubscriber = 3.0
 
+    static func matureChance(_ genre: Genre) -> Double {
+        [.action: 0.35, .drama: 0.25, .reality: 0.3, .comedy: 0.2, .anime: 0.2, .docs: 0.05, .kids: 0, .local: 0.15][genre] ?? 0.1
+    }
+
+    /// A regional license costs less than worldwide rights, but not in proportion to its size.
+    static func territoryPriceFactor(share: Double) -> Double { 0.35 + 0.65 * min(1, max(0, share)) }
+
+    /// Freshness with the floor classics keep.
+    static func freshness(of title: Title) -> Double {
+        max(freshness(ageWeeks: title.ageWeeks), title.evergreen ? 0.6 : 0)
+    }
+
+    /// Share of would-be customers who pirate instead: pricey service + thin catalog + low-income market.
+    static func piracy(price: Double, tolerance: Double, appeal: Double) -> Double {
+        let risk = CountryRules.pirateRisk(tolerance: tolerance)
+        let pressure = 0.6 * max(0, price / max(1, tolerance) - 0.8) + 0.5 * (1 - appeal)
+        return clamp(risk * pressure, 0, 0.6)
+    }
+
     static func titleAppeal(_ title: Title, in country: Country) -> Double {
         let quality = Double(title.quality) / 100
         let popularity = 0.4 + 0.6 * Double(title.popularity) / 100
         var appeal = quality * popularity
             * country.taste(title.genre)
             * languageMatch(title: title, country: country)
-            * freshness(ageWeeks: title.ageWeeks)
+            * freshness(of: title)
             * releaseBoost(ageWeeks: title.ageWeeks)
+        if title.controversial { appeal *= 1.15 }
+        if title.mature, title.cleared.contains(country.code) { appeal *= 0.85 }
         if title.license?.exclusive == true { appeal *= 1.15 }
         if title.sought { appeal *= soughtAppeal }
         if title.genre == .local && title.language != country.language { appeal *= 0.3 }
