@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Licensing manager styles (save v24)
+- Pick a style instead of fiddling with numbers: Passive, Moderate, Aggressive or Custom.
+- The three presets size the weekly budget to your revenue and cash (5% / 15% / 30% of revenue plus a small slice of cash), always keep a reserve in the bank (12 / 8 / 4 weeks of costs), and stop buying entirely when your runway drops under 26 / 16 / 8 weeks. They can't drain an early-game company.
+- Custom keeps every detailed rule (budget, max price, quality, genres, renewals) for when you want full control. A newly hired manager starts on Passive.
+
 ### Last-chance expiry stop
 - The sim now also stops when a license has 1 week left (in addition to 12 and 4 weeks), so nothing lapses without a final warning.
 

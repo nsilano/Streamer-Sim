@@ -3,6 +3,7 @@ import Foundation
 /// A hired licensing manager who buys titles for you every week, within the limits you set.
 struct Curator: Codable, Equatable {
     var enabled = true                       // pause without firing
+    var mode: CuratorMode = .custom          // presets size spending to your revenue and cash; custom uses the rules below
     var weeklyBudget = 2_000_000.0           // spending allowance added each week
     var carryBudget = 0.0                    // unspent allowance carried over (up to 3 weeks' worth)
     var maxPricePerTitle = 3_000_000.0
@@ -65,4 +66,29 @@ extension Curator {
         default: return reason
         }
     }
+}
+
+/// How hard the licensing manager shops. The presets scale with your revenue and cash, keep a safety
+/// reserve and stop buying when your runway gets short, so they can't drain an early-game company.
+enum CuratorMode: String, Codable, CaseIterable, Identifiable {
+    case passive, moderate, aggressive, custom
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+
+    var blurb: String {
+        switch self {
+        case .passive: return "Picks up the odd good-value title. Spends about 5% of revenue plus a sliver of cash, keeps 12 weeks of costs in the bank, and stops if you have under 26 weeks of runway."
+        case .moderate: return "Steady growth. About 15% of revenue plus a little cash, keeps 8 weeks of costs in the bank, stops under 16 weeks of runway."
+        case .aggressive: return "Builds a big library fast. About 30% of revenue plus more cash, keeps 4 weeks of costs in the bank, stops under 8 weeks of runway."
+        case .custom: return "You set every rule yourself."
+        }
+    }
+
+    var revenueShare: Double { self == .passive ? 0.05 : self == .moderate ? 0.15 : 0.30 }
+    var cashShare: Double { self == .passive ? 0.003 : self == .moderate ? 0.008 : 0.02 }
+    var reserveWeeks: Double { self == .passive ? 12 : self == .moderate ? 8 : 4 }
+    var minRunwayWeeks: Double { self == .passive ? 26 : self == .moderate ? 16 : 8 }
+    var carryWeeks: Double { self == .passive ? 6 : self == .moderate ? 4 : 3 }
+    var minQuality: Int { self == .passive ? 60 : self == .moderate ? 55 : 45 }
+    var maxYears: Int { self == .aggressive ? 5 : 3 }
 }

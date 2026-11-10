@@ -89,6 +89,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 20. **Phase 20 (done): Play/Pause + stop-on-major-events.** The user always plays on auto-advance. Dashboard control = Play/Pause + speed (1x-8x). `PauseCheck.reasons(before:after:)` (pure, tested) decides what stops the sim: expiring licenses (12/4 weeks), expired licenses, server load crossing 90%/100%, crashes, cash < 0, runway < 8 weeks, price wars, recalls, game over. `GameStore.pauseReasons` stays on screen until dismissed or resumed. Add new major situations to `PauseCheck` rather than as transient messages.
 
+21. **Phase 21 (done): licensing manager styles.** `CuratorMode` (passive/moderate/aggressive/custom) in `Models/Curator.swift`; `effective(_:)`/`effectiveCurator()` in `Engine/CuratorModes.swift` size presets from revenue and cash each week; `curatorRunwayBlock` stops preset buying when runway is short; carry-over weeks per mode. `hireCurator(mode:)` defaults to `.custom` for tests; the app hires on `.passive`. Save version is 24.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

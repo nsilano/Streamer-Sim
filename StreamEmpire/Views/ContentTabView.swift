@@ -110,9 +110,14 @@ struct ContentTabView: View {
                     Pill(text: curator.enabled ? "Active" : "Paused", tint: curator.enabled ? Theme.good : Theme.amber)
                     Text("\(Format.money(state.curatorSalary))/wk salary").font(.caption).foregroundStyle(Theme.text2)
                 }
-                Text("Adds \(Format.money(curator.weeklyBudget)) a week to their allowance (unspent money carries over, up to 3 weeks) for titles with quality \(curator.minQuality)+, until your catalog reaches \(curator.targetCatalogSize), keeping \(Format.money(curator.cashReserve)) in the bank.")
+                let rules = state.effectiveCurator() ?? curator
+                Pill(text: "Style: \(curator.mode.title)", tint: Theme.teal)
+                Text("This week: up to \(Format.money(rules.weeklyBudget)) for titles with quality \(rules.minQuality)+, until your catalog reaches \(rules.targetCatalogSize), always keeping \(Format.money(rules.cashReserve)) in the bank.")
                     .font(.footnote).foregroundStyle(Theme.text2)
-                LabeledValue(label: "Allowance available now", value: Format.money(curator.weeklyBudget + curator.carryBudget))
+                LabeledValue(label: "Allowance available now", value: Format.money(rules.weeklyBudget + curator.carryBudget))
+                if let block = state.curatorRunwayBlock {
+                    Text(block).font(.caption).foregroundStyle(Theme.amber)
+                }
                 if let status = state.curatorStatus {
                     HStack(alignment: .top, spacing: 6) {
                         Image(systemName: "text.bubble.fill").font(.caption).foregroundStyle(Theme.teal)
@@ -135,7 +140,7 @@ struct ContentTabView: View {
                 Text("Hire a manager to keep your library growing on autopilot. You set the budget, quality bar, genres and limits; they shop the market every week.")
                     .font(.footnote).foregroundStyle(Theme.text2)
                 Button("Hire · \(Format.money(state.curatorHirePrice)) + \(Format.money(state.curatorSalary))/wk") {
-                    store.perform { try $0.hireCurator() }
+                    store.perform { try $0.hireCurator(mode: .passive) }
                     showCurator = true
                 }
                 .buttonStyle(GlowButtonStyle(tint: Theme.teal))
@@ -492,6 +497,17 @@ struct CuratorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker("Style", selection: $draft.mode) {
+                        ForEach(CuratorMode.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    Text(draft.mode.blurb).font(.footnote).foregroundStyle(Theme.text2)
+                } header: {
+                    Text("Shopping style")
+                } footer: {
+                    Text("Passive, Moderate and Aggressive size the budget to your revenue and cash every week, keep a reserve and stop buying when money runs short. Pick Custom to set everything yourself.")
+                }
                 Section("Right now") {
                     preview
                 }
@@ -500,6 +516,7 @@ struct CuratorSheet: View {
                 } footer: {
                     Text("Each week your manager buys the best-value titles that pass every rule below, up to 3 purchases.")
                 }
+                if draft.mode == .custom {
                 Section("Spending") {
                     NumberFieldRow(label: "Max per week", value: $draft.weeklyBudget, range: 0...1_000_000_000, isMoney: true)
                     NumberFieldRow(label: "Max price per title", value: $draft.maxPricePerTitle, range: 0...1_000_000_000, isMoney: true)
@@ -543,6 +560,7 @@ struct CuratorSheet: View {
                 } footer: {
                     Text(draft.genres.isEmpty ? "None selected means any genre." : "Only these genres.")
                 }
+                }
             }
             .scrollDismissesKeyboard(.interactively)
             .artScreen()
@@ -567,10 +585,11 @@ struct CuratorSheet: View {
     @ViewBuilder
     private var preview: some View {
         if let state = store.state {
+            let rules = state.effective(draft)
             let languages = servedLanguages(state)
-            let passing = state.licenseMarket.filter { draft.allows($0, languages: languages) }
+            let passing = state.licenseMarket.filter { rules.allows($0, languages: languages) }
             let prices = passing.map { state.licensePrice($0) }
-            let affordable = prices.filter { $0 <= draft.maxPricePerTitle && $0 <= draft.weeklyBudget + draft.carryBudget }
+            let affordable = prices.filter { $0 <= rules.maxPricePerTitle && $0 <= rules.weeklyBudget * state.curatorCarryWeeks }
             LabeledValue(label: "Listings on the market", value: "\(state.licenseMarket.count)")
             LabeledValue(label: "Pass your quality, genre and language rules", value: "\(passing.count)")
             LabeledValue(label: "Also within budget and max price", value: "\(affordable.count)",

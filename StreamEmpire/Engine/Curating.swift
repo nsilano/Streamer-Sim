@@ -12,8 +12,12 @@ extension GameState {
     /// The licensing manager shops the current listings within your rules. Returns nil if there is no manager.
     /// Unspent allowance carries over (up to 3 weeks' worth) so pricier titles become affordable.
     mutating func curatorShop() -> CuratorRun? {
-        guard var c = curator else { return nil }
+        guard let stored = curator, let c = effectiveCurator() else { return nil }
         var run = CuratorRun()
+        if c.enabled, let block = curatorRunwayBlock {
+            run.note = block
+            return run
+        }
         guard c.enabled else {
             run.note = "Paused."
             return run
@@ -23,8 +27,9 @@ extension GameState {
         let renewNote = renewal.names.isEmpty && renewal.skipped == 0 ? "" :
             " Renewed \(renewal.names.count) (\(Format.money(renewal.spent)))\(renewal.skipped > 0 ? ", \(renewal.skipped) too pricey to renew" : "")."
         guard catalog.count < c.targetCatalogSize else {
-            c.carryBudget = min(3 * c.weeklyBudget, max(0, c.weeklyBudget + c.carryBudget - renewal.spent))
-            curator = c
+            var saved = stored
+            saved.carryBudget = min(curatorCarryWeeks * c.weeklyBudget, max(0, c.weeklyBudget + c.carryBudget - renewal.spent))
+            curator = saved
             run.note = "Your catalog already has \(catalog.count) titles (target \(c.targetCatalogSize)).\(renewNote)"
             return run
         }
@@ -61,8 +66,9 @@ extension GameState {
             }
         }
 
-        c.carryBudget = min(3 * c.weeklyBudget, max(0, available - run.spent))
-        curator = c
+        var saved = stored
+        saved.carryBudget = min(curatorCarryWeeks * c.weeklyBudget, max(0, available - run.spent))
+        curator = saved
 
         if !run.bought.isEmpty {
             run.note = "Signed \(run.bought.count) title\(run.bought.count == 1 ? "" : "s") for \(Format.money(run.spent)): \(run.bought.joined(separator: ", "))."

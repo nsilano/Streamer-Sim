@@ -28,7 +28,8 @@ extension GameState {
 
     // MARK: Licensing manager
 
-    mutating func hireCurator() throws {
+    /// `mode` defaults to Custom (your own rules); the app hires with a preset.
+    mutating func hireCurator(mode: CuratorMode = .custom) throws {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard curator == nil else { throw ActionError.invalidProject("You already have a licensing manager.") }
         let price = curatorHirePrice
@@ -36,6 +37,7 @@ extension GameState {
         finances.cash -= price
         finances.ledger.other += price
         curator = Curator()
+        curator?.mode = mode
         addNews(.you, "\(companyName) hires a licensing manager", "They'll keep the library growing within the rules you set.")
     }
 
