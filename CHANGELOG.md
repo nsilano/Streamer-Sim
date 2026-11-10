@@ -5,6 +5,12 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### 20 more countries (50 in total)
+- New markets: Portugal, Belgium, Switzerland, Austria, Denmark, Norway, Finland, Czechia, Greece, Romania, Vietnam, Philippines, Malaysia, Pakistan, Taiwan, Peru, Israel, Qatar, Morocco and Ghana. All are on the map and the list, can be your starting market, and have their own size, prices, language and rules (Qatar and Pakistan ban reality shows; Pakistan, Qatar, Malaysia and Vietnam are strict about mature titles).
+- Eight new languages for dubbing and subtitles (Danish, Norwegian, Finnish, Czech, Greek, Romanian, Hebrew, Vietnamese).
+- The "all markets" goal is now 50 markets. Rivals spread their existing subscribers over all 50 countries.
+- Fixed a test that expected a scandal from a title that had already expired.
+
 ### Test and balance fixes
 - The opening license market is always fully on sale (no embargo on day one).
 - Piracy now scales churn instead of adding to it; exchange rates move at the end of each week so the first week is neutral.

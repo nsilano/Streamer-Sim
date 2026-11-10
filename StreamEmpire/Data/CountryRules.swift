@@ -7,7 +7,7 @@ enum CountryRules {
 
     static func bannedGenres(_ code: String) -> Set<Genre> {
         switch code {
-        case "SA", "AE", "EG", "ID": return [.reality]
+        case "SA", "AE", "EG", "ID", "QA", "PK": return [.reality]
         default: return []
         }
     }
@@ -16,6 +16,11 @@ enum CountryRules {
         switch code {
         case "SA": return 0.9
         case "AE": return 0.85
+        case "QA": return 0.85
+        case "PK": return 0.8
+        case "MY": return 0.7
+        case "VN": return 0.65
+        case "MA": return 0.6
         case "EG": return 0.8
         case "ID": return 0.75
         case "IN": return 0.7
@@ -34,7 +39,8 @@ enum CountryRules {
         case "FR", "ES", "IT", "GB": return 0.03
         case "TR": return 0.075
         case "IN", "ID", "KE", "NG": return 0.02
-        case "PL", "AT", "DE": return 0.015
+        case "PL", "AT", "DE", "CZ", "PT", "BE", "RO", "GR": return 0.015
+        case "PK", "VN", "PH", "MA", "GH": return 0.02
         default: return 0
         }
     }

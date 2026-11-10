@@ -269,7 +269,7 @@ struct CompanyView: View {
             LabeledValue(label: "#1 in the world", value: state.rank == 1 ? "Leading!" : "Rank #\(state.rank)")
             goalRow("Go public (IPO)", done: state.goals.contains("ipo"))
             goalRow("$10B annual revenue (\(Format.money(state.finances.annualizedRevenue)))", done: state.goals.contains("revenue10B"))
-            goalRow("All 30 markets (\(state.liveMarketCodes.count)/30)", done: state.goals.contains("allMarkets"))
+            goalRow("All \(CountryData.all.count) markets (\(state.liveMarketCodes.count)/\(CountryData.all.count))", done: state.goals.contains("allMarkets"))
             goalRow("Take over a rival", done: state.goals.contains("takeover"))
         }
         .artCard(tint: Theme.good)

@@ -1,6 +1,6 @@
 import Foundation
 
-/// The 30-country table (6 regions).
+/// The 50-country table (6 regions).
 enum CountryData {
     // MARK: Genre taste profiles
 
@@ -111,6 +111,51 @@ enum CountryData {
              language: .arabic, quota: 0.30, launchMillions: 2.5, risk: 0.35),
         make("KE", "Kenya", "🇰🇪", .africa, households: 2, tolerance: 3, ads: 0.25,
              language: .english, quota: 0.30, launchMillions: 0.8, risk: 0.30),
+        // More Europe
+        make("PT", "Portugal", "🇵🇹", .europe, households: 4, tolerance: 8, ads: 0.5,
+             language: .portuguese, quota: 0.25, launchMillions: 1.6, risk: 0.12),
+        make("BE", "Belgium", "🇧🇪", .europe, households: 5, tolerance: 10, ads: 0.7,
+             language: .dutch, quota: 0.25, launchMillions: 2, risk: 0.10),
+        make("CH", "Switzerland", "🇨🇭", .europe, households: 3.8, tolerance: 14, ads: 0.8,
+             language: .german, quota: 0.20, launchMillions: 2.2, risk: 0.06),
+        make("AT", "Austria", "🇦🇹", .europe, households: 4, tolerance: 10, ads: 0.7,
+             language: .german, quota: 0.25, launchMillions: 1.8, risk: 0.08),
+        make("DK", "Denmark", "🇩🇰", .europe, households: 2.8, tolerance: 12, ads: 0.75,
+             language: .danish, quota: 0.20, launchMillions: 1.6, risk: 0.07),
+        make("NO", "Norway", "🇳🇴", .europe, households: 2.4, tolerance: 13, ads: 0.75,
+             language: .norwegian, quota: 0.20, launchMillions: 1.6, risk: 0.07),
+        make("FI", "Finland", "🇫🇮", .europe, households: 2.5, tolerance: 11, ads: 0.7,
+             language: .finnish, quota: 0.20, launchMillions: 1.5, risk: 0.07),
+        make("CZ", "Czechia", "🇨🇿", .europe, households: 4.5, tolerance: 7, ads: 0.5,
+             language: .czech, quota: 0.30, launchMillions: 1.5, risk: 0.14),
+        make("GR", "Greece", "🇬🇷", .europe, households: 3.5, tolerance: 7, ads: 0.45,
+             language: .greek, quota: 0.30, launchMillions: 1.4, risk: 0.18),
+        make("RO", "Romania", "🇷🇴", .europe, households: 6, tolerance: 5, ads: 0.4,
+             language: .romanian, quota: 0.30, launchMillions: 1.6, risk: 0.22),
+        // More Asia-Pacific
+        make("VN", "Vietnam", "🇻🇳", .asiaPacific, households: 20, tolerance: 3.5, ads: 0.35,
+             language: .vietnamese, quota: 0.30, launchMillions: 3, risk: 0.30),
+        make("PH", "Philippines", "🇵🇭", .asiaPacific, households: 14, tolerance: 3.5, ads: 0.35,
+             language: .english, quota: 0.25, launchMillions: 2.5, risk: 0.25),
+        make("MY", "Malaysia", "🇲🇾", .asiaPacific, households: 8, tolerance: 5, ads: 0.45,
+             language: .english, quota: 0.30, launchMillions: 2, risk: 0.22),
+        make("PK", "Pakistan", "🇵🇰", .asiaPacific, households: 14, tolerance: 2.5, ads: 0.25,
+             language: .english, quota: 0.30, launchMillions: 2, risk: 0.35),
+        make("TW", "Taiwan", "🇹🇼", .asiaPacific, households: 8.5, tolerance: 8, ads: 0.6,
+             language: .mandarin, quota: 0.35, launchMillions: 3, risk: 0.12,
+             taste: [.drama: 1.2, .anime: 1.3]),
+        // More Latin America
+        make("PE", "Peru", "🇵🇪", .latinAmerica, households: 6, tolerance: 4.5, ads: 0.35,
+             language: .spanish, quota: 0.20, launchMillions: 1.5, risk: 0.25),
+        // More Middle East & Africa
+        make("IL", "Israel", "🇮🇱", .middleEast, households: 2.8, tolerance: 9, ads: 0.65,
+             language: .hebrew, quota: 0.25, launchMillions: 1.8, risk: 0.15),
+        make("QA", "Qatar", "🇶🇦", .middleEast, households: 0.7, tolerance: 11, ads: 0.7,
+             language: .arabic, quota: 0.20, launchMillions: 1.0, risk: 0.15),
+        make("MA", "Morocco", "🇲🇦", .africa, households: 6, tolerance: 3.5, ads: 0.3,
+             language: .arabic, quota: 0.30, launchMillions: 1.5, risk: 0.28),
+        make("GH", "Ghana", "🇬🇭", .africa, households: 3, tolerance: 3, ads: 0.25,
+             language: .english, quota: 0.30, launchMillions: 1.0, risk: 0.30),
     ]
 
     static let byCode: [String: Country] = Dictionary(uniqueKeysWithValues: all.map { ($0.code, $0) })

@@ -148,6 +148,7 @@ final class Phase18Tests: XCTestCase {
         var plain = title(); plain.ageWeeks = 30
         var spicy = plain; spicy.controversial = true
         XCTAssertGreaterThan(Formulas.titleAppeal(spicy, in: ie), Formulas.titleAppeal(plain, in: ie))
+        spicy.weeksRemaining = nil          // keep it in the catalog for the whole run
         var s = newState()
         s.catalog = [spicy]
         for _ in 0..<2_500 where !s.news.contains(where: { $0.headline.contains("Controversy over") }) {

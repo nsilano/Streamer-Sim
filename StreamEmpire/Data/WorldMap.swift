@@ -2,7 +2,7 @@ import Foundation
 
 /// One country outline in map coordinates (an equirectangular-ish Miller projection, `w` x `h` units).
 struct WorldCountry: Codable, Equatable {
-    let code: String        // ISO code for the 30 playable countries, "" for scenery
+    let code: String        // ISO code for the playable countries, "" for scenery
     let name: String
     let rings: [[Int]]      // each ring is a flat [x0, y0, x1, y1, ...] list
     let cx: Int             // label / marker position

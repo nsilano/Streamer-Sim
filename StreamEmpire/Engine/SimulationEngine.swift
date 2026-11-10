@@ -22,7 +22,7 @@ enum SimulationEngine {
         case "ipo": return "IPO"
         case "revenue10B": return "$10B annual revenue"
         case "takeover": return "Acquire a rival"
-        default: return "All 30 markets"
+        default: return "All \(CountryData.all.count) markets"
         }
     }
 

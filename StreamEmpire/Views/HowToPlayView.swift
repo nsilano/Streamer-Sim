@@ -28,7 +28,7 @@ struct HowToPlayView: View {
                     tip("banknote", "Don't go bankrupt",
                         "Debt has a limit. Fall past your overdraft limit, or stay in the red for 8 weeks with no funding left, and it's game over. Loans, investors and an IPO can bail you out.")
                     tip("crown.fill", "Win by being #1",
-                        "Overtake every rival in global subscribers (from week 52). Bonus goals: IPO, $10B annual revenue, all 30 markets.")
+                        "Overtake every rival in global subscribers (from week 52). Bonus goals: IPO, $10B annual revenue, all \(CountryData.all.count) markets.")
                 }
                 .padding(16)
             }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Twelve fictional rivals sized after real streaming services (paid subscriptions, in the 30 modeled countries).
+/// Twelve fictional rivals sized after real streaming services (paid subscriptions, spread over the modeled countries).
 enum RivalData {
     private struct Def {
         let id: String

@@ -8,8 +8,8 @@ of a real one ("The First of Us", "Breaking Better"; see `Data/ParodyTitles.swif
 Single player. Found a streaming service in one country and grow it into the #1 platform in the world by
 expanding into countries, building a catalog (licensed + originals) and winning subscribers and revenue.
 
-- **Start:** $25M seed cash, empty catalog, pick any of the 30 countries as your home market and a difficulty (Easy/Medium/Hard: costs x0.75 / x1.0 / x1.4, rivals slower/normal/faster).
-- **Win:** #1 in global subscribers, ahead of every rival (checked from week 52). Bonus goals: IPO, $10B annual revenue, all 30 markets.
+- **Start:** $25M seed cash, empty catalog, pick any of the 50 countries as your home market and a difficulty (Easy/Medium/Hard: costs x0.75 / x1.0 / x1.4, rivals slower/normal/faster).
+- **Win:** #1 in global subscribers, ahead of every rival (checked from week 52). Bonus goals: IPO, $10B annual revenue, all 50 markets.
 - **Lose:** cash below the overdraft limit ($5M + 25% of annual revenue), or below zero for 8 straight weeks with no funding available (hard cap 26 weeks).
 
 ## Release rule (important)
@@ -23,7 +23,7 @@ Every commit pushed to the feature branch must also update `CHANGELOG.md` (playe
 (new subs, churn, revenue, costs, events). Auto-advance toggle on the dashboard.
 
 ## Key mechanics
-- **Countries (30 / 6 regions):** broadband households (subscription ceiling = households x subscriptions per household, ~1.8 to ~4.2 by income, shared by ALL services), price tolerance, ad strength, genre taste weights, language, local quota, rival shares, launch cost, regulatory risk. Launch = pay cost, 4 weeks setup, then live. Big markets (USA, India, Japan) unlock at a global-subs OR catalog-size threshold.
+- **Countries (50 / 6 regions):** broadband households (subscription ceiling = households x subscriptions per household, ~1.8 to ~4.2 by income, shared by ALL services), price tolerance, ad strength, genre taste weights, language, local quota, rival shares, launch cost, regulatory risk. Launch = pay cost, 4 weeks setup, then live. Big markets (USA, India, Japan) unlock at a global-subs OR catalog-size threshold.
 - **Content:** licensing market (rotating, procedural fictional titles; rivals can snatch listings) and originals (6-52 weeks, budget raises quality but hits are never guaranteed, owned forever worldwide). Appeal per country = sum of title appeal x genre taste x language match x freshness x release boost, with diminishing returns. Subtitles/dubbing cost per title per language.
 - **Subscribers** tracked per country and per tier (Ad / Standard / Premium, each with own price). Adds depend on catalog appeal, marketing, price vs tolerance, awareness, word of mouth, rivals, platform reach. Churn depends on content freshness, price, rival releases, service quality.
 - **Finances:** revenue = subscriptions (price x 12 / 52 per week) + ads. Costs = licensing, originals, dubbing, streaming/CDN per sub, staff, marketing, country operating costs. Funding = loans (interest) and investor rounds (equity %). IPO at a revenue/subscriber threshold. Always show cash, weekly P/L and runway.
