@@ -32,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 24
+    static let currentVersion = 25
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -62,6 +62,7 @@ struct GameState: Codable, Equatable {
     var outputDeals: [OutputDeal] = []
     var lastNegotiation = ""
     var lastDividendWeek = -100
+    var trend: [TrendPoint] = []               // weekly headline numbers for the charts (up to 10 years)
     var listingReach = 0
     var autoRenewAll = false                   // renew every expiring license automatically (2 years)                       // content scouting level: more listings on the market            // people looking for a job with you
     var loanedOut: [LoanedTitle] = []          // titles licensed out to others for a fee

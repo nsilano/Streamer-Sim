@@ -46,7 +46,7 @@ struct DashboardView: View {
                             }
                             .artCard(tint: Theme.magenta)
                         }
-                        if state.reportHistory.count > 1 { TrendCard(reports: state.reportHistory) }
+                        if state.trend.count > 1 { TrendCard(points: state.trend) }
                         topFive(state)
                         if let report = state.lastReport { ReportSummaryCard(report: report) }
                     }

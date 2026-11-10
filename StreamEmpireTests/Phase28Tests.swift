@@ -18,4 +18,14 @@ final class Phase28Tests: XCTestCase {
         XCTAssertEqual(GameCalendar.companyYear(week: 52), 1)
         XCTAssertEqual(GameCalendar.companyYear(week: 53), 2)
     }
+
+    func testTrendKeepsAWeeklyHistoryForTheCharts() {
+        var s = GameState.newGame(startCountry: "IE", companyName: "Test Co", seed: 2)
+        s.eventsEnabled = false
+        s.finances.cash = 1e9
+        for _ in 0..<60 { s = SimulationEngine.advanceWeek(s) }
+        XCTAssertEqual(s.trend.count, 60, "a full year and more, not just the last 26 reports")
+        XCTAssertEqual(s.trend.first?.week, 1)
+        XCTAssertEqual(s.trend.last?.cash ?? 0, s.lastReport!.cashEnd, accuracy: 0.01)
+    }
 }

@@ -24,3 +24,12 @@ struct WeeklyReport: Codable, Equatable {
 
     var netSubs: Double { newSubs - churned }
 }
+
+/// One week's headline numbers, kept for the long-range charts.
+struct TrendPoint: Codable, Equatable {
+    var week: Int
+    var subs: Double
+    var profit: Double
+    var cash: Double
+    var revenue: Double
+}

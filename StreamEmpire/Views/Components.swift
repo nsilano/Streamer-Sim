@@ -1,54 +1,98 @@
 import SwiftUI
 import Charts
 
-/// Subscribers / profit / cash over the last weeks of reports.
+/// Subscribers, revenue, profit and cash over the past year or the whole company history, on a calendar axis.
 struct TrendCard: View {
     enum Metric: String, CaseIterable, Identifiable {
-        case subs = "Subscribers", profit = "Profit", cash = "Cash"
+        case subs = "Subscribers", revenue = "Revenue", profit = "Profit", cash = "Cash"
+        var id: String { rawValue }
+    }
+    enum Span: String, CaseIterable, Identifiable {
+        case year = "Past year", all = "All time"
         var id: String { rawValue }
     }
 
-    let reports: [WeeklyReport]
+    let points: [TrendPoint]
     @State private var metric: Metric = .subs
+    @State private var span: Span = .year
 
-    private func value(_ report: WeeklyReport) -> Double {
+    private func value(_ p: TrendPoint) -> Double {
         switch metric {
-        case .subs: return report.totalSubs
-        case .profit: return report.financials.profit
-        case .cash: return report.cashEnd
+        case .subs: return p.subs
+        case .revenue: return p.revenue
+        case .profit: return p.profit
+        case .cash: return p.cash
         }
     }
 
+    private func label(_ v: Double) -> String { metric == .subs ? Format.count(v) : Format.money(v) }
+
     var body: some View {
+        let shown = span == .year ? Array(points.suffix(52)) : points
+        let first = shown.first, last = shown.last
         VStack(alignment: .leading, spacing: 10) {
             Picker("Metric", selection: $metric) {
                 ForEach(Metric.allCases) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
-            Chart(reports, id: \.week) { report in
-                LineMark(x: .value("Week", report.week), y: .value(metric.rawValue, value(report)))
-                    .interpolationMethod(.monotone)
-                    .foregroundStyle(Theme.accentGradient)
-                AreaMark(x: .value("Week", report.week), y: .value(metric.rawValue, value(report)))
-                    .interpolationMethod(.monotone)
-                    .foregroundStyle(LinearGradient(colors: [Theme.magenta.opacity(0.30), Color.clear],
-                                                    startPoint: .top, endPoint: .bottom))
+            Picker("Span", selection: $span) {
+                ForEach(Span.allCases) { Text($0.rawValue).tag($0) }
             }
+            .pickerStyle(.segmented)
+            if let first, let last {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(label(value(last))).font(Theme.number(22)).foregroundStyle(.white)
+                        Text("\(metric.rawValue) in \(Format.stamp(week: last.week))").font(.caption2).foregroundStyle(Theme.text2)
+                    }
+                    Spacer()
+                    let change = value(last) - value(first)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("\(change >= 0 ? "+" : "-")\(label(abs(change)))").font(.subheadline.weight(.bold))
+                            .foregroundStyle(change >= 0 ? Theme.good : Theme.danger)
+                        Text("since \(GameCalendar.dateText(week: first.week))").font(.caption2).foregroundStyle(Theme.text2)
+                    }
+                }
+            }
+            Chart {
+                ForEach(shown, id: \.week) { p in
+                    if metric == .profit {
+                        BarMark(x: .value("Date", GameCalendar.date(week: p.week), unit: .weekOfYear),
+                                y: .value(metric.rawValue, p.profit))
+                            .foregroundStyle(p.profit >= 0 ? Theme.good : Theme.danger)
+                    } else {
+                        AreaMark(x: .value("Date", GameCalendar.date(week: p.week)), y: .value(metric.rawValue, value(p)))
+                            .interpolationMethod(.monotone)
+                            .foregroundStyle(LinearGradient(colors: [Theme.magenta.opacity(0.30), Color.clear],
+                                                            startPoint: .top, endPoint: .bottom))
+                        LineMark(x: .value("Date", GameCalendar.date(week: p.week)), y: .value(metric.rawValue, value(p)))
+                            .interpolationMethod(.monotone)
+                            .foregroundStyle(Theme.accentGradient)
+                            .lineStyle(StrokeStyle(lineWidth: 2.5))
+                    }
+                }
+                if metric == .profit || metric == .cash {
+                    RuleMark(y: .value("Zero", 0)).foregroundStyle(Color.white.opacity(0.35))
+                }
+            }
+            .chartXScale(domain: (first.map { GameCalendar.date(week: $0.week) } ?? GameCalendar.date(week: 1))
+                         ... (last.map { GameCalendar.date(week: max($0.week, (first?.week ?? 1) + 1)) } ?? GameCalendar.date(week: 2)))
             .chartYAxis {
-                AxisMarks { mark in
+                AxisMarks(position: .trailing) { mark in
                     AxisGridLine().foregroundStyle(Color.white.opacity(0.08))
                     AxisValueLabel {
-                        if let v = mark.as(Double.self) {
-                            Text(metric == .subs ? Format.count(v) : Format.money(v))
-                                .foregroundStyle(Theme.text2)
-                        }
+                        if let v = mark.as(Double.self) { Text(label(v)).foregroundStyle(Theme.text2) }
                     }
                 }
             }
             .chartXAxis {
-                AxisMarks { _ in AxisValueLabel().foregroundStyle(Theme.text2) }
+                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                    AxisGridLine().foregroundStyle(Color.white.opacity(0.05))
+                    AxisValueLabel(format: span == .year ? .dateTime.month(.abbreviated) : .dateTime.month(.abbreviated).year(.twoDigits))
+                        .foregroundStyle(Theme.text2)
+                }
             }
-            .frame(height: 150)
+            .frame(height: 190)
         }
         .artCard()
     }

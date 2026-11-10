@@ -5,6 +5,10 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Better Dashboard charts (save v25)
+- The Dashboard chart now keeps your full history (up to 10 years) and shows the Past year or All time on a calendar axis (months), fitted to your data instead of a squashed week axis starting at 0.
+- Metrics: Subscribers, Revenue, Profit (green/red weekly bars) and Cash, with a zero line where it matters, the latest value, and the change over the period shown.
+
 ### One ad-load control
 - Removed the duplicate "Ad load" policy. Ad load is set only with the slider in Company > Business.
 

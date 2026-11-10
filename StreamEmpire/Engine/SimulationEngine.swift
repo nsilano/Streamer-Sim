@@ -382,6 +382,9 @@ enum SimulationEngine {
                                   rank: s.rank, markets: marketReports, events: events)
         s.lastReport = report
         s.reportHistory.append(report)
+        s.trend.append(TrendPoint(week: report.week, subs: report.totalSubs, profit: report.financials.profit,
+                                  cash: report.cashEnd, revenue: report.financials.revenue))
+        if s.trend.count > 520 { s.trend.removeFirst(s.trend.count - 520) }
         Earnings.report(&s)
         if s.reportHistory.count > 26 { s.reportHistory.removeFirst() }
         s.week += 1
