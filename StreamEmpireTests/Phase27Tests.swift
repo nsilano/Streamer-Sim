@@ -23,7 +23,7 @@ final class Phase27Tests: XCTestCase {
         var s = newState()
         s.catalog = [Title(id: 1, name: "Soon", kind: .series, genre: .drama, language: .english, quality: 70, popularity: 60,
                            ageWeeks: 10, isOriginal: false, license: LicenseTerms(cost: 1, years: 1, regions: [], exclusive: false),
-                           weeksRemaining: 13, listingWeeksLeft: 0)]
+                           weeksRemaining: 5, listingWeeksLeft: 0)]
         let next = SimulationEngine.advanceWeek(s)
         XCTAssertTrue(PauseCheck.reasons(before: s, after: next).contains { $0.id == "expiring" })
     }

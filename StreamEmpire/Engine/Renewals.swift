@@ -42,13 +42,19 @@ extension GameState {
                 "Kept for \(years) more year\(years == 1 ? "" : "s") at \(Format.money(price)).")
     }
 
-    /// Weeks-left marks at which the sim stops to warn you.
-    static let expiryWarningWeeks: Set<Int> = [12, 4, 1]
+    /// Weeks left at which an expiring license can stop the sim (only with `expiryAlerts == .stop`).
+    static let expiryStopWeeks = 4
+    /// Minimum weeks between two expiry stops: one stop covers everything expiring in the next 8 weeks.
+    static let expiryStopCooldown = 4
 
-    /// Titles that just crossed a warning line this week (12, 4 or 1 week left). With a renewal style on,
-    /// reasonably priced ones were already renewed, so only the expensive or unaffordable ones remain.
+    /// Licenses that should stop the sim this week: only with alerts set to Stop, when a license your
+    /// auto-renew style didn't take reaches 4 weeks left, at most once every 4 weeks. The stop then
+    /// lists everything expiring within 8 weeks, so one pause covers a whole batch.
     var newlyExpiring: [Title] {
-        catalog.filter { $0.license != nil && GameState.expiryWarningWeeks.contains($0.weeksRemaining ?? -1) }
+        guard expiryAlerts == .stop, week - lastExpiryStopWeek >= GameState.expiryStopCooldown else { return [] }
+        let hit = catalog.contains { $0.license != nil && $0.weeksRemaining == GameState.expiryStopWeeks }
+        guard hit else { return [] }
+        return expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 8 }
     }
 
     /// Total to renew every expiring title for `years`.

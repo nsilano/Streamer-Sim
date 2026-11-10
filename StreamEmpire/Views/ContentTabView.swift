@@ -799,6 +799,13 @@ struct RenewalModePicker: View {
             }
             .pickerStyle(.segmented)
             Text(state.renewalMode.blurb).font(.caption).foregroundStyle(Theme.text2)
+            Text("When a license is about to expire").font(.subheadline.weight(.semibold)).foregroundStyle(.white).padding(.top, 4)
+            Picker("Expiry alerts", selection: Binding(get: { state.expiryAlerts },
+                                                       set: { mode in store.perform { $0.expiryAlerts = mode } })) {
+                ForEach(ExpiryAlerts.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Text(state.expiryAlerts.blurb).font(.caption).foregroundStyle(Theme.text2)
         }
         .artCard(tint: Theme.good)
     }

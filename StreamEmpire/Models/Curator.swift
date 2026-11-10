@@ -111,10 +111,26 @@ enum RenewalMode: String, Codable, CaseIterable, Identifiable {
 
     var blurb: String {
         switch self {
-        case .off: return "Nothing renews by itself. You're stopped at 12, 4 and 1 week left for every license."
-        case .careful: return "Renews when it costs no more per year than you paid and under 2% of your cash. Anything pricier stops the sim."
-        case .standard: return "Renews up to 1.3x what you paid per year and under 5% of your cash. Only unusually expensive renewals stop the sim."
-        case .generous: return "Renews up to 2x what you paid per year and under 12% of your cash. Only absurd prices stop the sim."
+        case .off: return "Nothing renews by itself; every license follows your expiry alert setting."
+        case .careful: return "Renews when it costs no more per year than you paid and under 2% of your cash. Anything pricier is left to you."
+        case .standard: return "Renews up to 1.3x what you paid per year and under 5% of your cash. Only unusually expensive renewals are left to you."
+        case .generous: return "Renews up to 2x what you paid per year and under 12% of your cash. Only absurd prices are left to you."
+        }
+    }
+}
+
+/// What an expiring license that didn't auto-renew does to your game.
+enum ExpiryAlerts: String, Codable, CaseIterable, Identifiable {
+    case stop, show, ignore
+    var id: String { rawValue }
+    var title: String {
+        switch self { case .stop: return "Stop the sim"; case .show: return "Just show it"; case .ignore: return "Ignore" }
+    }
+    var blurb: String {
+        switch self {
+        case .stop: return "Pauses at most once every 4 weeks, when a license hits 4 weeks left, with everything expiring soon in one list."
+        case .show: return "Never pauses. Expiring titles show on the Dashboard and in the news; renew whenever you like."
+        case .ignore: return "No reminders. Licenses your auto-renew style doesn't take simply end."
         }
     }
 }

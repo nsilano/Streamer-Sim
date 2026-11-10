@@ -29,7 +29,8 @@ final class GameStore: ObservableObject {
         state = GameState.newGame(startCountry: country,
                                   companyName: name.isEmpty ? "Stream Empire" : name,
                                   seed: seed, difficulty: difficulty, scenario: scenario)
-        state?.renewalMode = .standard     // reasonable renewals happen by themselves; only pricey ones stop you
+        state?.renewalMode = .standard     // reasonable renewals happen by themselves
+        state?.expiryAlerts = .show        // expiring titles are shown, not forced on you
         persist()
     }
 
@@ -66,6 +67,8 @@ final class GameStore: ObservableObject {
         }
         let expiring = !next.newlyExpiring.isEmpty
         if expiring {
+            state?.lastExpiryStopWeek = next.week
+            persist()
             self.showReport = false
             showExpiring = true
         } else if showReport {

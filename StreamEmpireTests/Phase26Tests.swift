@@ -20,17 +20,27 @@ final class Phase26Tests: XCTestCase {
               weeksRemaining: left, listingWeeksLeft: 0, paidPrice: paid, popularityAtPurchase: 60)
     }
 
-    func testTitlesCrossingTheWarningLinesAreFlagged() {
+    func testOneStopCoversAWholeBatchAtFourWeeksLeft() {
         var s = newState()
-        s.catalog = [owned(id: 1, left: 13), owned(id: 2, left: 5), owned(id: 3, left: 30)]
+        s.expiryAlerts = .stop
+        s.catalog = [owned(id: 1, left: 13), owned(id: 2, left: 5), owned(id: 3, left: 9), owned(id: 4, left: 30)]
         s = SimulationEngine.advanceWeek(s)
-        XCTAssertEqual(Set(s.newlyExpiring.map(\.id)), [1, 2])
-        s = SimulationEngine.advanceWeek(s)
-        XCTAssertTrue(s.newlyExpiring.isEmpty, "each line triggers once")
-        var last = newState()
-        last.catalog = [owned(id: 9, left: 2)]
-        last = SimulationEngine.advanceWeek(last)
-        XCTAssertEqual(last.newlyExpiring.map(\.id), [9], "a last-chance stop with one week left")
+        XCTAssertEqual(Set(s.newlyExpiring.map(\.id)), [2, 3], "title 2 hit 4 weeks; title 3 (8 weeks) joins the same stop")
+        s.lastExpiryStopWeek = s.week
+        for _ in 0..<3 {
+            s = SimulationEngine.advanceWeek(s)
+            XCTAssertTrue(s.newlyExpiring.isEmpty, "no second stop within 4 weeks")
+        }
+    }
+
+    func testShowAndIgnoreNeverStopTheSim() {
+        for mode in [ExpiryAlerts.show, .ignore] {
+            var s = newState()
+            s.expiryAlerts = mode
+            s.catalog = [owned(id: 1, left: 5)]
+            s = SimulationEngine.advanceWeek(s)
+            XCTAssertTrue(s.newlyExpiring.isEmpty, "\(mode)")
+        }
     }
 
     func testRenewAllKeepsEverythingYouCanAfford() throws {
@@ -73,9 +83,11 @@ final class Phase26Tests: XCTestCase {
         s.renewalMode = .standard
         var hot = owned(id: 2, left: 13)
         hot.popularity = 100            // popularity jumped 40 points since you signed: renewal is far pricier
-        s.catalog = [owned(id: 1, left: 13), hot]
+        hot.weeksRemaining = 5
+        s.catalog = [owned(id: 1, left: 5), hot]
         XCTAssertNil(s.renewalBlock(s.catalog[0]))
         XCTAssertNotNil(s.renewalBlock(s.catalog[1]))
+        s.expiryAlerts = .stop
         s = SimulationEngine.advanceWeek(s)
         XCTAssertEqual(s.newlyExpiring.map(\.id), [2], "only the absurd one stops the sim")
     }

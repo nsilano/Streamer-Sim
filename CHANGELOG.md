@@ -5,6 +5,11 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Expiry alerts you control (save v27)
+- New setting next to Auto-renew: "When a license is about to expire": Stop the sim, Just show it (new games start here) or Ignore.
+- Just show it never pauses: expiring titles appear on the Dashboard card and in the news.
+- Stop the sim now pauses at most once every 4 weeks, when a license your auto-renew style didn't take hits 4 weeks left, and lists everything expiring within 8 weeks in one sheet (no more stops at 12 and 1 week).
+
 ### Clearer finances early on
 - The staff cost line is now called "Core team, staff & overhead", and with nobody hired it explains the base cost: you, a small founding crew, an office and tools, even before your first hire.
 - No more nonsense like "2000000% of revenue" while you have no revenue: revenue percentages only show once you earn something.

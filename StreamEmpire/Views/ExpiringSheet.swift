@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Opens (and stops the sim) when licenses cross 12 or 4 weeks left, so you can renew before they go.
+/// Opens (and stops the sim) when expiry alerts are set to Stop and licenses near expiry, so you can renew before they go.
 struct ExpiringSheet: View {
     @EnvironmentObject var store: GameStore
     @Environment(\.dismiss) private var dismiss

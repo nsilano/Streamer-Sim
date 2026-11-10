@@ -76,7 +76,7 @@ struct DashboardView: View {
     /// Always visible: licenses about to run out, with a one-tap renewal.
     @ViewBuilder
     private func expiringCard(_ state: GameState) -> some View {
-        let soon = state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 12 }
+        let soon = state.expiryAlerts == .ignore ? [] : state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 12 }
         if !soon.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Label("\(soon.count) title\(soon.count == 1 ? "" : "s") about to expire", systemImage: "clock.badge.exclamationmark.fill")
