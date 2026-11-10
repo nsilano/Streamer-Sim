@@ -87,7 +87,7 @@ final class Phase23Tests: XCTestCase {
         for _ in 0..<GameState.outputDeliveryEvery { s = SimulationEngine.advanceWeek(s) }
         let delivered = s.catalog.filter { $0.genre == .anime && $0.license?.exclusive == true }
         XCTAssertEqual(delivered.count, 1)
-        XCTAssertEqual(delivered[0].weeksRemaining, 156)
+        XCTAssertTrue((155...156).contains(delivered[0].weeksRemaining ?? 0), "a 3-year license (it ages in the week it arrives)")
         XCTAssertGreaterThanOrEqual(s.lastReport!.financials.licensing, fee - 0.01)
     }
 

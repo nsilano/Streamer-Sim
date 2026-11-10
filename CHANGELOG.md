@@ -11,6 +11,7 @@ Save version is noted when it changes (older saves are ignored).
 - Exit a market: shut down in a country (subscribers there lose the service; wind-down cost). You can relaunch later.
 - Cancel a production mid-way (money spent is gone).
 - Pull a licensed title from the service, or write off an original for a 10% tax benefit (fans don't like it).
+- (Test fix: a delivered title ages in the week it arrives.)
 - Corporate: rename the company; after the IPO, buy back shares and pay quarterly dividends.
 
 ### Project notes
