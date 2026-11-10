@@ -13,9 +13,8 @@ final class Phase22Tests: XCTestCase {
         return s
     }
 
-    private func person(id: Int, _ department: Department = .content, skill: Int = 2, pay: Double = 1.0,
-                        trait: EmployeeTrait = .steady) -> Employee {
-        Employee(id: id, name: "Person \(id)", department: department, skill: skill, pay: pay, trait: trait)
+    private func person(id: Int, _ department: Department = .content, skill: Int = 2, pay: Double = 1.0) -> Employee {
+        Employee(id: id, name: "Person \(id)", department: department, skill: skill, pay: pay)
     }
 
     func testANewGameHasAJobBoardOfNamedCandidates() {
@@ -56,19 +55,6 @@ final class Phase22Tests: XCTestCase {
         XCTAssertEqual(staff.effectiveLevel(.content), 2, accuracy: 1e-9)
     }
 
-    func testTraitsPayAndMoraleShapeOutputAndCost() {
-        let base = person(id: 1)
-        XCTAssertGreaterThan(person(id: 2, trait: .prodigy).output, base.output)
-        XCTAssertGreaterThan(person(id: 2, trait: .prodigy).weeklySalary, base.weeklySalary)
-        XCTAssertLessThan(person(id: 2, trait: .frugal).weeklySalary, base.weeklySalary)
-        XCTAssertGreaterThan(person(id: 2, pay: 1.4).output, base.output)
-        var gloomy = base; gloomy.morale = 10
-        var happy = base; happy.morale = 95
-        XCTAssertLessThan(gloomy.output, base.output)
-        XCTAssertGreaterThan(happy.output, base.output)
-        XCTAssertEqual(base.moraleFactor, 1.0, accuracy: 1e-9, "content staff work at face value")
-    }
-
     func testYouSetEachPersonsSalary() throws {
         var s = newState()
         s.staff.employees = [person(id: 1)]
@@ -81,19 +67,9 @@ final class Phase22Tests: XCTestCase {
         XCTAssertGreaterThan(fin.staff, Formulas.baseStaffCostPerWeek + before)
     }
 
-    func testMoraleFollowsPay() {
-        var s = newState()
-        s.staff.employees = [person(id: 1, pay: 1.4), person(id: 2, pay: 0.8, trait: .steady)]
-        for _ in 0..<30 { s = SimulationEngine.advanceWeek(s) }
-        let happy = s.staff.employees.first { $0.id == 1 }
-        XCTAssertNotNil(happy)
-        XCTAssertGreaterThan(happy!.morale, 75)
-        if let low = s.staff.employees.first(where: { $0.id == 2 }) { XCTAssertLessThan(low.morale, 40) }
-    }
-
     func testUnderpaidPeopleQuitByName() {
         var s = newState()
-        s.staff.employees = [person(id: 1, pay: 0.6, trait: .ambitious)]
+        s.staff.employees = [person(id: 1, pay: 0.6)]
         var quitEvent: GameEvent?
         for _ in 0..<500 where !s.staff.employees.isEmpty {
             s = SimulationEngine.advanceWeek(s)
@@ -110,23 +86,18 @@ final class Phase22Tests: XCTestCase {
         XCTAssertEqual(s.staff.employees.count, 1)
     }
 
-    func testLongServiceBuildsSkill() {
-        var s = newState()
-        s.staff.employees = [person(id: 1, skill: 1, trait: .rookie)]
-        for _ in 0..<52 { s = SimulationEngine.advanceWeek(s) }
-        XCTAssertEqual(s.staff.employees.first?.skill, 2, "rookies learn in a year")
-        XCTAssertTrue(s.news.contains { $0.headline == "Person 1 is promoted" })
+    func testBetterPayMeansBetterWork() {
+        XCTAssertGreaterThan(person(id: 1, pay: 1.4).output, person(id: 2).output)
+        XCTAssertLessThan(person(id: 1, pay: 0.7).output, person(id: 2).output)
+        XCTAssertEqual(person(id: 1, skill: 2).output, 2, accuracy: 1e-9)
     }
 
-    func testLettingSomeoneGoCostsSeveranceAndDentsMorale() throws {
+    func testLettingSomeoneGo() throws {
         var s = newState()
         s.staff.employees = [person(id: 1), person(id: 2)]
-        let cash = s.finances.cash
-        let severance = s.severancePrice(s.staff.employees[0])
         try s.fire(employeeID: 1)
-        XCTAssertEqual(s.finances.cash, cash - severance, accuracy: 0.01)
         XCTAssertEqual(s.staff.employees.map(\.id), [2])
-        XCTAssertLessThan(s.staff.employees[0].morale, 50)
+        XCTAssertThrowsError(try s.fire(employeeID: 1))
     }
 
     func testTheJobBoardRefreshes() {
@@ -141,7 +112,7 @@ final class Phase22Tests: XCTestCase {
         var s = newState()
         let listing = s.licenseMarket.first { $0.embargoWeeks == 0 }!
         let before = s.licensePrice(listing)
-        s.staff.employees = [person(id: 1, .content, skill: 3, trait: .prodigy)]
+        s.staff.employees = [person(id: 1, .content, skill: 3)]
         XCTAssertLessThan(s.licensePrice(listing), before)
     }
 

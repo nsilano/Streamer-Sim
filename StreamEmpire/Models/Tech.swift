@@ -105,7 +105,7 @@ enum Department: String, Codable, CaseIterable, Identifiable {
 
 /// Staff level (0...5) per department.
 /// Your people, grouped into fixed departments. A department's level is the combined skill of the
-/// people in it (capped at 5); its effect also depends on their pay, morale and traits.
+/// people in it (capped at 5); its effect also depends on what you pay them.
 struct Staff: Codable, Equatable {
     var employees: [Employee] = []
     /// Default pay per department (applied to new hires and by the department-wide pay setting).
@@ -129,7 +129,7 @@ struct Staff: Codable, Equatable {
         for i in employees.indices where employees[i].department == department { employees[i].pay = value }
     }
 
-    /// Combined output of the department (skill x pay x morale x trait), scaled down if over the size cap.
+    /// Combined output of the department (skill x pay effectiveness), scaled down if over the size cap.
     func effectiveLevel(_ department: Department) -> Double {
         let team = members(department)
         let raw = Double(team.reduce(0) { $0 + $1.skill })

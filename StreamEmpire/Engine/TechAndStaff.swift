@@ -105,7 +105,7 @@ extension GameState {
                                         skill: 1, pay: staff.pay[department.rawValue] ?? 1.0))
     }
 
-    /// Lets the least skilled (most recent) person in a department go, without severance.
+    /// Lets the least skilled (most recent) person in a department go.
     mutating func reduceStaff(_ department: Department) throws {
         guard let index = staff.employees.indices.filter({ staff.employees[$0].department == department })
             .min(by: { staff.employees[$0].skill != staff.employees[$1].skill ? staff.employees[$0].skill < staff.employees[$1].skill : $0 > $1 })

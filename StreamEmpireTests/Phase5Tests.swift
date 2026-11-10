@@ -83,8 +83,7 @@ final class Phase5Tests: XCTestCase {
         s.finances.cash = 1e12
         s.staff.legal = 3
         for _ in 0..<300 { s = SimulationEngine.advanceWeek(s) }
-        XCTAssertEqual(s.staff.members(.legal).count, 3, "nobody quits at fair pay")
-        XCTAssertGreaterThanOrEqual(s.staff.legal, 3, "and long service only adds skill")
+        XCTAssertEqual(s.staff.legal, 3)
     }
 
     // MARK: Studios

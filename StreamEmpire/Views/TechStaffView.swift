@@ -181,7 +181,7 @@ struct TechStaffView: View {
     private func team(_ state: GameState) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: "Your team", icon: "person.3.fill", tint: Theme.amber)
-            Text("Hire people from the job board. Each person has a skill (1-3 stars), a trait and a salary you set. A department's level is its people's combined skill (max 5); pay and morale decide how well they work.")
+            Text("Hire people from the job board. Each person has a skill (1-3 stars) and a salary you set. A department's level is its people's combined skill (max 5). Better pay makes them work better; underpaid people may quit.")
                 .font(.footnote).foregroundStyle(Theme.text2)
             hiringBoard(state)
             ForEach(Department.allCases) { department in
@@ -242,7 +242,6 @@ struct TechStaffView: View {
                         Spacer()
                         Pill(text: person.department.displayName, tint: Theme.teal)
                     }
-                    Text("\(person.trait.displayName): \(person.trait.blurb)").font(.caption2).foregroundStyle(Theme.text2)
                     HStack {
                         Text("Asks \(Format.money(state.salaryPrice(person)))/wk").font(.caption).foregroundStyle(Theme.text2)
                         Spacer()
@@ -265,24 +264,16 @@ struct TechStaffView: View {
                 Text(person.name).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                 Text(stars(person.skill)).font(.caption).foregroundStyle(Theme.amber)
                 Spacer()
-                Pill(text: person.trait.displayName, tint: Theme.violet)
+                Button("Let go") { store.perform { try $0.fire(employeeID: person.id) } }
+                    .font(.caption2).foregroundStyle(Theme.danger)
             }
-            StatBar(label: "Morale", value: person.morale / 100, text: "\(Int(person.morale))",
-                    tint: person.morale < 30 ? Theme.danger : person.morale < 50 ? Theme.amber : Theme.good, height: 4, compact: true)
             HStack {
-                Text("\(Format.money(state.salaryPrice(person)))/wk · \(Format.percent(person.pay)) of market").font(.caption2).foregroundStyle(Theme.text2)
+                Text("\(Format.money(state.salaryPrice(person)))/wk · \(Format.percent(person.pay)) of market")
+                    .font(.caption2).foregroundStyle(person.pay < 0.9 ? Theme.amber : Theme.text2)
                 Spacer()
                 Stepper("", value: Binding(get: { person.pay },
                                            set: { v in store.perform { try $0.setSalary(employeeID: person.id, pay: v) } }),
                         in: Formulas.payRange, step: 0.05).labelsHidden()
-            }
-            HStack {
-                Text("\(person.weeksEmployed) wks with you").font(.caption2).foregroundStyle(Theme.text2)
-                Spacer()
-                Button("Let go · \(Format.money(state.severancePrice(person))) severance") {
-                    store.perform { try $0.fire(employeeID: person.id) }
-                }
-                .font(.caption2).foregroundStyle(Theme.danger)
             }
         }
         .padding(8)
