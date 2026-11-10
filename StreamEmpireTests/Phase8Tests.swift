@@ -121,7 +121,7 @@ final class Phase8Tests: XCTestCase {
         XCTAssertGreaterThan(eurovue.subs["DE"] ?? 0, 10 * (eurovue.subs["TR"] ?? 1) / 10)
         let spark = rivals.first { $0.id == "spark" }!
         XCTAssertGreaterThan(spark.subs["IN"]!, 0.6 * spark.totalSubs, "Spark Bharat is mostly India")
-        XCTAssertEqual(rivals.first { $0.id == "netflux" }!.countryCount, 30)
+        XCTAssertEqual(rivals.first { $0.id == "netflux" }!.countryCount, CountryData.all.count)
     }
 
     func testNoCountryStartsOverfullAndYouHaveRoomToGrow() {

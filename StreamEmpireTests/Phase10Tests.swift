@@ -23,7 +23,10 @@ final class Phase10Tests: XCTestCase {
         XCTAssertEqual(s.unreadNewsCount, 0)
         XCTAssertTrue(s.milestonesReached.contains("netflux-subs-300"))
         let after = SimulationEngine.advanceWeek(s)
-        XCTAssertFalse(after.news.contains { $0.kind == .subscribers }, "already-passed milestones stay quiet")
+        // (A rival may legitimately cross a fresh threshold in week one; what must stay quiet are already-passed ones.)
+        let reached = s.milestonesReached
+        XCTAssertFalse(after.news.contains { $0.kind == .subscribers && $0.rivalID == nil }, "your own milestones stay quiet")
+        XCTAssertTrue(reached.isSubset(of: after.milestonesReached))
     }
 
     func testSubscriberMilestoneIsReported() {

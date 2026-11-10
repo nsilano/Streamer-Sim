@@ -9,6 +9,7 @@ Save version is noted when it changes (older saves are ignored).
 - New markets: Portugal, Belgium, Switzerland, Austria, Denmark, Norway, Finland, Czechia, Greece, Romania, Vietnam, Philippines, Malaysia, Pakistan, Taiwan, Peru, Israel, Qatar, Morocco and Ghana. All are on the map and the list, can be your starting market, and have their own size, prices, language and rules (Qatar and Pakistan ban reality shows; Pakistan, Qatar, Malaysia and Vietnam are strict about mature titles).
 - Eight new languages for dubbing and subtitles (Danish, Norwegian, Finnish, Czech, Greek, Romanian, Hebrew, Vietnamese).
 - The "all markets" goal is now 50 markets. Rivals spread their existing subscribers over all 50 countries.
+- Two older tests updated for 50 countries (rival footprint count, week-one milestone news).
 - Fixed a test that expected a scandal from a title that had already expired.
 
 ### Test and balance fixes
