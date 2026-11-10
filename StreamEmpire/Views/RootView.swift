@@ -57,7 +57,8 @@ struct GameOverView: View {
             Text(won ? "YOU'RE #1" : "BANKRUPT")
                 .font(.system(size: 44, weight: .black, design: .serif)).tracking(5)
                 .foregroundStyle(won ? Theme.amber : Theme.danger)
-            Text(won ? "\(state.companyName) is the biggest streaming platform in the world."
+            Text(won ? (state.scenario == .sandbox ? "\(state.companyName) is the biggest streaming platform in the world."
+                                                    : "\(state.scenario.title) complete! Score \(state.score). Best: \(store.bestScore(state.scenario)).")
                      : (state.lossReason ?? "\(state.companyName) ran out of money."))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white.opacity(0.85))

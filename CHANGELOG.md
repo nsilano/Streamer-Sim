@@ -5,6 +5,10 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Challenges and advisor (save v19)
+- Pick a challenge on the new-game screen: Sandbox, 10M subscribers in 3 years, profit in 2 years, or become #1 within 8 years. Deadlines, a score (audience, cash, time left), and your best score per challenge on this device.
+- "What should I do next?" advisor on the Dashboard: urgent warnings first, then expiring titles, new markets worth opening, catalog gaps, blocked titles, piracy hot spots, auctions and offers.
+
 ### Realism pack 3: the business side (save v18)
 - New Company > Business screen.
 - Quarterly earnings every 13 weeks: profit on the books (content spending spread over two years) vs analysts' expectations. Beat or miss moves your investor mood and your valuation.

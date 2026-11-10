@@ -18,12 +18,12 @@ final class GameStore: ObservableObject {
         state = SaveManager.load()
     }
 
-    func newGame(companyName: String, country: String, difficulty: Difficulty = .medium) {
+    func newGame(companyName: String, country: String, difficulty: Difficulty = .medium, scenario: Scenario = .sandbox) {
         let name = companyName.trimmingCharacters(in: .whitespaces)
         let seed = UInt64.random(in: 1...UInt64.max)
         state = GameState.newGame(startCountry: country,
                                   companyName: name.isEmpty ? "Stream Empire" : name,
-                                  seed: seed, difficulty: difficulty)
+                                  seed: seed, difficulty: difficulty, scenario: scenario)
         persist()
     }
 
@@ -47,6 +47,7 @@ final class GameStore: ObservableObject {
     func nextWeek(showReport: Bool = true) {
         guard let current = state, current.outcome == .playing else { return }
         let hadAlert = current.pendingEvent?.id
+        defer { recordBestScore() }
         state = SimulationEngine.advanceWeek(current)
         persist()
         // Stop auto-advance when the game ends or a NEW alert appears.
@@ -55,6 +56,15 @@ final class GameStore: ObservableObject {
         if state?.outcome != .playing || newAlert || expiringNow { autoAdvance = false }
         if showReport { self.showReport = true }
     }
+
+    /// Remembers your best score per scenario on this device.
+    private func recordBestScore() {
+        guard let s = state, s.outcome == .won, s.score > 0 else { return }
+        let key = "bestScore_\(s.scenario.rawValue)"
+        if s.score > UserDefaults.standard.integer(forKey: key) { UserDefaults.standard.set(s.score, forKey: key) }
+    }
+
+    func bestScore(_ scenario: Scenario) -> Int { UserDefaults.standard.integer(forKey: "bestScore_\(scenario.rawValue)") }
 
     /// Applies a player action; surfaces failures as an alert message.
     func perform(_ action: (inout GameState) throws -> Void) {

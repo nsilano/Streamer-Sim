@@ -15,6 +15,21 @@ struct DashboardView: View {
                         ForEach(Array(state.advice().filter { $0.id != "expiring" }.prefix(2))) { AdviceBanner(advice: $0) }
                         controls(state)
                         NavigationLink {
+                            AdvisorView()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "lightbulb.fill").font(.title3).foregroundStyle(Theme.amber)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("What should I do next?").font(.headline).foregroundStyle(.white)
+                                    Text("\(state.recommendations().count) suggestion\(state.recommendations().count == 1 ? "" : "s"), most urgent first")
+                                        .font(.caption).foregroundStyle(Theme.text2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
+                            }
+                            .artCard(tint: Theme.amber)
+                        }
+                        NavigationLink {
                             PromotionsView()
                         } label: {
                             HStack(spacing: 12) {

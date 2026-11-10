@@ -9,6 +9,7 @@ struct NewGameView: View {
     @State private var search = ""
     @State private var showHelp = false
     @State private var difficulty: Difficulty = .medium
+    @State private var scenario: Scenario = .sandbox
 
     private struct RegionGroup: Identifiable {
         let region: Region
@@ -55,6 +56,26 @@ struct NewGameView: View {
                             }
                         }
                         Text(difficulty.blurb).font(.caption).foregroundStyle(Theme.text2)
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionTitle(text: "Challenge", icon: "flag.checkered", tint: Theme.good)
+                        ForEach(Scenario.allCases) { item in
+                            Button { scenario = item } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack {
+                                        Text(item.title).font(.subheadline.weight(.heavy)).foregroundStyle(.white)
+                                        Spacer()
+                                        if store.bestScore(item) > 0 { Pill(text: "Best \(store.bestScore(item))", tint: Theme.amber) }
+                                    }
+                                    Text(item.blurb).font(.caption2).foregroundStyle(Theme.text2)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(12)
+                                .background(RoundedRectangle(cornerRadius: 14).fill(scenario == item ? Theme.magenta.opacity(0.35) : Color.white.opacity(0.07)))
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(scenario == item ? Theme.magenta : Color.clear, lineWidth: 2))
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         SectionTitle(text: "Choose your home market", icon: "globe.europe.africa.fill", tint: Theme.teal)
@@ -140,7 +161,7 @@ struct NewGameView: View {
                 }
             }
             Button("Found the company") {
-                store.newGame(companyName: companyName, country: selected, difficulty: difficulty)
+                store.newGame(companyName: companyName, country: selected, difficulty: difficulty, scenario: scenario)
             }
             .buttonStyle(GlowButtonStyle())
         }

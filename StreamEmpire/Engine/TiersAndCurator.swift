@@ -57,6 +57,7 @@ extension GameState {
     /// A fresh game in the same country and company. `sameWorld` replays the exact same seed.
     func restarted(sameWorld: Bool, newSeed: UInt64) -> GameState {
         GameState.newGame(startCountry: startCountry.isEmpty ? (liveMarketCodes.first ?? "IE") : startCountry,
-                          companyName: companyName, seed: sameWorld ? startSeed : newSeed, difficulty: difficulty)
+                          companyName: companyName, seed: sameWorld ? startSeed : newSeed, difficulty: difficulty,
+                          scenario: scenario)
     }
 }

@@ -339,9 +339,24 @@ enum SimulationEngine {
             s.outcome = .lost
             s.lossReason = reason
             events.append(s.makeEvent(.warning, "Bankrupt", reason))
-        } else if s.week >= minWeeksToWin,
+        } else if s.scenario != .sandbox, s.scenario != .dethrone, let verdict = Scenarios.verdict(s, totalSubs: totalAfter) {
+            s.outcome = verdict.won ? .won : .lost
+            if verdict.won {
+                s.score = Scenarios.score(s)
+                events.append(s.makeEvent(.milestone, "Challenge complete!", "\(verdict.text) Score: \(s.score)."))
+            } else {
+                s.lossReason = verdict.text
+                events.append(s.makeEvent(.warning, "Challenge failed", verdict.text))
+            }
+        } else if s.scenario == .dethrone, s.week >= s.scenario.deadline ?? Int.max,
+                  !(totalAfter > (s.rivals.map({ $0.totalSubs }).max() ?? 0)) {
+            s.outcome = .lost
+            s.lossReason = "Eight years passed and \(s.companyName) never became #1."
+            events.append(s.makeEvent(.warning, "Challenge failed", s.lossReason ?? ""))
+        } else if s.week >= minWeeksToWin, [.sandbox, .dethrone].contains(s.scenario),
                   let topRival = s.rivals.map({ $0.totalSubs }).max(), totalAfter > topRival {
             s.outcome = .won
+            s.score = Scenarios.score(s)
             events.append(s.makeEvent(.milestone, "You're #1!",
                                       "\(s.companyName) now has more subscribers than every rival."))
         } else if s.finances.cash < 0 {
