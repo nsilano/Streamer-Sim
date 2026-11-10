@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### One ad-load control
+- Removed the duplicate "Ad load" policy. Ad load is set only with the slider in Company > Business.
+
 ### Readable spending chart
 - Finances > Spending over time now shows just the last 12 weeks as evenly spaced bars (one per week, labelled W96, W99...), the top 4 cost types plus "Everything else", and no more bars below zero from refunds.
 

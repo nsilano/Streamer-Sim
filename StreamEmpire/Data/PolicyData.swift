@@ -170,15 +170,6 @@ enum PolicyData {
 
     private static let ads: [PolicyDefinition] = [
         PolicyDefinition(
-            id: "adload", category: .ads, title: "Ad load", icon: "rectangle.3.group.fill",
-            summary: "How many ads on the Ad-supported tier?",
-            defaultOption: "standard",
-            options: [
-                PolicyOption(id: "light", title: "Light", detail: "Few ads, happy viewers.", effects: PolicyEffects(churn: 0.95, adRevenue: 0.7, trust: 0.03), pros: ["Happier viewers"], cons: ["Much less ad revenue"]),
-                PolicyOption(id: "standard", title: "Standard", detail: "Industry-typical.", effects: .neutral, pros: [], cons: []),
-                PolicyOption(id: "heavy", title: "Heavy", detail: "Ads everywhere.", effects: PolicyEffects(churn: 1.10, adRevenue: 1.35, trust: -0.08), pros: ["Big ad revenue"], cons: ["More cancellations", "Trust slips"]),
-            ]),
-        PolicyDefinition(
             id: "privacy", category: .ads, title: "Data & privacy", icon: "lock.shield.fill",
             summary: "What do you do with viewer data?",
             defaultOption: "standard",

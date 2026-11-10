@@ -183,10 +183,9 @@ final class Phase12Tests: XCTestCase {
         XCTAssertEqual(household / base, 1.10 * 1.05, accuracy: 1e-6)
     }
 
-    func testAdLoadAndPrivacyMoveAdRevenue() throws {
+    func testPrivacyMovesAdRevenue() throws {
         let base = try week().1.financials.adRevenue
-        XCTAssertEqual(try week(("adload", "heavy")).1.financials.adRevenue / base, 1.35, accuracy: 1e-6)
-        XCTAssertEqual(try week(("adload", "light")).1.financials.adRevenue / base, 0.7, accuracy: 1e-6)
+        XCTAssertNil(PolicyData.definition("adload"), "ad load lives in Company > Business only")
         XCTAssertEqual(try week(("privacy", "monetize")).1.financials.adRevenue / base, 1.2, accuracy: 1e-6)
     }
 
@@ -262,10 +261,10 @@ final class Phase12Tests: XCTestCase {
     func testPoliciesSurviveSaves() throws {
         var s = newState()
         try s.setPolicy("sharing", option: "household", forcedBad: true)
-        try s.setPolicy("adload", option: "heavy")
+        try s.setPolicy("placement", option: "on")
         let loaded = try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(s))
         XCTAssertEqual(loaded, s)
-        XCTAssertEqual(loaded.policyOptionID("adload"), "heavy")
+        XCTAssertEqual(loaded.policyOptionID("placement"), "on")
         XCTAssertEqual(loaded.policyLog.count, 2)
         XCTAssertEqual(loaded.policyShocks.count, 1)
     }
