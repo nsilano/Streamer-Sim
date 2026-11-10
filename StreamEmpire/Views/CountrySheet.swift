@@ -24,6 +24,7 @@ struct CountrySheet: View {
                         }
                         marketCard(country)
                         rivalsCard(country, state)
+                        if market.status != .notLaunched { exitCard(country, state) }
                     }
                     .padding(16)
                 }
@@ -258,6 +259,17 @@ struct CountrySheet: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
         .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.14)))
+    }
+
+    private func exitCard(_ country: Country, _ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionTitle(text: "Leave this market", icon: "door.left.hand.open", tint: Theme.danger)
+            Text("Shut down here: every subscriber in \(country.name) loses the service, local partnerships and promotions end, and wind-down costs \(Format.money(state.exitPrice(country))). You can relaunch later at full price.")
+                .font(.caption).foregroundStyle(Theme.text2)
+            Button("Exit \(country.name)") { store.perform { try $0.exitMarket(code: country.code) } }
+                .buttonStyle(SoftButtonStyle(tint: Theme.danger))
+        }
+        .artCard(tint: Theme.danger)
     }
 
     private func marketingCard(_ country: Country, _ market: MarketState) -> some View {

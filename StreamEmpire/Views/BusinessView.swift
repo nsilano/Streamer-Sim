@@ -5,12 +5,17 @@ struct BusinessView: View {
     @EnvironmentObject var store: GameStore
     @State private var partnerCountry = ""
     @State private var premium = 1.2
+    @State private var dealGenre: Genre = .drama
+    @State private var newName = ""
+    @State private var buyback = 0.05
 
     var body: some View {
         ScrollView {
             if let state = store.state {
                 VStack(alignment: .leading, spacing: 14) {
                     earnings(state)
+                    corporate(state)
+                    outputDeals(state)
                     features(state)
                     sports(state)
                     partnerships(state)
@@ -54,6 +59,66 @@ struct BusinessView: View {
                 .font(.caption2).foregroundStyle(Theme.text2)
         }
         .artCard(tint: Theme.amber)
+    }
+
+    // MARK: Corporate
+
+    private func corporate(_ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Corporate", icon: "building.columns.fill", tint: Theme.violet)
+            HStack {
+                TextField("New company name", text: $newName).textFieldStyle(.roundedBorder)
+                Button("Rename") { store.perform { try $0.renameCompany(newName) }; newName = "" }
+                    .disabled(newName.trimmingCharacters(in: .whitespaces).count < 2)
+            }
+            if state.equity.ipoDone {
+                LabeledValue(label: "You own", value: Format.percent(state.equity.ownership))
+                HStack {
+                    Text("Buy back \(Format.percent(buyback))").font(.caption)
+                    Slider(value: $buyback, in: 0.01...0.10, step: 0.01)
+                }
+                Button("Buy back shares · \(Format.money(state.buybackPrice(percent: buyback)))") {
+                    store.perform { try $0.buyBackShares(percent: buyback) }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.violet)).disabled(state.finances.cash < state.buybackPrice(percent: buyback))
+                Button("Pay a dividend · \(Format.money(state.dividendPrice()))") { store.perform { try $0.payDividend() } }
+                    .buttonStyle(SoftButtonStyle(tint: Theme.good))
+                    .disabled(state.finances.cash < state.dividendPrice() || state.week - state.lastDividendWeek < 13)
+                Text("Buybacks raise your ownership; dividends lift investor mood (once a quarter).").font(.caption2).foregroundStyle(Theme.text2)
+            } else {
+                Text("Share buybacks and dividends unlock after your IPO.").font(.caption).foregroundStyle(Theme.text2)
+            }
+        }
+        .artCard(tint: Theme.violet)
+    }
+
+    // MARK: Output deals
+
+    private func outputDeals(_ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Studio output deals (\(state.outputDeals.count)/\(GameState.maxOutputDeals))", icon: "shippingbox.fill", tint: Theme.teal)
+            Text("A studio delivers a new exclusive 3-year title in your chosen genre every \(GameState.outputDeliveryEvery) weeks, for two years, for a weekly fee. Ending early costs 8 weeks of fees.")
+                .font(.footnote).foregroundStyle(Theme.text2)
+            ForEach(state.outputDeals) { deal in
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(deal.studio) · \(deal.genre.displayName)").font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                        Text("\(Format.money(deal.weeklyFee))/wk · next title in \(deal.nextDelivery) wks · \(deal.delivered) delivered · \(deal.weeksLeft) wks left")
+                            .font(.caption2).foregroundStyle(Theme.text2)
+                    }
+                    Spacer()
+                    Button("End") { store.perform { try $0.cancelOutputDeal(id: deal.id) } }.font(.caption).foregroundStyle(Theme.danger)
+                }
+            }
+            if state.outputDeals.count < GameState.maxOutputDeals {
+                Picker("Genre", selection: $dealGenre) { ForEach(Genre.allCases) { Text($0.displayName).tag($0) } }
+                Button("Sign a deal · \(Format.money(state.outputDealFee()))/wk") {
+                    store.perform { try $0.signOutputDeal(genre: dealGenre) }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.teal)).disabled(state.finances.cash < state.outputDealFee() * 4)
+            }
+        }
+        .artCard(tint: Theme.teal)
     }
 
     // MARK: Features

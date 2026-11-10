@@ -38,6 +38,8 @@ struct OriginalsView: View {
                         Pill(text: state.studios.first(where: { $0.id == project.studioID })?.name ?? "Outsourced", tint: Theme.violet)
                         StatBar(label: "\(project.weeksLeft) weeks left", value: project.progress,
                                 text: "\(Format.money(project.weeklyCost))/wk", tint: Theme.amber, height: 5, compact: true)
+                        Button("Cancel production") { store.perform { try $0.cancelProduction(id: project.id) } }
+                            .font(.caption2).foregroundStyle(Theme.danger)
                     }
                 }
                 .artCard(tint: Theme.amber)

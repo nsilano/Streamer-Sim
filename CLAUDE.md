@@ -79,6 +79,8 @@ Dashboard - Markets - Content - Rivals - Company.
 15. **Phase 15 (done): named employees, kept simple on purpose.** `Models/Employee.swift` (name, department, skill 1-3, individual pay), `Staff.employees`; department level = combined skill capped at 5, `effectiveLevel` = sum of skill x pay effectiveness. Job board (`GameState.candidates`, refreshed every 4 weeks), `hire(candidateID:)`, `setSalary`, `fire`; `People.weekly` handles underpaid people quitting. The user does NOT want depth here: no traits, morale, promotions, teams or assignments. The `staff[.dept] = n` setter creates generic skill-1 staff for tests. Save version is 20.
    Random pop-up events stay OFF (user request).
 
+16. **Phase 16 (done): CEO toolkit** (`Engine/CEOActions.swift`): license negotiation (`askingPrice`, `acceptChance`, `negotiate`, `Title.talksBlockedUntil`), studio output deals (`OutputDeal`, weekly fee booked as licensing, delivery every 8 weeks), `exitMarket`, `cancelProduction`, `removeTitle` (originals = write-off with 10% benefit booked as negative "other" spend), `renameCompany`, `buyBackShares`, `payDividend`. The user wants the CEO's decision space to stay open: prefer adding real-world CEO decisions over restricting them. Save version is 21.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

@@ -89,3 +89,14 @@ struct AcquisitionOffer: Codable, Equatable, Identifiable {
     var titleCount: Int
     var weeksLeft: Int
 }
+
+/// A studio that delivers a new title to you every few weeks for a weekly fee.
+struct OutputDeal: Codable, Equatable, Identifiable {
+    var id: Int
+    var studio: String
+    var genre: Genre
+    var weeklyFee: Double
+    var weeksLeft: Int
+    var nextDelivery: Int          // weeks until the next title arrives
+    var delivered = 0
+}

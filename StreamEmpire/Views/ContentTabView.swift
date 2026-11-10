@@ -233,6 +233,7 @@ struct TitleDetailSheet: View {
     let titleID: Int
     @State private var showLocalize = false
     @State private var showContinue = false
+    @State private var showNegotiate = false
 
     var body: some View {
         NavigationStack {
@@ -269,6 +270,7 @@ struct TitleDetailSheet: View {
             .toolbar { Button("Done") { dismiss() } }
             .sheet(isPresented: $showLocalize) { LocalizeView(titleID: titleID) }
             .sheet(isPresented: $showContinue) { ContinueView(titleID: titleID) }
+            .sheet(isPresented: $showNegotiate) { NegotiateView(titleID: titleID) }
         }
     }
 
@@ -333,6 +335,8 @@ struct TitleDetailSheet: View {
             }
             .buttonStyle(GlowButtonStyle(tint: Theme.teal))
             .disabled(state.finances.cash < price || title.embargoWeeks > 0)
+            Button("Negotiate terms") { showNegotiate = true }
+                .buttonStyle(SoftButtonStyle(tint: Theme.amber)).disabled(title.embargoWeeks > 0)
         }
         .artCard(tint: Theme.teal)
     }
@@ -444,6 +448,11 @@ struct TitleDetailSheet: View {
                     .buttonStyle(SoftButtonStyle(tint: Theme.magenta))
             }
             Button("Add dubbing or subtitles") { showLocalize = true }.buttonStyle(SoftButtonStyle(tint: Theme.violet))
+            Button(title.isOriginal ? "Write off (10% tax benefit, fans upset)" : "Pull from the service (no refund)") {
+                store.perform { try $0.removeTitle(titleID: title.id) }
+                dismiss()
+            }
+            .font(.caption).foregroundStyle(Theme.danger)
         }
         .artCard(tint: Theme.good)
     }
@@ -653,5 +662,67 @@ struct RenewCard: View {
         .padding(12)
         .background(Theme.danger.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.danger.opacity(0.6), lineWidth: 1))
+    }
+}
+
+/// Counter-offer on a listing: your price, your term, exclusive or not.
+struct NegotiateView: View {
+    @EnvironmentObject var store: GameStore
+    @Environment(\.dismiss) private var dismiss
+    let titleID: Int
+    @State private var offer = 0.85
+    @State private var years = 2
+    @State private var exclusive = false
+    @State private var loaded = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let state = store.state, let title = state.licenseMarket.first(where: { $0.id == titleID }) {
+                    let asking = state.askingPrice(title, years: years, exclusive: exclusive)
+                    let chance = state.acceptChance(title, offer: offer)
+                    Section("Terms") {
+                        Stepper(value: $years, in: 1...5) { LabeledValue(label: "Length", value: "\(years) yr") }
+                        Toggle("Exclusive (+15% appeal, costs more)", isOn: $exclusive)
+                        LabeledValue(label: "Asking for these terms", value: Format.money(asking))
+                    }
+                    Section("Your offer") {
+                        HStack {
+                            Text("\(Format.percent(offer)) of asking")
+                            Slider(value: $offer, in: 0.5...1.0, step: 0.01)
+                        }
+                        LabeledValue(label: "You pay", value: Format.money(asking * offer))
+                        StatBar(label: "Chance they accept", value: chance, text: Format.percent(chance),
+                                tint: chance > 0.6 ? Theme.good : chance > 0.3 ? Theme.amber : Theme.danger)
+                        Text("If they say no, they won't talk for 4 weeks and the price goes up 5%.\(title.sought ? " Famous titles drive a hard bargain." : "")")
+                            .font(.footnote).foregroundStyle(Theme.text2)
+                    }
+                    Section {
+                        Button("Make the offer") {
+                            store.perform { _ = try $0.negotiate(titleID: titleID, offer: offer, years: years, exclusive: exclusive) }
+                        }
+                        .disabled(state.finances.cash < asking * offer || title.talksBlockedUntil > state.week)
+                        if title.talksBlockedUntil > state.week {
+                            Text("They won't talk again until week \(title.talksBlockedUntil).").font(.footnote).foregroundStyle(Theme.amber)
+                        }
+                    }
+                } else if let state = store.state {
+                    Text(state.lastNegotiation.isEmpty ? "This listing is gone." : state.lastNegotiation)
+                }
+                if let note = store.state?.lastNegotiation, !note.isEmpty, store.state?.licenseMarket.contains(where: { $0.id == titleID }) == true {
+                    Section { Text(note).font(.footnote) }
+                }
+            }
+            .artScreen()
+            .navigationTitle("Negotiate")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Done") { dismiss() } }
+            .onAppear {
+                guard !loaded, let title = store.state?.licenseMarket.first(where: { $0.id == titleID }) else { return }
+                years = title.license?.years ?? 2
+                exclusive = title.license?.exclusive ?? false
+                loaded = true
+            }
+        }
     }
 }

@@ -37,6 +37,7 @@ struct Title: Codable, Identifiable, Equatable {
     var weeklyRelease = false      // released weekly instead of all at once
     var star: StarTier = .none
     var awards = 0
+    var talksBlockedUntil = 0      // listing only: the seller refuses counter-offers until this week
 
     /// Do the license territories cover this country?
     func inTerritory(_ countryCode: String) -> Bool {

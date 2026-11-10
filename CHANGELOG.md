@@ -5,6 +5,14 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### CEO toolkit (save v21)
+- Negotiate licenses: counter-offer on any listing with your own price, length and exclusivity. Lowballs and famous titles are less likely to be accepted; a refusal stalls talks for 4 weeks and raises the price 5%.
+- Studio output deals: pay a weekly fee and a studio delivers a new exclusive 3-year title in your chosen genre every 8 weeks for two years (up to 2 deals; ending early costs 8 weeks of fees).
+- Exit a market: shut down in a country (subscribers there lose the service; wind-down cost). You can relaunch later.
+- Cancel a production mid-way (money spent is gone).
+- Pull a licensed title from the service, or write off an original for a 10% tax benefit (fans don't like it).
+- Corporate: rename the company; after the IPO, buy back shares and pay quarterly dividends.
+
 ### Project notes
 - CLAUDE.md now documents phases 11-15 (realism packs, business, challenges, 50 countries, named employees). No gameplay change.
 
