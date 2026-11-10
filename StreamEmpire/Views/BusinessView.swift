@@ -2,7 +2,15 @@ import SwiftUI
 
 /// Earnings, product features, sports rights, partnerships, acquisitions and advertising.
 struct BusinessView: View {
+    enum Tab: String, CaseIterable, Identifiable {
+        case earnings = "Earnings", deals = "Deals", product = "Product"
+        var id: String { rawValue }
+    }
+
     @EnvironmentObject var store: GameStore
+    @State private var tab: Tab
+
+    init(tab: Tab = .earnings) { _tab = State(initialValue: tab) }
     @State private var partnerCountry = ""
     @State private var premium = 1.2
     @State private var dealGenre: Genre = .drama
@@ -13,22 +21,29 @@ struct BusinessView: View {
         ScrollView {
             if let state = store.state {
                 VStack(alignment: .leading, spacing: 14) {
-                    earnings(state)
-                    corporate(state)
-                    outputDeals(state)
-                    features(state)
-                    sports(state)
-                    partnerships(state)
-                    acquisitions(state)
-                    advertising(state)
-                    currencies(state)
+                    Picker("Section", selection: $tab) { ForEach(Tab.allCases) { Text($0.rawValue).tag($0) } }
+                        .pickerStyle(.segmented)
+                    switch tab {
+                    case .earnings:
+                        earnings(state)
+                        corporate(state)
+                        currencies(state)
+                    case .deals:
+                        outputDeals(state)
+                        sports(state)
+                        partnerships(state)
+                        acquisitions(state)
+                    case .product:
+                        features(state)
+                        advertising(state)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
         }
         .artScreen()
-        .navigationTitle("Business")
+        .navigationTitle(tab == .earnings ? "Earnings & corporate" : tab == .deals ? "Deals" : "Product")
         .navigationBarTitleDisplayMode(.inline)
     }
 

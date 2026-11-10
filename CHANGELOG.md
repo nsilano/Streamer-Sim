@@ -5,6 +5,13 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Cleaner screens (nothing removed)
+- Company is now a hub: your cash at the top, then tiles in three groups. Money: Finances, Funding, Earnings & corporate. Operations: Tech & team, Product. Growth & strategy: Promotions, Policies, Deals.
+- Loans, investors, IPO, ownership and stakes in rivals moved together into one Funding screen.
+- The old long Business page is split into tabs: Earnings, Deals (output deals, sports, bundles, acquisitions) and Product (features, ad load).
+- Dashboard: one "Needs your attention" card (expiring licenses plus the top 3 suggestions, with "See all") replaces the separate expiring card, advice banners, advisor link and promotion link.
+- Content: auto-renew and expiry-alert settings moved behind the sliders button in the header, so the catalog opens straight to your titles.
+
 ### Expiry alerts you control (save v27)
 - New setting next to Auto-renew: "When a license is about to expire": Stop the sim, Just show it (new games start here) or Ignore.
 - Just show it never pauses: expiring titles appear on the Dashboard card and in the news.

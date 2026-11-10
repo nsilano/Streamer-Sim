@@ -178,3 +178,26 @@ struct PriceField: View {
         }
     }
 }
+
+/// A compact navigation tile for hub screens.
+struct HubTile: View, Identifiable {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let tint: Color
+    let destination: () -> AnyView
+    var id: String { title }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: icon).font(.title2).foregroundStyle(tint)
+            Text(title).font(.subheadline.weight(.bold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
+            Text(subtitle).font(.caption2).foregroundStyle(Theme.text2).lineLimit(2)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 16).fill(tint.opacity(0.12)))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.35), lineWidth: 1))
+    }
+}

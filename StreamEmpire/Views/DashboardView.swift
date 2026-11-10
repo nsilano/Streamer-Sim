@@ -13,39 +13,7 @@ struct DashboardView: View {
                         controls(state)
                         hero(state)
                         statGrid(state)
-                        expiringCard(state)
-                        ForEach(Array(state.advice().filter { $0.id != "expiring" }.prefix(2))) { AdviceBanner(advice: $0) }
-                        NavigationLink {
-                            AdvisorView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "lightbulb.fill").font(.title3).foregroundStyle(Theme.amber)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("What should I do next?").font(.headline).foregroundStyle(.white)
-                                    Text("\(state.recommendations().count) suggestion\(state.recommendations().count == 1 ? "" : "s"), most urgent first")
-                                        .font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.amber)
-                        }
-                        NavigationLink {
-                            PromotionsView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "megaphone.fill").font(.title3).foregroundStyle(Theme.magenta)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Run a promotion").font(.headline).foregroundStyle(.white)
-                                    Text(state.promotions.isEmpty ? "Discounts, free trials and campaigns to win subscribers fast"
-                                                                  : "\(state.promotions.count) running now")
-                                        .font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.magenta)
-                        }
+                        attentionCard(state)
                         if state.trend.count > 1 { TrendCard(points: state.trend) }
                         topFive(state)
                         if let report = state.lastReport { ReportSummaryCard(report: report) }
@@ -71,6 +39,44 @@ struct DashboardView: View {
                     .padding(10).background(Circle().fill(Color.white.opacity(0.10)))
             }
         }
+    }
+
+    /// One place for what needs you: expiring licenses and the advisor's top suggestions.
+    private func attentionCard(_ state: GameState) -> some View {
+        let recs = state.recommendations().filter { $0.id != "expiring" }
+        let expiring = state.expiryAlerts == .ignore ? [] : state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 12 }
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "Needs your attention", icon: "lightbulb.fill", tint: Theme.amber)
+            if !expiring.isEmpty {
+                Button { store.showExpiring = true } label: {
+                    HStack {
+                        Image(systemName: "clock.badge.exclamationmark.fill").foregroundStyle(Theme.danger)
+                        Text("\(expiring.count) license\(expiring.count == 1 ? "" : "s") expiring soon").font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                        Spacer()
+                        Text("Review").font(.caption.weight(.bold)).foregroundStyle(Theme.danger)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+            ForEach(Array(recs.prefix(3))) { item in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: item.icon).foregroundStyle(item.urgent ? Theme.danger : Theme.amber).frame(width: 20)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.title).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                        Text(item.detail).font(.caption).foregroundStyle(Theme.text2).lineLimit(2)
+                    }
+                }
+            }
+            if expiring.isEmpty && recs.isEmpty {
+                Text("All clear. Keep growing!").font(.footnote).foregroundStyle(Theme.text2)
+            }
+            if recs.count > 3 {
+                NavigationLink { AdvisorView() } label: {
+                    Text("See all \(recs.count) suggestions").font(.caption.weight(.bold)).foregroundStyle(Theme.amber)
+                }
+            }
+        }
+        .artCard(tint: Theme.amber)
     }
 
     /// Always visible: licenses about to run out, with a one-tap renewal.

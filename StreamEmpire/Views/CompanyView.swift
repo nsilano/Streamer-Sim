@@ -2,9 +2,6 @@ import SwiftUI
 
 struct CompanyView: View {
     @EnvironmentObject var store: GameStore
-    @State private var loanAmount: Double = 5_000_000
-    @State private var loanTerm: Int = 104
-    @State private var roundPercent: Double = 0.10
 
     var body: some View {
         NavigationStack {
@@ -18,85 +15,20 @@ struct CompanyView: View {
                             }
                         }
                         cashCard(state)
-                        NavigationLink {
-                            FinanceView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "magnifyingglass.circle.fill").font(.title2).foregroundStyle(Theme.magenta)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Where is my money going?").font(.headline).foregroundStyle(.white)
-                                    Text("Ranked spending, trends, country profit and why you're losing money")
-                                        .font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.magenta)
-                        }
-                        costsCard(state)
-                        NavigationLink {
-                            TechStaffView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "server.rack").font(.title2).foregroundStyle(Theme.teal)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Tech, servers & team").font(.headline).foregroundStyle(.white)
-                                    Text("Apps, datacenters, staff and pay").font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.teal)
-                        }
-                        NavigationLink {
-                            BusinessView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "briefcase.fill").font(.title2).foregroundStyle(Theme.amber)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Business").font(.headline).foregroundStyle(.white)
-                                    Text("Earnings, product features, sports rights, bundles, acquisitions, ads")
-                                        .font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.amber)
-                        }
-                        NavigationLink {
-                            PromotionsView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "megaphone.fill").font(.title2).foregroundStyle(Theme.magenta)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Promotions").font(.headline).foregroundStyle(.white)
-                                    Text("Temporary campaigns to drive more subscribers in").font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.magenta)
-                        }
-                        NavigationLink {
-                            PoliciesView()
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "list.bullet.clipboard.fill").font(.title2).foregroundStyle(Theme.violet)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Policies & reputation").font(.headline).foregroundStyle(.white)
-                                    Text("Password sharing, trials, ads, privacy and more · trust \(Int(state.brandTrust))")
-                                        .font(.caption).foregroundStyle(Theme.text2)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.text2)
-                            }
-                            .artCard(tint: Theme.violet)
-                        }
-                        investmentsCard(state)
-                        ownershipCard(state)
-                        loansCard(state)
-                        investorsCard(state)
-                        ipoCard(state)
+                        hubSection("Money", tiles: [
+                            HubTile(icon: "magnifyingglass.circle.fill", title: "Finances", subtitle: "Spending, trends, country P&L", tint: Theme.magenta) { AnyView(FinanceView()) },
+                            HubTile(icon: "building.columns.fill", title: "Funding", subtitle: "Loans, investors, IPO, stakes", tint: Theme.teal) { AnyView(FundingView()) },
+                            HubTile(icon: "chart.bar.doc.horizontal.fill", title: "Earnings & corporate", subtitle: "Quarters, buybacks, currencies", tint: Theme.amber) { AnyView(BusinessView(tab: .earnings)) },
+                        ])
+                        hubSection("Operations", tiles: [
+                            HubTile(icon: "server.rack", title: "Tech & team", subtitle: "Apps, servers, staff, pay", tint: Theme.teal) { AnyView(TechStaffView()) },
+                            HubTile(icon: "iphone.gen3", title: "Product", subtitle: "Features, ad load", tint: Theme.violet) { AnyView(BusinessView(tab: .product)) },
+                        ])
+                        hubSection("Growth & strategy", tiles: [
+                            HubTile(icon: "megaphone.fill", title: "Promotions", subtitle: state.promotions.isEmpty ? "Short campaigns" : "\(state.promotions.count) running", tint: Theme.magenta) { AnyView(PromotionsView()) },
+                            HubTile(icon: "list.bullet.clipboard.fill", title: "Policies", subtitle: "Trust \(Int(state.brandTrust))", tint: Theme.violet) { AnyView(PoliciesView()) },
+                            HubTile(icon: "shippingbox.fill", title: "Deals", subtitle: "Sports, bundles, studios, buys", tint: Theme.good) { AnyView(BusinessView(tab: .deals)) },
+                        ])
                         goalsCard(state)
                     }
                     .padding(.horizontal, 16)
@@ -131,27 +63,62 @@ struct CompanyView: View {
         .artCard(tint: Theme.amber)
     }
 
-    private func costsCard(_ state: GameState) -> some View {
-        let w = state.finances.lastWeek
-        let rows: [(String, Double, Color)] = [
-            ("Licensing", w.licensing, Theme.amber), ("Originals", w.originals, Theme.magenta),
-            ("Dubbing & subtitles", w.localization, Theme.violet), ("Streaming", w.streaming, Theme.teal),
-            ("Staff & overhead", w.staff, Theme.violet), ("Marketing", w.marketing, Theme.magenta),
-            ("Country operations", w.operations, Theme.teal), ("Servers & apps", w.tech, Theme.teal),
-            ("Studios", w.studios, Theme.violet), ("Launches", w.launch, Theme.amber),
-            ("Loan interest", w.interest, Theme.danger), ("Regulatory fines", w.fines, Theme.danger),
-            ("Hiring & events", w.other, Theme.amber),
-        ].filter { $0.1 > 0 }
-        let biggest = max(1, rows.map { $0.1 }.max() ?? 1)
-        return VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(text: "Where the money goes (last week)", icon: "chart.bar.xaxis", tint: Theme.magenta)
-            LabeledValue(label: "Subscriptions", value: Format.money(w.subscriptionRevenue), tint: Theme.good)
-            LabeledValue(label: "Ads", value: Format.money(w.adRevenue), tint: Theme.good)
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                StatBar(label: row.0, value: row.1 / biggest, text: Format.money(row.1), tint: row.2, height: 5, compact: true)
+    private func hubSection(_ title: String, tiles: [HubTile]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased()).font(.caption2.weight(.heavy)).tracking(1.4).foregroundStyle(Theme.text2)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                ForEach(tiles) { tile in
+                    NavigationLink { tile.destination() } label: { tile }.buttonStyle(.plain)
+                }
             }
         }
-        .artCard(tint: Theme.magenta)
+    }
+
+    private func goalsCard(_ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Goals", icon: "flag.checkered", tint: Theme.good)
+            LabeledValue(label: "#1 in the world", value: state.rank == 1 ? "Leading!" : "Rank #\(state.rank)")
+            goalRow("Go public (IPO)", done: state.goals.contains("ipo"))
+            goalRow("$10B annual revenue (\(Format.money(state.finances.annualizedRevenue)))", done: state.goals.contains("revenue10B"))
+            goalRow("All \(CountryData.all.count) markets (\(state.liveMarketCodes.count)/\(CountryData.all.count))", done: state.goals.contains("allMarkets"))
+            goalRow("Take over a rival", done: state.goals.contains("takeover"))
+        }
+        .artCard(tint: Theme.good)
+    }
+
+    private func goalRow(_ title: String, done: Bool) -> some View {
+        HStack {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.good : Theme.text2)
+            Text(title).font(.subheadline).foregroundStyle(.white)
+        }
+    }
+}
+
+
+/// Ownership, loans, investors, the IPO and stakes in rivals, in one place.
+struct FundingView: View {
+    @EnvironmentObject var store: GameStore
+    @State private var loanAmount: Double = 5_000_000
+    @State private var loanTerm: Int = 104
+    @State private var roundPercent: Double = 0.10
+
+    var body: some View {
+        ScrollView {
+            if let state = store.state {
+                VStack(alignment: .leading, spacing: 14) {
+                    ownershipCard(state)
+                    loansCard(state)
+                    investorsCard(state)
+                    ipoCard(state)
+                    investmentsCard(state)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+        }
+        .artScreen()
+        .navigationTitle("Funding")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: Funding
@@ -263,22 +230,4 @@ struct CompanyView: View {
         .artCard(tint: Theme.amber)
     }
 
-    private func goalsCard(_ state: GameState) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionTitle(text: "Goals", icon: "flag.checkered", tint: Theme.good)
-            LabeledValue(label: "#1 in the world", value: state.rank == 1 ? "Leading!" : "Rank #\(state.rank)")
-            goalRow("Go public (IPO)", done: state.goals.contains("ipo"))
-            goalRow("$10B annual revenue (\(Format.money(state.finances.annualizedRevenue)))", done: state.goals.contains("revenue10B"))
-            goalRow("All \(CountryData.all.count) markets (\(state.liveMarketCodes.count)/\(CountryData.all.count))", done: state.goals.contains("allMarkets"))
-            goalRow("Take over a rival", done: state.goals.contains("takeover"))
-        }
-        .artCard(tint: Theme.good)
-    }
-
-    private func goalRow(_ title: String, done: Bool) -> some View {
-        HStack {
-            Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.good : Theme.text2)
-            Text(title).font(.subheadline).foregroundStyle(.white)
-        }
-    }
 }

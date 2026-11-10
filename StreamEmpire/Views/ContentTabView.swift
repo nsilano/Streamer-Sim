@@ -20,6 +20,7 @@ struct ContentTabView: View {
     @State private var sort: Sort = .fit
     @State private var detail: TitleRef?
     @State private var showCurator = false
+    @State private var showSettings = false
 
     private let columns = [GridItem(.adaptive(minimum: 140), spacing: 12, alignment: .top)]
 
@@ -28,7 +29,12 @@ struct ContentTabView: View {
             ScrollView {
                 if let state = store.state {
                     VStack(alignment: .leading, spacing: 14) {
-                        ScreenHeader(title: "Content", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.catalog.count) titles · \(state.projects.count) in production")
+                        ScreenHeader(title: "Content", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.catalog.count) titles · \(state.projects.count) in production") {
+                            Button { showSettings = true } label: {
+                                Image(systemName: "slider.horizontal.3").font(.title3).foregroundStyle(.white.opacity(0.85))
+                                    .padding(10).background(Circle().fill(Color.white.opacity(0.10)))
+                            }
+                        }
                         Picker("Section", selection: $section) {
                             ForEach(Section.allCases) { Text($0.rawValue).tag($0) }
                         }
@@ -48,6 +54,7 @@ struct ContentTabView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $detail) { ref in TitleDetailSheet(titleID: ref.id) }
             .sheet(isPresented: $showCurator) { CuratorSheet() }
+            .sheet(isPresented: $showSettings) { ContentSettingsSheet() }
         }
     }
 
@@ -197,7 +204,6 @@ struct ContentTabView: View {
 
     @ViewBuilder
     private func catalog(_ state: GameState) -> some View {
-        RenewalModePicker(state: state)
         if !state.expiringTitles.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(text: "Expiring soon", icon: "clock.badge.exclamationmark.fill", tint: Theme.danger)
@@ -808,5 +814,29 @@ struct RenewalModePicker: View {
             Text(state.expiryAlerts.blurb).font(.caption).foregroundStyle(Theme.text2)
         }
         .artCard(tint: Theme.good)
+    }
+}
+
+/// Renewal and expiry settings, out of the way of the catalog.
+struct ContentSettingsSheet: View {
+    @EnvironmentObject var store: GameStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                if let state = store.state {
+                    VStack(alignment: .leading, spacing: 14) {
+                        RenewalModePicker(state: state)
+                        Text("The licensing manager's own rules are under Content > Licensing.").font(.caption).foregroundStyle(Theme.text2)
+                    }
+                    .padding(16)
+                }
+            }
+            .artScreen()
+            .navigationTitle("Content settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Done") { dismiss() } }
+        }
     }
 }
