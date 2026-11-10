@@ -81,6 +81,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 16. **Phase 16 (done): CEO toolkit** (`Engine/CEOActions.swift`): license negotiation (`askingPrice`, `acceptChance`, `negotiate`, `Title.talksBlockedUntil`), studio output deals (`OutputDeal`, weekly fee booked as licensing, delivery every 8 weeks), `exitMarket`, `cancelProduction`, `removeTitle` (originals = write-off with 10% benefit booked as negative "other" spend), `renameCompany`, `buyBackShares`, `payDividend`. The user wants the CEO's decision space to stay open: prefer adding real-world CEO decisions over restricting them. Save version is 21.
 
+17. **Phase 17 (done): two-way switching** (`Engine/Switching.swift`): per live country and rival, `Formulas.switchScore` (catalog appeal vs rival strength, standard price vs rival price, service quality) -> `switchRate` (in: capped 0.3%/wk of that rival's subs, scaled by awareness; out: capped 0.15%/wk of yours in total). Customers move, never vanish. The user insisted this be fair both ways.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

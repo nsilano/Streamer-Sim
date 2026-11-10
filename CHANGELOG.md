@@ -5,6 +5,10 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Customers switch both ways
+- In every live country, customers now move between you and each rival based on catalog strength, standard-plan price and service quality. A better offer pulls their subscribers to you (up to 0.3% of each rival's customers there per week, more once people know your brand); a worse one sends yours to them (capped at 0.15% a week in total).
+- Rival subscriber counts can now fall. The news and weekly report show the biggest swings, and the country sheet tags each rival "Switching to you" or "Losing to them".
+
 ### CEO toolkit (save v21)
 - Negotiate licenses: counter-offer on any listing with your own price, length and exclusivity. Lowballs and famous titles are less likely to be accepted; a refusal stalls talks for 4 weeks and raises the price 5%.
 - Studio output deals: pay a weekly fee and a studio delivers a new exclusive 3-year title in your chosen genre every 8 weeks for two years (up to 2 deals; ending early costs 8 weeks of fees).

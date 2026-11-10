@@ -332,12 +332,17 @@ struct CountrySheet: View {
                 Text("No rivals have launched here yet.").font(.footnote).foregroundStyle(Theme.text2)
             } else {
                 StackedBar(segments: segments)
-                Text("Pink is you. The unfilled part of the bar is room still up for grabs.")
+                Text("Pink is you. The unfilled part of the bar is room still up for grabs. A stronger catalog, a fairer price and smooth service win customers from rivals; the reverse sends yours to them.")
                     .font(.caption2).foregroundStyle(Theme.text2)
+                let outlook = Dictionary(uniqueKeysWithValues: state.switchOutlook(code: code).map { ($0.rival.id, $0.score) })
                 ForEach(present.prefix(8)) { rival in
                     HStack {
                         Text(rival.name).font(.subheadline).foregroundStyle(.white)
                         if rival.priceLevel < 0.95 { Pill(text: "Price cuts", tint: Theme.danger) }
+                        if let score = outlook[rival.id] {
+                            if score > 0.02 { Pill(text: "Switching to you", tint: Theme.good) }
+                            else if score < -0.02 { Pill(text: "Losing to them", tint: Theme.amber) }
+                        }
                         Spacer()
                         Text("\(Format.count(rival.subs[code] ?? 0)) · \(Format.percent((rival.subs[code] ?? 0) / ceiling))")
                             .font(.caption).foregroundStyle(Theme.text2).monospacedDigit()

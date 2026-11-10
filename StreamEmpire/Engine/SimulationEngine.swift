@@ -93,6 +93,7 @@ enum SimulationEngine {
         // Markets
         var marketReports: [MarketReport] = []
         var totalNew = 0.0, totalChurned = 0.0, billedSubs = 0.0
+        var switchFlows: [String: Double] = [:], switchedIn = 0.0, switchedOut = 0.0
 
         for code in s.markets.keys.sorted() {
             guard var market = s.markets[code], let country = CountryData.country(code) else { continue }
@@ -191,6 +192,10 @@ enum SimulationEngine {
             s.markets[code] = market
             s.recordTitleViews(code: code, titles: titles, country: country, subs: ownSubs,
                                revenue: subRevenue + adRevenue)
+            let flow = Switching.apply(&s, country: country, appeal: appeal, service: quality)
+            switchedIn += flow.gained
+            switchedOut += flow.lost
+            for id in flow.byRival.keys.sorted() { switchFlows[id, default: 0] += flow.byRival[id] ?? 0 }
 
             // Local-content quota: a catalog short on local-language titles draws regulatory fines.
             let localCount = titles.filter { $0.language == country.language || $0.dubs.contains(country.language) }.count
@@ -226,6 +231,7 @@ enum SimulationEngine {
         }
 
         s.finalizeTitleStats()
+        Switching.report(&s, flows: switchFlows, gained: switchedIn, lost: switchedOut, events: &events)
         s.driftCurrencies()          // rates move after this week's revenue is booked
         fin.originals += s.talentShares()
 
