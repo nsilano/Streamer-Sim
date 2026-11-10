@@ -83,6 +83,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 17. **Phase 17 (done): two-way switching** (`Engine/Switching.swift`): per live country and rival, `Formulas.switchScore` (catalog appeal vs rival strength, standard price vs rival price, service quality) -> `switchRate` (in: capped 0.3%/wk of that rival's subs, scaled by awareness; out: capped 0.15%/wk of yours in total). Customers move, never vanish. The user insisted this be fair both ways.
 
+18. **Phase 18 (done): listing market controls** (`Engine/ListingMarket.swift`): `refreshListings` (paid, replaces all), `expandListings` (`listingReach` 0-3, `listingTarget` = 14 + 6/level), `fillListings` used by the weekly refresh. Save version is 22.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

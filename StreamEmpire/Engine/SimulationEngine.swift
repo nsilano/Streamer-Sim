@@ -578,14 +578,7 @@ enum SimulationEngine {
         }
         s.licenseMarket = kept
 
-        var added = 0
-        while s.licenseMarket.count < GameState.targetListings && added < 4 {
-            let id = s.takeID()
-            let taken = Set(s.licenseMarket.map(\.name) + s.catalog.map(\.name) + s.projects.map(\.name) + s.loanedOut.map(\.title.name))
-            let title = TitleGenerator.generate(id: id, rng: &s.rng, avoiding: taken)
-            s.licenseMarket.append(title)
-            added += 1
-        }
+        s.fillListings(limit: 4 + s.listingReach)
     }
 
     private static func advanceRivals(_ s: inout GameState, events: inout [GameEvent]) {

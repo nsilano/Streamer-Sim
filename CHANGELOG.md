@@ -5,6 +5,10 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Refresh or expand the licensing market (save v22)
+- "Refresh listings": pay to swap every offer on the market for a fresh batch right away (price grows with your audience).
+- "More listings": a permanent upgrade (3 levels) that shows 6 more offers at a time and refills faster.
+
 ### Customers switch both ways
 - In every live country, customers now move between you and each rival based on catalog strength, standard-plan price and service quality. A better offer pulls their subscribers to you (up to 0.3% of each rival's customers there per week, more once people know your brand); a worse one sends yours to them (capped at 0.15% a week in total).
 - Rival subscriber counts can now fall. The news and weekly report show the biggest swings, and the country sheet tags each rival "Switching to you" or "Losing to them".

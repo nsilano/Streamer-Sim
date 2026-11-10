@@ -64,6 +64,22 @@ struct ContentTabView: View {
                     Label(sort.rawValue, systemImage: "arrow.up.arrow.down").font(.caption.weight(.semibold))
                 }
             }
+            HStack(spacing: 8) {
+                Button("Refresh listings · \(Format.money(state.refreshListingsPrice()))") {
+                    store.perform { try $0.refreshListings() }
+                }
+                .buttonStyle(SoftButtonStyle(tint: Theme.amber))
+                .disabled(state.finances.cash < state.refreshListingsPrice())
+                if state.listingReach < GameState.maxListingReach {
+                    Button("More listings (+\(GameState.listingsPerReachLevel)) · \(Format.money(state.expandListingsPrice()))") {
+                        store.perform { try $0.expandListings() }
+                    }
+                    .buttonStyle(SoftButtonStyle(tint: Theme.teal))
+                    .disabled(state.finances.cash < state.expandListingsPrice())
+                }
+            }
+            Text("\(state.licenseMarket.count) of \(state.listingTarget) offers. Refresh swaps them all for a new batch; More listings permanently shows more at once (level \(state.listingReach)/\(GameState.maxListingReach)).")
+                .font(.caption2).foregroundStyle(Theme.text2)
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(sorted(state.licenseMarket, state)) { title in
                     Button { detail = TitleRef(id: title.id) } label: {

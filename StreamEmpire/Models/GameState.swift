@@ -32,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 21
+    static let currentVersion = 22
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -61,7 +61,8 @@ struct GameState: Codable, Equatable {
     var candidates: [Employee] = []
     var outputDeals: [OutputDeal] = []
     var lastNegotiation = ""
-    var lastDividendWeek = -100            // people looking for a job with you
+    var lastDividendWeek = -100
+    var listingReach = 0                       // content scouting level: more listings on the market            // people looking for a job with you
     var loanedOut: [LoanedTitle] = []          // titles licensed out to others for a fee
     var titleStats: [Int: TitleStats] = [:]    // per-title viewers and revenue (keyed by title id)
     var licenseMarket: [Title] = []
