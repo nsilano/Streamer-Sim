@@ -23,14 +23,15 @@ extension GameState {
         localizationTargets(code: code, dub: dub, limit: limit).reduce(0) { $0 + localizationPrice(kind: $1.kind, dub: dub) }
     }
 
-    /// Subtitles or dubs every target in one go. Returns how many titles were localized.
+    /// Subtitles or dubs every target in one go (or only `only`, if given). Returns how many titles were localized.
     @discardableResult
-    mutating func bulkLocalize(code: String, dub: Bool, limit: Int? = nil) throws -> Int {
+    mutating func bulkLocalize(code: String, dub: Bool, limit: Int? = nil, only: Set<Int>? = nil) throws -> Int {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard let country = CountryData.country(code) else { throw ActionError.countryNotFound }
-        let targets = localizationTargets(code: code, dub: dub, limit: limit)
+        var targets = localizationTargets(code: code, dub: dub, limit: limit)
+        if let only { targets = targets.filter { only.contains($0.id) } }
         guard !targets.isEmpty else { throw ActionError.invalidProject("Nothing left to \(dub ? "dub" : "subtitle") in \(country.language.displayName).") }
-        let price = bulkLocalizePrice(code: code, dub: dub, limit: limit)
+        let price = targets.reduce(0) { $0 + localizationPrice(kind: $1.kind, dub: dub) }
         guard finances.cash >= price else { throw ActionError.insufficientFunds(needed: price) }
         finances.cash -= price
         finances.ledger.localization += price

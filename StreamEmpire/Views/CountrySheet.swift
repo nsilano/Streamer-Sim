@@ -3,6 +3,8 @@ import SwiftUI
 /// Everything about one country: your service overall, your business there, the market, plans and rivals.
 struct CountrySheet: View {
     @EnvironmentObject var store: GameStore
+    @State private var pickLocalize: PickRequest?
+    struct PickRequest: Identifiable { let dub: Bool; var id: Bool { dub } }
     @Environment(\.dismiss) private var dismiss
     let code: String
 
@@ -32,6 +34,7 @@ struct CountrySheet: View {
             }
             .artScreen()
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(item: $pickLocalize) { request in LocalizePickerSheet(code: code, dub: request.dub) }
             .toolbar { Button("Done") { dismiss() } }
         }
     }
@@ -296,6 +299,13 @@ struct CountrySheet: View {
                 }
                 .buttonStyle(SoftButtonStyle(tint: Theme.magenta)).disabled(state.finances.cash < price)
             }
+            if !subs.isEmpty || !dubAll.isEmpty {
+                HStack {
+                    if !subs.isEmpty { Button("Choose titles to subtitle") { pickLocalize = PickRequest(dub: false) }.font(.caption.weight(.semibold)) }
+                    Spacer()
+                    if !dubAll.isEmpty { Button("Choose titles to dub") { pickLocalize = PickRequest(dub: true) }.font(.caption.weight(.semibold)) }
+                }
+            }
         }
         .artCard(tint: Theme.violet)
     }
@@ -390,5 +400,59 @@ struct CountrySheet: View {
             }
         }
         .artCard(tint: Theme.danger)
+    }
+}
+
+/// Pick exactly which titles to subtitle or dub for one market. Everything starts ticked.
+struct LocalizePickerSheet: View {
+    @EnvironmentObject var store: GameStore
+    @Environment(\.dismiss) private var dismiss
+    let code: String
+    let dub: Bool
+    @State private var skipped: Set<Int> = []
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if let state = store.state, let country = CountryData.country(code) {
+                    let targets = state.localizationTargets(code: code, dub: dub)
+                    let chosen = targets.filter { !skipped.contains($0.id) }
+                    let price = chosen.reduce(0) { $0 + state.localizationPrice(kind: $1.kind, dub: dub) }
+                    Section {
+                        Button("\(dub ? "Dub" : "Subtitle") \(chosen.count) title\(chosen.count == 1 ? "" : "s") in \(country.language.displayName) · \(Format.money(price))") {
+                            store.perform { _ = try $0.bulkLocalize(code: code, dub: dub, only: Set(chosen.map(\.id))) }
+                            dismiss()
+                        }
+                        .disabled(chosen.isEmpty || state.finances.cash < price)
+                        HStack {
+                            Button("Select all") { skipped = [] }
+                            Spacer()
+                            Button("Select none") { skipped = Set(targets.map(\.id)) }
+                        }
+                        .font(.caption)
+                    } footer: {
+                        Text("Best fit for \(country.name) first. Untick anything you don't want \(dub ? "dubbed" : "subtitled").")
+                    }
+                    Section {
+                        ForEach(targets) { title in
+                            Toggle(isOn: Binding(get: { !skipped.contains(title.id) },
+                                                 set: { on in if on { skipped.remove(title.id) } else { skipped.insert(title.id) } })) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(title.name).foregroundStyle(.white)
+                                    Text("\(title.kind.displayName) · \(title.genre.displayName) · \(title.language.displayName) · \(Format.money(state.localizationPrice(kind: title.kind, dub: dub)))")
+                                        .font(.caption2).foregroundStyle(Theme.text2)
+                                }
+                            }
+                            .tint(Theme.magenta)
+                        }
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .artScreen()
+            .navigationTitle(dub ? "Choose titles to dub" : "Choose titles to subtitle")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Cancel") { dismiss() } }
+        }
     }
 }

@@ -62,4 +62,16 @@ final class Phase30Tests: XCTestCase {
         s.finances.cash = 0
         XCTAssertThrowsError(try s.bulkLocalize(code: "DE", dub: false))
     }
+
+    func testYouCanPickExactlyWhichTitlesToDub() throws {
+        var s = newState()
+        s.catalog = titles(10)
+        let keep: Set<Int> = [100, 105]
+        let cash = s.finances.cash
+        XCTAssertEqual(try s.bulkLocalize(code: "DE", dub: true, only: keep), 2)
+        XCTAssertEqual(Set(s.catalog.filter { $0.dubs.contains(.german) }.map(\.id)), keep)
+        let expected = s.catalog.filter { keep.contains($0.id) }.reduce(0) { $0 + s.localizationPrice(kind: $1.kind, dub: true) }
+        XCTAssertEqual(s.finances.cash, cash - expected, accuracy: 0.01)
+        XCTAssertThrowsError(try s.bulkLocalize(code: "DE", dub: true, only: []), "nothing chosen")
+    }
 }
