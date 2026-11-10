@@ -5,6 +5,10 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Tidier licensing screen
+- "Refresh listings" and "More listings" are now two equal tiles with the price underneath, and the long explanation is a short status line.
+- The licensing manager hire card now describes the shopping styles instead of the old manual controls.
+
 ### Localize a whole market in one tap
 - "Choose titles to subtitle / dub" opens a list with every eligible title ticked; untick the ones you want to skip and the price updates.
 - Each launched country's page has a "Localize for <country>" card: subtitle every title in the local language, dub your top 20 (best fit for that market first), or dub everything. Prices are shown up front; titles already in that language or already localized are skipped.

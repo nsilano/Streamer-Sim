@@ -64,21 +64,20 @@ struct ContentTabView: View {
                     Label(sort.rawValue, systemImage: "arrow.up.arrow.down").font(.caption.weight(.semibold))
                 }
             }
-            HStack(spacing: 8) {
-                Button("Refresh listings · \(Format.money(state.refreshListingsPrice()))") {
+            HStack(spacing: 10) {
+                marketButton(title: "Refresh listings", price: state.refreshListingsPrice(), icon: "arrow.clockwise",
+                             tint: Theme.amber, disabled: state.finances.cash < state.refreshListingsPrice()) {
                     store.perform { try $0.refreshListings() }
                 }
-                .buttonStyle(SoftButtonStyle(tint: Theme.amber))
-                .disabled(state.finances.cash < state.refreshListingsPrice())
                 if state.listingReach < GameState.maxListingReach {
-                    Button("More listings (+\(GameState.listingsPerReachLevel)) · \(Format.money(state.expandListingsPrice()))") {
+                    marketButton(title: "More listings +\(GameState.listingsPerReachLevel)", price: state.expandListingsPrice(),
+                                 icon: "plus.rectangle.on.rectangle", tint: Theme.teal,
+                                 disabled: state.finances.cash < state.expandListingsPrice()) {
                         store.perform { try $0.expandListings() }
                     }
-                    .buttonStyle(SoftButtonStyle(tint: Theme.teal))
-                    .disabled(state.finances.cash < state.expandListingsPrice())
                 }
             }
-            Text("\(state.licenseMarket.count) of \(state.listingTarget) offers. Refresh swaps them all for a new batch; More listings permanently shows more at once (level \(state.listingReach)/\(GameState.maxListingReach)).")
+            Text("\(state.licenseMarket.count) of \(state.listingTarget) offers · scouting level \(state.listingReach)/\(GameState.maxListingReach)")
                 .font(.caption2).foregroundStyle(Theme.text2)
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(sorted(state.licenseMarket, state)) { title in
@@ -90,6 +89,25 @@ struct ContentTabView: View {
                 }
             }
         }
+    }
+
+    /// Equal-size action tile: label on top, price underneath.
+    private func marketButton(title: String, price: Double, icon: String, tint: Color, disabled: Bool,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 3) {
+                Label(title, systemImage: icon).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(Format.money(price)).font(.caption.weight(.bold)).opacity(0.85)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .foregroundStyle(tint)
+            .background(RoundedRectangle(cornerRadius: 14).fill(tint.opacity(0.15)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(tint.opacity(0.5), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .opacity(disabled ? 0.5 : 1)
     }
 
     private func sorted(_ titles: [Title], _ state: GameState) -> [Title] {
@@ -137,7 +155,7 @@ struct ContentTabView: View {
                         .buttonStyle(SoftButtonStyle(tint: Theme.danger))
                 }
             } else {
-                Text("Hire a manager to keep your library growing on autopilot. You set the budget, quality bar, genres and limits; they shop the market every week.")
+                Text("A manager shops the market for you every week. Pick a style (Passive, Moderate or Aggressive) that spends in line with what you earn, or set every rule yourself.")
                     .font(.footnote).foregroundStyle(Theme.text2)
                 Button("Hire · \(Format.money(state.curatorHirePrice)) + \(Format.money(state.curatorSalary))/wk") {
                     store.perform { try $0.hireCurator(mode: .passive) }
