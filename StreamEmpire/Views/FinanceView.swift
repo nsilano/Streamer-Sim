@@ -93,12 +93,12 @@ struct FinanceView: View {
             .map { category in (category, weeks.reduce(0) { $0 + category.amount(in: $1) }) }
             .filter { $0.1 > 0 }
             .sorted { $0.1 > $1.1 }
-        let main = Array(top.prefix(6).map { $0.0 })
+        let main = Array(top.prefix(4).map { $0.0 })
         var points: [SpendPoint] = []
         for (index, week) in weeks.enumerated() {
             var other = 0.0
             for category in CostCategory.allCases {
-                let amount = category.amount(in: week)
+                let amount = max(0, category.amount(in: week))   // refunds would draw below zero
                 if main.contains(category) {
                     points.append(SpendPoint(id: "\(index)-\(category.rawValue)", week: startWeek + index, category: category.displayName, amount: amount))
                 } else {
@@ -107,15 +107,25 @@ struct FinanceView: View {
             }
             if other > 0 { points.append(SpendPoint(id: "\(index)-rest", week: startWeek + index, category: "Everything else", amount: other)) }
         }
-        let names = main.map { $0.displayName } + (top.count > 6 ? ["Everything else"] : [])
+        let names = main.map { $0.displayName } + (top.count > 4 ? ["Everything else"] : [])
+        let labels = weeks.indices.map { "W\(startWeek + $0)" }
+        let shownLabels = labels.enumerated().filter { $0.offset % 3 == (labels.count - 1) % 3 }.map(\.element)
         return VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: "Spending over time", icon: "chart.bar.fill", tint: Theme.violet)
             if weeks.count < 2 {
                 Text("Play a couple of weeks to see the trend.").font(.footnote).foregroundStyle(Theme.text2)
             } else {
+                Text("Last \(weeks.count) weeks. Each bar is one week's spending, split by where it went.")
+                    .font(.caption2).foregroundStyle(Theme.text2)
                 Chart(points) { point in
-                    BarMark(x: .value("Week", point.week), y: .value("Spend", point.amount))
+                    BarMark(x: .value("Week", "W\(point.week)"), y: .value("Spend", point.amount), width: .ratio(0.7))
                         .foregroundStyle(by: .value("Category", point.category))
+                }
+                .chartXScale(domain: labels)
+                .chartXAxis {
+                    AxisMarks(values: shownLabels) { _ in
+                        AxisValueLabel().foregroundStyle(Theme.text2)
+                    }
                 }
                 .chartForegroundStyleScale(domain: names, range: Array(Self.palette.prefix(names.count)))
                 .chartYAxis {

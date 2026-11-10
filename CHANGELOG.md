@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Readable spending chart
+- Finances > Spending over time now shows just the last 12 weeks as evenly spaced bars (one per week, labelled W96, W99...), the top 4 cost types plus "Everything else", and no more bars below zero from refunds.
+
 ### Licensing manager styles (save v24)
 - Pick a style instead of fiddling with numbers: Passive, Moderate, Aggressive or Custom.
 - The three presets size the weekly budget to your revenue and cash (5% / 15% / 30% of revenue plus a small slice of cash), always keep a reserve in the bank (12 / 8 / 4 weeks of costs), and stop buying entirely when your runway drops under 26 / 16 / 8 weeks. They can't drain an early-game company.
