@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Last-chance expiry stop
+- The sim now also stops when a license has 1 week left (in addition to 12 and 4 weeks), so nothing lapses without a final warning.
+
 ### Dates and your-company news highlight
 - An in-game calendar: week 1 is Monday, Jan 5, 2026, and each turn is a week. Every tab's header shows the date and week number (the Dashboard also shows your company's age in years).
 - News items, weekly reports and policy reactions are stamped with the date and week.

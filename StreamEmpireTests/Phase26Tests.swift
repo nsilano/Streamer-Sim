@@ -27,6 +27,10 @@ final class Phase26Tests: XCTestCase {
         XCTAssertEqual(Set(s.newlyExpiring.map(\.id)), [1, 2])
         s = SimulationEngine.advanceWeek(s)
         XCTAssertTrue(s.newlyExpiring.isEmpty, "each line triggers once")
+        var last = newState()
+        last.catalog = [owned(id: 9, left: 2)]
+        last = SimulationEngine.advanceWeek(last)
+        XCTAssertEqual(last.newlyExpiring.map(\.id), [9], "a last-chance stop with one week left")
     }
 
     func testRenewAllKeepsEverythingYouCanAfford() throws {

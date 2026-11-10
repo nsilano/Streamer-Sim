@@ -42,9 +42,12 @@ extension GameState {
                 "Kept for \(years) more year\(years == 1 ? "" : "s") at \(Format.money(price)).")
     }
 
-    /// Titles that just crossed a warning line this week (12 or 4 weeks left).
+    /// Weeks-left marks at which the sim stops to warn you.
+    static let expiryWarningWeeks: Set<Int> = [12, 4, 1]
+
+    /// Titles that just crossed a warning line this week (12, 4 or 1 week left).
     var newlyExpiring: [Title] {
-        catalog.filter { $0.license != nil && ($0.weeksRemaining == 12 || $0.weeksRemaining == 4) }
+        catalog.filter { $0.license != nil && GameState.expiryWarningWeeks.contains($0.weeksRemaining ?? -1) }
     }
 
     /// Total to renew every expiring title for `years`.
