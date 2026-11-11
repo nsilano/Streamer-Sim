@@ -3,10 +3,21 @@
 Newest first. Every pushed update adds an entry here (see "Changelog rule" in CLAUDE.md).
 Save version is noted when it changes (older saves are ignored).
 
+**Build numbers:** "Build N" is the number you see in TestFlight (it is the TestFlight workflow's run number). New work
+collects under "Unreleased" and moves under a new "Build N" heading, with the date and commit, when a build is uploaded.
+Builds 16 and 17 were the same code.
+
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
+
+Nothing waiting. New work goes here until it is sent to TestFlight.
+
+## Build 22 (TestFlight, 2026-11-11) - 92d32d6
 
 ### Thousands more titles
 - The licensable library grew from 355 to roughly 3,900 parody titles (about 760 more drama, 620 comedy, 510 action, 430 kids, 310 anime, 240 reality, 250 docs and 450 local-language titles in a dozen-plus languages). Names no longer repeat for a very long time, and sequel-numbered repeats ("... II") are rare.
+
+
+## Build 21 (TestFlight, 2026-11-11) - 27f4748
 
 ### Cleaner screens (nothing removed)
 - Company is now a hub: your cash at the top, then tiles in three groups. Money: Finances, Funding, Earnings & corporate. Operations: Tech & team, Product. Growth & strategy: Promotions, Policies, Deals.
@@ -45,6 +56,9 @@ Save version is noted when it changes (older saves are ignored).
 ### One ad-load control
 - Removed the duplicate "Ad load" policy. Ad load is set only with the slider in Company > Business.
 
+
+## Build 20 (TestFlight, 2026-11-10) - 05b2cf6
+
 ### Readable spending chart
 - Finances > Spending over time now shows just the last 12 weeks as evenly spaced bars (one per week, labelled W96, W99...), the top 4 cost types plus "Everything else", and no more bars below zero from refunds.
 
@@ -77,6 +91,9 @@ Save version is noted when it changes (older saves are ignored).
 ### Customers switch both ways
 - In every live country, customers now move between you and each rival based on catalog strength, standard-plan price and service quality. A better offer pulls their subscribers to you (up to 0.3% of each rival's customers there per week, more once people know your brand); a worse one sends yours to them (capped at 0.15% a week in total).
 - Rival subscriber counts can now fall. The news and weekly report show the biggest swings, and the country sheet tags each rival "Switching to you" or "Losing to them".
+
+
+## Build 19 (TestFlight, 2026-11-10) - f5a3af3
 
 ### CEO toolkit (save v21)
 - Negotiate licenses: counter-offer on any listing with your own price, length and exclusivity. Lowballs and famous titles are less likely to be accepted; a refusal stalls talks for 4 weeks and raises the price 5%.
@@ -139,6 +156,9 @@ Save version is noted when it changes (older saves are ignored).
 - Industry trends over the years (password sharing, ad boom, 4K expectations, streaming fatigue).
 - New title traits: mature, controversial (more appeal, occasional scandal that dents brand trust), evergreen (classics that never fully go stale).
 
+
+## Build 18 (TestFlight, 2026-11-10) - c7fd158
+
 ### Random pop-up events removed
 - No more random events at all (outages, piracy, strikes, password crackdowns, recessions, viral/merger news). Nothing pops up or forces a choice. An old save's pending alert still settles itself. Server crashes from overloaded capacity are separate and still happen if you let load exceed capacity.
 
@@ -149,6 +169,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ### Type your numbers
 - Licensing manager rules (budget, max price, cash reserve, quality, years, catalog size, renewals) are typed number fields instead of +/- steppers. Values are clamped to sensible limits when you finish typing; dragging the list dismisses the keyboard.
+
+
+## Build 16-17 (TestFlight, 2026-11-09) - ca74afc
 
 ### TestFlight signing cleanup
 - The manual TestFlight workflow now revokes old "Created via API" signing certificates before archiving, so it doesn't hit Apple's certificate limit. Certificates you created yourself are never touched. (Runs in a Python virtualenv; the runner blocks system pip.)
@@ -173,6 +196,7 @@ Save version is noted when it changes (older saves are ignored).
 
 ### Release safety - 06ae231
 - TestFlight workflow is manual-only (`workflow_dispatch`). Release rule added to CLAUDE.md: no push to `main` or TestFlight upload without explicit permission.
+
 
 ## Earlier work (all on the feature branch)
 - Promotions: five temporary campaign types with fatigue and churn hangover (a0dadd4; save v13).

@@ -16,7 +16,8 @@ expanding into countries, building a catalog (licensed + originals) and winning 
 **Never push to `main`, merge to `main`, or trigger the TestFlight workflow without the user's explicit permission.** Work on the feature branch only. The TestFlight workflow is manual (`workflow_dispatch`) and must stay that way.
 
 ## Changelog rule
-Every commit pushed to the feature branch must also update `CHANGELOG.md` (player-facing summary under "Unreleased", newest first, with the short commit hash and save version if it changed). Do this in the same push, not later.
+Every commit pushed to the feature branch must also update `CHANGELOG.md` (player-facing summary under "Unreleased", newest first, with the save version if it changed). Do this in the same push, not later.
+**Build versions:** when a TestFlight build is triggered (only with the user's permission), in the same session move everything under "Unreleased" into a new heading `## Build N (TestFlight, YYYY-MM-DD) - <short commit>` at the top, where N is the TestFlight workflow's run number (`gh run list --workflow testflight.yml --limit 1 --json number`), and leave "Unreleased" empty. Always tell the user the build number when a build uploads.
 
 ## Core loop
 1 turn = 1 week. Player decides -> "Next Week" -> `SimulationEngine.advanceWeek` -> weekly report
