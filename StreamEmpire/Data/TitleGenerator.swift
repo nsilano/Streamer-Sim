@@ -121,6 +121,9 @@ enum TitleGenerator {
                 return base
             }
         }
+        var n = 11
+        while avoiding.contains("\(base.name) \(n)") { n += 1 }
+        base.name = "\(base.name) \(n)"
         return base
     }
 
@@ -157,6 +160,11 @@ enum TitleGenerator {
             if pool > 0, taken * 8 > pool, rng.chance(min(0.9, Double(taken) / Double(pool))) {
                 parody = inventedTitle(genre: genre, rng: &rng, avoiding: avoiding)
             }
+        }
+        if genre == .local, avoiding.contains(parody.name) || parody.name.range(of: #" [IVX]+$"#, options: .regularExpression) != nil {
+            // Local-language pool used up: a pun title (English wordplay) in the same local language.
+            let base = inventedTitle(genre: .drama, rng: &rng, avoiding: avoiding)
+            parody = ParodyTitle(name: base.name, kind: base.kind, genre: .local, language: parody.language)
         }
         let kind = parody.kind
         let language = parody.language
