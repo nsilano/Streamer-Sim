@@ -200,4 +200,59 @@ final class SeasonsAndChirpTests: XCTestCase {
         XCTAssertNotEqual(swap.name, rival.name, "a rival doesn't announce that it is losing customers")
         XCTAssertNil(swap.authorRivalID)
     }
+
+    // MARK: Automatic dubs and subtitles
+
+    private func localizedState() -> GameState {
+        var s = newState()
+        s.finances.cash = 200_000_000
+        s.markets["FR"]?.status = .live
+        s.markets["DE"]?.status = .live
+        s.catalog = (0..<30).map { i in
+            Title(id: 9_000 + i, name: "L\(i)", kind: i % 3 == 0 ? .movie : .series, genre: .drama, language: .english,
+                  quality: 70, popularity: 60, ageWeeks: 10, isOriginal: true, license: nil, weeksRemaining: nil, listingWeeksLeft: 0)
+        }
+        return s
+    }
+
+    func testAutoSubtitlesCoverEveryLiveLanguageWithinTheBudget() {
+        var s = localizedState()
+        s.localization = LocalizationPlan(subtitles: .all, dubs: .off, topCount: 20, weeklyBudget: 1_000_000_000)
+        s.runAutoLocalization()
+        for t in s.catalog {
+            XCTAssertTrue(t.subtitles.contains(.french) && t.subtitles.contains(.german), "title \(t.id)")
+            XCTAssertFalse(t.subtitles.contains(.english), "never subtitles in its own language")
+        }
+        XCTAssertGreaterThan(s.finances.ledger.localization, 0)
+        XCTAssertNotNil(s.localizationStatus)
+    }
+
+    func testAutoLocalizationIsOffByDefaultAndRespectsTheWeeklyBudget() {
+        var off = localizedState()
+        off.runAutoLocalization()
+        XCTAssertTrue(off.catalog.allSatisfy { $0.subtitles.isEmpty })
+        var capped = localizedState()
+        capped.localization = LocalizationPlan(subtitles: .all, dubs: .off, topCount: 20, weeklyBudget: 1)
+        capped.runAutoLocalization()
+        XCTAssertTrue(capped.catalog.allSatisfy { $0.subtitles.isEmpty }, "nothing fits a $1 budget")
+        var some = localizedState()
+        let one = some.localizationPrice(kind: .series, dub: false)
+        some.localization = LocalizationPlan(subtitles: .all, dubs: .off, topCount: 20, weeklyBudget: one * 5.5)
+        some.runAutoLocalization()
+        XCTAssertEqual(some.catalog.reduce(0) { $0 + $1.subtitles.count }, 5)
+    }
+
+    func testTopDubbingStopsAtTheLimitAndLocalizeAllDoesItInOneTap() throws {
+        var s = localizedState()
+        s.localization = LocalizationPlan(subtitles: .off, dubs: .top, topCount: 4, weeklyBudget: 1_000_000_000)
+        s.runAutoLocalization()
+        XCTAssertEqual(s.catalog.filter { $0.dubs.contains(.french) }.count, 4)
+        var t = localizedState()
+        let price = t.localizeAllPrice(dub: false)
+        let cash = t.finances.cash
+        let jobs = try t.localizeAll(dub: false)
+        XCTAssertEqual(jobs, 60, "30 titles x 2 languages")
+        XCTAssertEqual(cash - t.finances.cash, price, accuracy: 0.01)
+        XCTAssertThrowsError(try t.localizeAll(dub: false), "nothing left")
+    }
 }

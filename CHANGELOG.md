@@ -9,6 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Dubs and subtitles without the chores (save version 32)
+- New Company > Dubs & subs screen. **Automatic:** pick Subtitles (Off / Every title) and Dubbing (Off / Top titles / Every title) once; every week your team localizes the catalog for the languages of the countries you operate in, within a weekly budget you type. New games start with subtitles on. **Do it now:** one tap subtitles the whole catalog for every language of your live markets, or dubs your top 20 titles per language, with the price shown. **Coverage** shows how far along each language is.
+- The per-country buttons and per-title pickers still exist for fine control.
+
 ### No more regional blocking
 - Removed regional blocking entirely: no banned genres, no strict-country local edits, and no territory-limited licenses. Every title plays in every market you operate in, new licenses are always worldwide, and the "title-market pairs are blocked" warning, the "Not playing in" list and the edit and worldwide-rights buttons are gone. Titles can still be marked mature, which only affects how audiences see them.
 

@@ -32,7 +32,7 @@ struct LeaderboardEntry: Identifiable, Equatable {
 }
 
 struct GameState: Codable, Equatable {
-    static let currentVersion = 31
+    static let currentVersion = 32
 
     var version: Int = GameState.currentVersion
     var companyName: String
@@ -67,6 +67,8 @@ struct GameState: Codable, Equatable {
     var expiryAlerts: ExpiryAlerts = .stop      // what happens when a license is about to expire (the app starts games on .show)
     var lastExpiryStopWeek = -100
     var pauseSensitivity: PauseSensitivity = .important   // what stops auto-advance (the app starts games on .critical)
+    var localization = LocalizationPlan()      // automatic dubbing and subtitles
+    var localizationStatus: String?            // what the automatic localization did last
     var autoScale = false                      // rent and release cloud capacity automatically
     var pausedSignups: [String] = []           // emergency brake: "all" or a region id where new sign-ups are shut off
     var renewalRules = RenewalRules()          // fine-tuning for automatic renewals

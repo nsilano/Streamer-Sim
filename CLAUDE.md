@@ -102,6 +102,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 26. **Phase 26 (done): layout + pricing home.** Company > Prices (`Views/PricesView.swift`: global, scale slider, per-country per-tier via `setPrices`), World map container uses the map's aspect ratio, and auto-advance stops whenever the Dashboard tab/root disappears (`DashboardView.onDisappear`, `RootView` tab change). The sim only runs while the player watches the dashboard (user request). No save change.
 
+27. **Phase 27 (done): dubs and subs at scale.** `LocalizationPlan` (`Models/LocalizationPlan.swift`, `GameState.localization`), `Engine/AutoLocalize.swift` (`runAutoLocalization` weekly after the curator, `localizeAll`, `localizationCoverage`), `Views/LocalizationView.swift` under Company. The user found per-title/per-country localization too tedious: keep everything bulk or automatic. Save version is 32.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

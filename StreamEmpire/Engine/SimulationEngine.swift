@@ -52,6 +52,7 @@ enum SimulationEngine {
 
         // The licensing manager shops the listings you can see now, before the weekly refresh.
         runCurator(&s, events: &events)
+        s.runAutoLocalization()
 
         Trends.announce(&s)
         Seasons.announce(&s)
