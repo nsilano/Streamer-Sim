@@ -12,6 +12,10 @@ final class Phase32Tests: XCTestCase {
         s.finances.cash = 1e9
         s.markets["IE"]?.subs = TierSet(ad: 0, standard: 20_000, premium: 0)
         s.markets["IE"]?.awareness = 0.5
+        s.catalog = (0..<30).map {
+            Title(id: 800 + $0, name: "K\($0)", kind: .series, genre: .drama, language: .english, quality: 85, popularity: 85,
+                  ageWeeks: 2, isOriginal: true, license: nil, weeksRemaining: nil, listingWeeksLeft: 0)
+        }
         return s
     }
 
