@@ -767,7 +767,7 @@ final class BotContentTests: XCTestCase {
 
     // MARK: Suspected bugs (these tests are EXPECTED TO FAIL on the current code)
 
-    /// BUG (LOW/MEDIUM) OriginalsAndFunding.swift:80 + SimulationEngine.swift:516: finishing a movie sequel writes
+    /// BUG (LOW/MEDIUM) OriginalsAndFunding.swift:51-69 + SimulationEngine.swift:514-516: finishing a movie sequel writes
     /// `s.catalog[pi].seasons = title.seasons`, so the PARENT movie now also says "2 seasons" and can be continued
     /// again, and so can the sequel. Both orders compute the same next number and produce two "X III" titles.
     func testBug_movieSequelsCollideOnName() throws {
@@ -785,7 +785,7 @@ final class BotContentTests: XCTestCase {
         XCTAssertEqual(Set(names).count, names.count, "two sequel projects share a name: \(names)")
     }
 
-    /// BUG (LOW) OriginalsAndFunding.swift:105-114: localizeTitle lets you pay for subtitles in a language the title
+    /// BUG (LOW) OriginalsAndFunding.swift:75-92: localizeTitle lets you pay for subtitles in a language the title
     /// is already dubbed in, although bulkLocalize (BulkLocalize.swift:14) treats a dub as covering the subtitles and
     /// Formulas.languageMatch ignores the subtitles when a dub exists (so the money buys nothing).
     func testBug_subtitlesAfterDubAreAccepted() throws {
@@ -798,7 +798,7 @@ final class BotContentTests: XCTestCase {
         XCTAssertTrue(threw, "paying for German subtitles on a title already dubbed in German should be refused")
     }
 
-    /// BUG (LOW) TitleGenerator.swift:57-64 (pickParody): when the base name and all nine roman-numeral variants are
+    /// BUG (LOW) TitleGenerator.swift:112-124 (pickParody): when the base name and all nine roman-numeral variants are
     /// already avoided, it returns `base` anyway, an avoided (duplicate) name, instead of widening or failing.
     func testBug_pickParodyReturnsAnAvoidedNameWhenSuffixesRunOut() {
         let pool = ParodyLibrary.byGenre[.local] ?? []
@@ -813,7 +813,7 @@ final class BotContentTests: XCTestCase {
         XCTAssertFalse(avoid.contains(pick.name), "pickParody returned \"\(pick.name)\" although it is in the avoid set")
     }
 
-    /// BUG (MEDIUM) CEOActions.swift:~105 (runOutputDeals): the delivered title is generated from a random genre's
+    /// BUG (MEDIUM) CEOActions.swift:107 (runOutputDeals): the delivered title is generated from a random genre's
     /// parody (name, kind, language) and then only `title.genre` is overwritten, so a "Docs" output deal delivers
     /// titles named after dramas, comedies and so on (and with their `mature` roll for the wrong genre).
     func testBug_outputDealTitlesAreNamedForTheWrongGenre() throws {
@@ -847,7 +847,7 @@ final class BotContentTests: XCTestCase {
         XCTAssertLessThanOrEqual(expired.count, 3, "\(expired.count) separate 'license expired' pause reasons for one week")
     }
 
-    /// BUG (LOW, debatable) Restrictions.swift:34-37: territoryExtensionPrice ignores `catalogSizePriceFactor` and the
+    /// BUG (LOW, debatable) Restrictions.swift:29-37: territoryExtensionPrice ignores `catalogSizePriceFactor` and the
     /// content-staff discount that `licensePrice` applies, so at a 4,000-title library (x9 licensing prices) widening
     /// rights costs the same as in a tiny library: a loophole for buying cheap regional rights then extending them.
     func testBug_territoryExtensionIgnoresTheCatalogSizePrice() {
