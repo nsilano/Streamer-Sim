@@ -556,9 +556,9 @@ struct CuratorSheet: View {
                     Text("Catalog size")
                 } footer: {
                     Text(draft.capMode == .auto ? "Auto uses the style's own target (or your Custom rules). "
-                         : draft.capMode == .none ? "No limit: the manager keeps buying. Licensing prices climb steeply past \(Formulas.catalogFreeSize) titles, so cost is the natural brake."
+                         : draft.capMode == .none ? "No limit: the manager keeps buying. Licensing prices climb past \(Formulas.catalogFreeSize) titles, so cost is the natural brake."
                          : "The manager stops buying at this many titles. Renewals still happen.")
-                    + Text("Licensing prices rise once a catalog passes \(Formulas.catalogFreeSize) titles (x2 at 400, x9 at 600, x27 at 800).")
+                    + Text("Licensing prices rise once a catalog passes \(Formulas.catalogFreeSize) titles: about x3 at 2,000, x9 at 4,000, x27 at 8,000.")
                 }
                 if draft.mode == .custom {
                 Section("Spending") {

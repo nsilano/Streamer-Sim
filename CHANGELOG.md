@@ -11,7 +11,8 @@ Builds 16 and 17 were the same code.
 
 ### Catalog limits and bigger-catalog pricing (save v29)
 - Licensing manager: new "Catalog size" setting in every style: Auto (the style's own target), Set a limit (you pick the number), or No limit.
-- Licensing prices now climb once your catalog passes 250 titles: x2 at 400, x4.6 at 500, x9 at 600, x27 at 800, x56 at 1,000. Nobody can own everything; cost is the natural brake. The licensing screen warns you as you approach and shows the multiplier.
+- Licensing prices climb once your catalog passes 300 titles: about x1.6 at 1,000, x3.3 at 2,000, x9 at 4,000, x27 at 8,000 (a Netflix-sized library, affordable only to a giant) and x52 at 12,000. Nobody can own everything; cost is the natural brake. The licensing screen warns you as you approach and shows the multiplier.
+- Built for a very big library: the manager signs up to 3 / 6 / 15 titles a week (Passive / Moderate / Aggressive), and the market can show up to 94 offers at once (8 scouting levels instead of 3) and refills faster.
 
 ### Emergency brake: pause new sign-ups (save v28)
 - A "Pause all new sign-ups" switch on the Dashboard shuts off new subscribers everywhere (existing subscribers stay and keep paying; marketing still costs money). Each region on Company > Tech & team also has its own switch.

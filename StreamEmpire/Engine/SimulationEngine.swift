@@ -583,7 +583,7 @@ enum SimulationEngine {
         }
         s.licenseMarket = kept
 
-        s.fillListings(limit: 4 + s.listingReach)
+        s.fillListings(limit: 4 + 3 * s.listingReach)
     }
 
     private static func advanceRivals(_ s: inout GameState, events: inout [GameEvent]) {

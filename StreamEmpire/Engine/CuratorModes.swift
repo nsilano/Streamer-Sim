@@ -26,6 +26,7 @@ extension GameState {
         c.maxPricePerTitle = max(150_000, c.weeklyBudget * mode.carryWeeks)
         c.minQuality = mode.minQuality
         c.maxYears = mode.maxYears
+        c.purchasesPerWeek = mode.purchasesPerWeek
         c.allowExclusive = mode != .passive
         c.targetCatalogSize = Int(mode == .passive ? 20 + 4 * live : mode == .moderate ? 30 + 6 * live : 60 + 8 * live)
         c.renewMaxPrice = max(c.maxPricePerTitle, 500_000)

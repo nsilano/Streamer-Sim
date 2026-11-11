@@ -33,7 +33,8 @@ final class Phase25Tests: XCTestCase {
         XCTAssertEqual(s.listingTarget, GameState.targetListings + GameState.listingsPerReachLevel)
         XCTAssertEqual(s.licenseMarket.count, s.listingTarget, "filled right away")
         XCTAssertGreaterThan(s.expandListingsPrice(), first, "each level costs more")
-        try s.expandListings(); try s.expandListings()
+        for _ in 1..<GameState.maxListingReach { try s.expandListings() }
+        XCTAssertEqual(s.listingReach, GameState.maxListingReach)
         XCTAssertThrowsError(try s.expandListings())
         for _ in 0..<20 { s = SimulationEngine.advanceWeek(s) }
         XCTAssertGreaterThan(s.licenseMarket.count, GameState.targetListings, "the bigger market keeps refilling")

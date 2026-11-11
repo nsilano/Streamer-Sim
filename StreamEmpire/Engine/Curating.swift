@@ -55,7 +55,7 @@ extension GameState {
         passing.sort { value($0) != value($1) ? value($0) > value($1) : $0.id < $1.id }
 
         for title in passing {
-            if run.bought.count >= Curator.maxPurchasesPerWeek || catalog.count >= c.targetCatalogSize { break }
+            if run.bought.count >= c.purchasesPerWeek || catalog.count >= c.targetCatalogSize { break }
             let price = licensePrice(title)
             if price > c.maxPricePerTitle { rejected["tooExpensive", default: 0] += 1; continue }
             if run.spent + price > available { rejected["overBudget", default: 0] += 1; continue }

@@ -2,8 +2,8 @@ import Foundation
 
 /// Refreshing the licensing market on demand and permanently widening how many offers you see.
 extension GameState {
-    static let maxListingReach = 3
-    static let listingsPerReachLevel = 6
+    static let maxListingReach = 8
+    static let listingsPerReachLevel = 10
 
     /// How many listings the market holds for you.
     var listingTarget: Int { GameState.targetListings + GameState.listingsPerReachLevel * listingReach }
@@ -14,7 +14,7 @@ extension GameState {
     }
 
     /// Cost of the next expansion level (more listings, permanently).
-    func expandListingsPrice() -> Double { scaled(1_000_000 * Double(listingReach + 1)) }
+    func expandListingsPrice() -> Double { scaled(1_000_000 * Double(listingReach + 1) * Double(listingReach + 1)) }
 
     /// Swap every listing for new ones. Listings you were negotiating disappear too.
     mutating func refreshListings() throws {

@@ -3,6 +3,7 @@ import Foundation
 /// A hired licensing manager who buys titles for you every week, within the limits you set.
 struct Curator: Codable, Equatable {
     var enabled = true                       // pause without firing
+    var purchasesPerWeek = Curator.maxPurchasesPerWeek   // most titles signed in a week (presets set their own)
     var capMode: CatalogCapMode = .auto      // how big the manager lets your catalog grow
     var catalogCap = 100                     // used when capMode is .fixed
     var mode: CuratorMode = .custom          // presets size spending to your revenue and cash; custom uses the rules below
@@ -24,7 +25,7 @@ struct Curator: Codable, Equatable {
 
     static let hireCost = 300_000.0
     static let weeklySalary = 15_000.0
-    static let maxPurchasesPerWeek = 3
+    static let maxPurchasesPerWeek = 3        // for Custom; presets buy more (see CuratorMode.purchasesPerWeek)
 }
 
 /// A tier being set up in a market.
@@ -93,6 +94,8 @@ enum CuratorMode: String, Codable, CaseIterable, Identifiable {
     var carryWeeks: Double { self == .passive ? 6 : self == .moderate ? 4 : 3 }
     var minQuality: Int { self == .passive ? 60 : self == .moderate ? 55 : 45 }
     var maxYears: Int { self == .aggressive ? 5 : 3 }
+    /// Most titles the manager signs in one week.
+    var purchasesPerWeek: Int { self == .passive ? 3 : self == .moderate ? 6 : self == .aggressive ? 15 : Curator.maxPurchasesPerWeek }
 }
 
 /// How freely expiring licenses are renewed without asking you. You're only stopped for the rest.
