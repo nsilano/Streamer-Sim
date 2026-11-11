@@ -155,14 +155,14 @@ final class SeasonsAndChirpTests: XCTestCase {
         var s = newState()
         s.finances.cash = 80_000_000
         s.finances.profitHistory = [2_000_000, 2_000_000, 2_000_000, 2_000_000]
-        s.finances.lastWeek.costs = 1_000_000
+        s.finances.lastWeek.staff = 1_000_000
         XCTAssertEqual(s.renewalPosture, .flush)
         s.finances.cash = 3_000_000
         s.finances.profitHistory = [-1_000_000, -1_000_000, -1_000_000, -1_000_000]
         XCTAssertEqual(s.renewalPosture, .tight)
         s.finances.cash = 40_000_000
         s.finances.profitHistory = [100_000, 100_000, 100_000, 100_000]
-        s.finances.lastWeek.costs = 5_000_000
+        s.finances.lastWeek.staff = 5_000_000
         XCTAssertEqual(s.renewalPosture, .normal)
         s.renewalRules.adaptToFinances = false
         s.finances.cash = 1_000
@@ -176,7 +176,7 @@ final class SeasonsAndChirpTests: XCTestCase {
         t.paidPrice = 100_000
         t.popularityAtPurchase = 70
         s.catalog = [t]
-        s.finances.lastWeek.costs = 1_000_000
+        s.finances.lastWeek.staff = 1_000_000
         s.finances.cash = 80_000_000
         s.finances.profitHistory = [2_000_000, 2_000_000, 2_000_000, 2_000_000]
         XCTAssertNil(s.renewalBlock(s.catalog[0]), "flush: no hesitation, even for a mediocre title")

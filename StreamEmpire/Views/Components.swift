@@ -205,4 +205,3 @@ struct HubTile: View, Identifiable {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(tint.opacity(0.35), lineWidth: 1))
     }
 }
-}
