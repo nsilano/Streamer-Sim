@@ -539,6 +539,12 @@ struct TitleDetailSheet: View {
                 .buttonStyle(GlowButtonStyle(tint: Theme.good))
                 .disabled(state.finances.cash < price)
             }
+            if title.license != nil, title.weeksRemaining != nil {
+                Toggle(isOn: Binding(get: { !title.noAutoRenew }, set: { on in store.perform { try $0.setAutoRenew(titleID: title.id, enabled: on) } })) {
+                    Text("Include in auto-renew").font(.subheadline).foregroundStyle(.white)
+                }
+                .tint(Theme.good)
+            }
             Text("Or take it off your service and license it to another streamer for a fee.")
                 .font(.caption).foregroundStyle(Theme.text2)
             ForEach(Formulas.sublicenseTerms, id: \.self) { weeks in
@@ -896,6 +902,7 @@ struct RenewalModePicker: View {
             }
             .pickerStyle(.segmented)
             Text(state.renewalMode.blurb).font(.caption).foregroundStyle(Theme.text2)
+            if state.renewalMode != .off { renewalRules(state) }
             Text("When a license is about to expire").font(.subheadline.weight(.semibold)).foregroundStyle(.white).padding(.top, 4)
             Picker("Expiry alerts", selection: Binding(get: { state.expiryAlerts },
                                                        set: { mode in store.perform { $0.expiryAlerts = mode } })) {
@@ -905,6 +912,41 @@ struct RenewalModePicker: View {
             Text(state.expiryAlerts.blurb).font(.caption).foregroundStyle(Theme.text2)
         }
         .artCard(tint: Theme.good)
+    }
+}
+
+extension RenewalModePicker {
+    /// Fine-tuning: term, quality bar, letting the weakest lapse, and keeping the sought-after ones.
+    func renewalRules(_ state: GameState) -> some View {
+        let rules = state.renewalRules
+        func set(_ change: @escaping (inout RenewalRules) -> Void) {
+            store.perform { s in
+                var r = s.renewalRules
+                change(&r)
+                try s.updateRenewalRules(r)
+            }
+        }
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Renewal rules").font(.subheadline.weight(.semibold)).foregroundStyle(.white).padding(.top, 4)
+            Stepper(value: Binding(get: { rules.years }, set: { v in set { $0.years = v } }), in: 1...5) {
+                Text("Renew for \(rules.years) year\(rules.years == 1 ? "" : "s")").font(.subheadline).foregroundStyle(.white)
+            }
+            Stepper(value: Binding(get: { rules.minQuality }, set: { v in set { $0.minQuality = v } }), in: 0...90, step: 5) {
+                Text(rules.minQuality == 0 ? "No quality bar" : "Only quality \(rules.minQuality)+").font(.subheadline).foregroundStyle(.white)
+            }
+            Text("Let the weakest titles lapse").font(.subheadline).foregroundStyle(.white)
+            Picker("Weakest", selection: Binding(get: { rules.dropWeakestShare }, set: { v in set { $0.dropWeakestShare = v } })) {
+                Text("None").tag(0.0); Text("10%").tag(0.1); Text("25%").tag(0.25); Text("50%").tag(0.5)
+            }
+            .pickerStyle(.segmented)
+            Text("Judged by viewers, once a title has been live 8+ weeks. Weak titles are left to expire so the money goes to better ones.")
+                .font(.caption).foregroundStyle(Theme.text2)
+            Toggle(isOn: Binding(get: { rules.keepSought }, set: { v in set { $0.keepSought = v } })) {
+                Text("Always keep sought-after titles").font(.subheadline).foregroundStyle(.white)
+            }
+            .tint(Theme.good)
+            Text("You can also exclude a single title from auto-renew on its detail page.").font(.caption).foregroundStyle(Theme.text2)
+        }
     }
 }
 

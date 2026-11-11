@@ -125,6 +125,14 @@ enum RenewalMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Fine-tuning for automatic renewals, on top of the renewal style.
+struct RenewalRules: Codable, Equatable {
+    var years = 2                  // term of an automatic renewal (1...5)
+    var minQuality = 0             // don't renew titles below this quality
+    var dropWeakestShare = 0.0     // let the weakest share of your catalog (by viewers) lapse; 0 renews everything that passes
+    var keepSought = true          // sought-after titles are always worth renewing (if the price is accepted)
+}
+
 /// What an expiring license that didn't auto-renew does to your game.
 enum ExpiryAlerts: String, Codable, CaseIterable, Identifiable {
     case stop, show, ignore

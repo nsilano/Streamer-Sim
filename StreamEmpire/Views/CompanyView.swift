@@ -15,19 +15,15 @@ struct CompanyView: View {
                             }
                         }
                         cashCard(state)
-                        hubSection("Money", tiles: [
-                            HubTile(icon: "magnifyingglass.circle.fill", title: "Finances", subtitle: "Spending, trends, country P&L", tint: Theme.magenta) { AnyView(FinanceView()) },
-                            HubTile(icon: "building.columns.fill", title: "Funding", subtitle: "Loans, investors, IPO, stakes", tint: Theme.teal) { AnyView(FundingView()) },
-                            HubTile(icon: "chart.bar.doc.horizontal.fill", title: "Earnings & corporate", subtitle: "Quarters, buybacks, currencies", tint: Theme.amber) { AnyView(BusinessView(tab: .earnings)) },
-                        ])
-                        hubSection("Operations", tiles: [
-                            HubTile(icon: "server.rack", title: "Tech & team", subtitle: "Apps, servers, staff, pay", tint: Theme.teal) { AnyView(TechStaffView()) },
+                        hubGrid([
+                            HubTile(icon: "magnifyingglass.circle.fill", title: "Finances", subtitle: "Spending, trends, P&L", tint: Theme.magenta) { AnyView(FinanceView()) },
+                            HubTile(icon: "building.columns.fill", title: "Funding", subtitle: "Loans, investors, IPO", tint: Theme.teal) { AnyView(FundingView()) },
+                            HubTile(icon: "chart.bar.doc.horizontal.fill", title: "Earnings", subtitle: "Quarters, buybacks, FX", tint: Theme.amber) { AnyView(BusinessView(tab: .earnings)) },
+                            HubTile(icon: "server.rack", title: "Tech & team", subtitle: "Apps, servers, staff", tint: Theme.teal) { AnyView(TechStaffView()) },
                             HubTile(icon: "iphone.gen3", title: "Product", subtitle: "Features, ad load", tint: Theme.violet) { AnyView(BusinessView(tab: .product)) },
-                        ])
-                        hubSection("Growth & strategy", tiles: [
                             HubTile(icon: "megaphone.fill", title: "Promotions", subtitle: state.promotions.isEmpty ? "Short campaigns" : "\(state.promotions.count) running", tint: Theme.magenta) { AnyView(PromotionsView()) },
-                            HubTile(icon: "list.bullet.clipboard.fill", title: "Policies", subtitle: "Trust \(Int(state.brandTrust))", tint: Theme.violet) { AnyView(PoliciesView()) },
-                            HubTile(icon: "shippingbox.fill", title: "Deals", subtitle: "Sports, bundles, studios, buys", tint: Theme.good) { AnyView(BusinessView(tab: .deals)) },
+                            HubTile(icon: "list.bullet.clipboard.fill", title: "Policies", subtitle: "Reputation \(Int(state.brandTrust))", tint: Theme.violet) { AnyView(PoliciesView()) },
+                            HubTile(icon: "shippingbox.fill", title: "Deals", subtitle: "Sports, bundles, buys", tint: Theme.good) { AnyView(BusinessView(tab: .deals)) },
                         ])
                         goalsCard(state)
                     }
@@ -63,13 +59,10 @@ struct CompanyView: View {
         .artCard(tint: Theme.amber)
     }
 
-    private func hubSection(_ title: String, tiles: [HubTile]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased()).font(.caption2.weight(.heavy)).tracking(1.4).foregroundStyle(Theme.text2)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                ForEach(tiles) { tile in
-                    NavigationLink { tile.destination() } label: { tile }.buttonStyle(.plain)
-                }
+    private func hubGrid(_ tiles: [HubTile]) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+            ForEach(tiles) { tile in
+                NavigationLink { tile.destination() } label: { tile }.buttonStyle(.plain)
             }
         }
     }

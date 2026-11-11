@@ -82,6 +82,21 @@ struct SettingsView: View {
                 Text("1x").tag(1.0); Text("2x").tag(0.5); Text("4x").tag(0.25); Text("8x").tag(0.12)
             }
             .pickerStyle(.segmented)
+            if let state = store.state {
+                Text("Automation").font(.subheadline.weight(.semibold)).foregroundStyle(.white).padding(.top, 4)
+                Picker("Stop the sim for", selection: Binding(get: { state.pauseSensitivity },
+                                                               set: { value in store.perform { $0.pauseSensitivity = value } })) {
+                    ForEach(PauseSensitivity.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                Text(state.pauseSensitivity.blurb).font(.caption).foregroundStyle(Theme.text2)
+                Toggle(isOn: Binding(get: { state.autoScale }, set: { value in store.perform { $0.autoScale = value } })) {
+                    Text("Scale servers automatically").font(.subheadline).foregroundStyle(.white)
+                }
+                .tint(Theme.teal)
+                Text("Rents cloud capacity when a region passes 85% load and gives it back when it's quiet. Datacenters stay up to you.")
+                    .font(.caption).foregroundStyle(Theme.text2)
+            }
             Button { showHelp = true } label: {
                 Label("How to play", systemImage: "questionmark.circle").frame(maxWidth: .infinity)
             }

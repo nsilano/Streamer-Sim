@@ -57,6 +57,10 @@ extension GameState {
             finances.cash -= price
             finances.ledger.other += price
         }
+        // Every change moves your reputation at once: customer-friendly options earn goodwill, harsh ones cost it.
+        let previousTrust = activeOption(definition).effects.trust
+        let reputationShift = Formulas.clamp((option.effects.trust - previousTrust) * 15, -10, 8)
+        brandTrust = Formulas.clamp(brandTrust + reputationShift, 0, 100)
         policies[policyID] = optionID
         policyChangedWeek[policyID] = week
 
@@ -64,6 +68,7 @@ extension GameState {
         var tone = PolicyTone.mixed
         var headline = "\(companyName) changes its \(definition.title.lowercased()) policy"
         var detail = "Now: \(option.title). \(option.detail)"
+        if abs(reputationShift) >= 0.5 { detail += " Reputation \(reputationShift > 0 ? "+" : "")\(Int(reputationShift.rounded()))." }
 
         if option.good != nil || option.bad != nil {
             let chance = Formulas.clamp(option.badChance * (1.3 - brandTrust * 0.006), 0, 0.95)

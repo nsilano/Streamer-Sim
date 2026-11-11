@@ -54,6 +54,8 @@ enum SimulationEngine {
         runCurator(&s, events: &events)
 
         Trends.announce(&s)
+        Seasons.announce(&s)
+        s.autoScaleCloud()
         s.refreshSportsOffers()
         s.progressPartnerships()
         s.refreshAcquisitionOffers()
@@ -167,14 +169,15 @@ enum SimulationEngine {
             let promo = s.promoEffects(for: code)
             let piracy = Formulas.piracy(price: price, tolerance: country.priceTolerance, appeal: appeal)
             let trend = Trends.effects(week: s.week)
+            let season = Seasons.effects(week: s.week, region: country.region)
             let signupsOpen = !s.signupsPaused(in: country.region)
-            let adds = signupsOpen ? min(gross * policy.adds * promo.adds * trend.adds * feats.adds * sports.adds * partner.adds
+            let adds = signupsOpen ? min(gross * policy.adds * promo.adds * trend.adds * season.adds * feats.adds * sports.adds * partner.adds
                                          * (1 - 0.2 * piracy), headroom) : 0
             let baseChurn = Formulas.churnRate(appeal: appeal, price: price,
                                                tolerance: country.priceTolerance,
                                                serviceQuality: quality,
                                                rivalHeat: pressure.heat)
-            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn * trend.churn
+            let churn = min(0.5, (recession ? 1.1 : 1.0) * policy.churn * promo.churn * baseChurn * trend.churn * season.churn
                             * feats.churn * sports.churn * (1 + 0.12 * (s.adLoad - 1)) * (1 + 0.5 * piracy))
             let split = Formulas.tierSplit(prices: market.prices, tiers: market.liveTiers)
 

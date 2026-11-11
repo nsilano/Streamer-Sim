@@ -40,7 +40,7 @@ struct PoliciesView: View {
     private func meters(_ state: GameState) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: "Your reputation", icon: "heart.text.square.fill", tint: Theme.magenta)
-            StatBar(label: "Brand trust", value: state.brandTrust / 100, text: "\(Int(state.brandTrust))/100",
+            StatBar(label: "Reputation", value: state.brandTrust / 100, text: "\(Int(state.brandTrust))/100",
                     tint: state.brandTrust >= 60 ? Theme.good : (state.brandTrust >= 35 ? Theme.amber : Theme.danger))
             Text("Trusted brands win more sign-ups, lose fewer subscribers and get the benefit of the doubt when a policy is unpopular.")
                 .font(.caption2).foregroundStyle(Theme.text2)

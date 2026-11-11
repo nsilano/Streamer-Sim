@@ -265,7 +265,9 @@ final class Phase10Tests: XCTestCase {
         s.licenseMarket = [pricey]
         XCTAssertEqual(s.curatorShop()?.bought.count, 0, "week 1: only $500K available")
         XCTAssertEqual(s.curator!.carryBudget, 500_000, accuracy: 0.01)
+        s.week += 1
         XCTAssertEqual(s.curatorShop()?.bought.count, 0, "week 2: $1.0M available")
+        s.week += 1
         XCTAssertEqual(s.curatorShop()?.bought, ["Big Series"], "week 3: $1.5M available")
         XCTAssertEqual(s.catalog.count, 1)
         XCTAssertEqual(s.curator!.carryBudget, 300_000, accuracy: 0.01)

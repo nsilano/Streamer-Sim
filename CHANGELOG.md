@@ -9,6 +9,15 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Chirp, seasons, reputation and less micromanaging (save version 31)
+- **Chirp:** the news is now a social feed. Every story is a post with an author, hashtags and likes/reposts/replies, and stories about you pull a reply from a fan or a critic that follows your reputation. It replaces the News view in the Rivals tab.
+- **Seasons:** winter and the holidays bring more sign-ups and less churn, summer slows things down (milder in the south and tropics). News flags the holiday rush, the summer slowdown and the return indoors.
+- **Reputation:** the brand-trust bar is now called Reputation. Changing any policy moves it straight away (harsh options cost reputation, friendly ones earn it back) and shows the change in the policy news.
+- **Fewer stops, more automation:** Settings > Automation lets you choose what stops the sim: only disasters (new default: game over, out of cash, servers at full capacity), important things too, or everything. Servers can scale themselves: cloud is rented when a region passes 85% load and given back when quiet.
+- **Licensing manager renewals:** new renewal rules (term of 1-5 years, a quality bar, let the weakest 10/25/50% lapse, always keep sought-after titles) plus a per-title "Include in auto-renew" switch on each title.
+- **Company tab:** the tiles are compact, one row of icon + title + one line, in a single grid.
+- Fixed: the older tests for Shop now and subtitles after a dub match the new rules.
+
 ### Bug fixes from the playtest bots (save version 30)
 - Licensing manager: pressing Shop now several times in one week no longer stacks the weekly budget. A seller who walked away from talks can't be bought from until the block ends.
 - Titles licensed out to a rival no longer lose an extra week of rights and age when they return.

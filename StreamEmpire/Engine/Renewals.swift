@@ -82,9 +82,11 @@ extension GameState {
         let mode = renewalMode
         guard mode != .off else { return "Auto-renew is off" }
         guard let license = title.license else { return nil }
-        let price = renewalPrice(title, years: 2)
+        if title.noAutoRenew { return "You excluded it from auto-renew" }
+        if let why = renewalPerformanceBlock(title) { return why }
+        let price = renewalPrice(title, years: renewalRules.years)
         let paidPerYear = max(1, (title.paidPrice > 0 ? title.paidPrice : licensePrice(title)) / Double(max(1, license.years)))
-        let ratio = price / 2 / paidPerYear
+        let ratio = price / Double(renewalRules.years) / paidPerYear
         if ratio > mode.maxPriceRatio {
             return "Price jumped to \(String(format: "%.1f", ratio))x what you paid per year"
         }
@@ -96,21 +98,47 @@ extension GameState {
         return nil
     }
 
-    /// Renews (2 years) every license 13 weeks or less from expiry whose price your renewal style accepts,
+    /// Your quality bar and "let the weakest lapse" rule, or nil if the title passes. Sought-after titles skip both if you keep them.
+    func renewalPerformanceBlock(_ title: Title) -> String? {
+        if title.sought, renewalRules.keepSought { return nil }
+        if title.quality < renewalRules.minQuality { return "Quality \(title.quality) is below your bar of \(renewalRules.minQuality)" }
+        let share = renewalRules.dropWeakestShare
+        guard share > 0, catalog.count >= 10 else { return nil }
+        let mine = stats(for: title)
+        guard mine.weeksLive >= 8 else { return nil }            // too new to judge
+        let better = catalog.reduce(0) { $0 + (stats(for: $1).weeklyViewers > mine.weeklyViewers ? 1 : 0) }
+        if Double(better) / Double(catalog.count) > 1 - share { return "Among your weakest \(Int(share * 100))% by viewers" }
+        return nil
+    }
+
+    mutating func setAutoRenew(titleID: Int, enabled: Bool) throws {
+        guard let index = catalog.firstIndex(where: { $0.id == titleID }) else { throw ActionError.titleNotFound }
+        catalog[index].noAutoRenew = !enabled
+    }
+
+    mutating func updateRenewalRules(_ rules: RenewalRules) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
+        guard (1...5).contains(rules.years), (0...100).contains(rules.minQuality), (0...0.9).contains(rules.dropWeakestShare) else {
+            throw ActionError.invalidAmount
+        }
+        renewalRules = rules
+    }
+
+    /// Renews (per your renewal rules, 2 years by default) every license 13 weeks or less from expiry whose price your renewal style accepts,
     /// before the 12-week warning. Only the ones it refuses ever stop the sim.
     mutating func autoRenewEverything(events: inout [GameEvent]) {
         guard renewalMode != .off else { return }
         var names: [String] = []
         var spent = 0.0
         for title in catalog where title.license != nil && (title.weeksRemaining ?? 99) <= 13 && renewalBlock(title) == nil {
-            let price = renewalPrice(title, years: 2)
-            guard (try? renewLicense(titleID: title.id, years: 2)) != nil else { continue }
+            let price = renewalPrice(title, years: renewalRules.years)
+            guard (try? renewLicense(titleID: title.id, years: renewalRules.years)) != nil else { continue }
             names.append(title.name)
             spent += price
         }
         if !names.isEmpty {
             events.append(makeEvent(.news, "Auto-renewed \(names.count) title\(names.count == 1 ? "" : "s")",
-                                    "\(names.prefix(3).joined(separator: ", "))\(names.count > 3 ? " and more" : "") kept for 2 more years (\(Format.money(spent)))."))
+                                    "\(names.prefix(3).joined(separator: ", "))\(names.count > 3 ? " and more" : "") kept for \(renewalRules.years) more year\(renewalRules.years == 1 ? "" : "s") (\(Format.money(spent)))."))
         }
     }
 
@@ -121,7 +149,7 @@ extension GameState {
         var spent = 0.0
         var skipped = 0
         for title in expiringTitles where (title.weeksRemaining ?? 99) <= 8 {
-            guard title.quality >= c.minQuality else { continue }
+            guard title.quality >= c.minQuality, !title.noAutoRenew, renewalPerformanceBlock(title) == nil else { continue }
             let price = renewalPrice(title, years: c.renewYears)
             if price > c.renewMaxPrice || spent + price > allowance || finances.cash - price < c.cashReserve { skipped += 1; continue }
             if (try? renewLicense(titleID: title.id, years: c.renewYears)) != nil {

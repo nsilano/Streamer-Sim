@@ -189,15 +189,20 @@ struct HubTile: View, Identifiable {
     var id: String { title }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Image(systemName: icon).font(.title2).foregroundStyle(tint)
-            Text(title).font(.subheadline.weight(.bold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
-            Text(subtitle).font(.caption2).foregroundStyle(Theme.text2).lineLimit(2)
+        HStack(spacing: 10) {
+            Image(systemName: icon).font(.title3).foregroundStyle(tint)
+                .frame(width: 36, height: 36)
+                .background(RoundedRectangle(cornerRadius: 10).fill(tint.opacity(0.18)))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.weight(.bold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.75)
+                Text(subtitle).font(.caption2).foregroundStyle(Theme.text2).lineLimit(1).minimumScaleFactor(0.8)
+            }
             Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 16).fill(tint.opacity(0.12)))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.35), lineWidth: 1))
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 14).fill(tint.opacity(0.12)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(tint.opacity(0.35), lineWidth: 1))
     }
+}
 }

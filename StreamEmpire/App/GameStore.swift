@@ -31,6 +31,8 @@ final class GameStore: ObservableObject {
                                   seed: seed, difficulty: difficulty, scenario: scenario)
         state?.renewalMode = .standard     // reasonable renewals happen by themselves
         state?.expiryAlerts = .show        // expiring titles are shown, not forced on you
+        state?.pauseSensitivity = .critical  // only disasters stop the sim
+        state?.autoScale = true            // servers scale themselves
         persist()
     }
 
@@ -62,7 +64,7 @@ final class GameStore: ObservableObject {
         state = next
         persist()
         // Anything major stops the sim and stays on screen until you react.
-        let reasons = PauseCheck.reasons(before: current, after: next)
+        let reasons = PauseCheck.reasons(before: current, after: next).filter { next.pauseSensitivity.stops($0.id) }
         if !reasons.isEmpty {
             autoAdvance = false
             pauseReasons = reasons
