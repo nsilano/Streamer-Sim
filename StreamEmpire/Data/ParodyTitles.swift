@@ -407,14 +407,14 @@ enum ParodyLibrary {
 
     /// Every parody, by genre.
     static let byGenre: [Genre: [ParodyTitle]] = [
-        .drama: parse(drama, genre: .drama),
-        .comedy: parse(comedy, genre: .comedy),
-        .action: parse(action, genre: .action),
-        .kids: parse(kids, genre: .kids),
-        .anime: parse(anime, genre: .anime),
-        .reality: parse(reality, genre: .reality),
-        .docs: parse(docs, genre: .docs),
-        .local: parse(local, genre: .local),
+        .drama: parse(drama + "\n" + moreDrama, genre: .drama),
+        .comedy: parse(comedy + "\n" + moreComedy, genre: .comedy),
+        .action: parse(action + "\n" + moreAction, genre: .action),
+        .kids: parse(kids + "\n" + moreKids, genre: .kids),
+        .anime: parse(anime + "\n" + moreAnime, genre: .anime),
+        .reality: parse(reality + "\n" + moreReality, genre: .reality),
+        .docs: parse(docs + "\n" + moreDocs, genre: .docs),
+        .local: parse(local + "\n" + moreLocal, genre: .local),
     ]
 
     static var all: [ParodyTitle] { Genre.allCases.flatMap { byGenre[$0] ?? [] } }

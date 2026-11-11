@@ -91,6 +91,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 21. **Phase 21 (done): licensing manager styles.** `CuratorMode` (passive/moderate/aggressive/custom) in `Models/Curator.swift`; `effective(_:)`/`effectiveCurator()` in `Engine/CuratorModes.swift` size presets from revenue and cash each week; `curatorRunwayBlock` stops preset buying when runway is short; carry-over weeks per mode. `hireCurator(mode:)` defaults to `.custom` for tests; the app hires on `.passive`. Save version is 24.
 
+22. **Phase 22 (done): ~3,900 parody titles.** The original 355 live in `Data/ParodyTitles.swift`; the rest in `Data/ParodyTitles<Genre>.swift` (`ParodyLibrary.moreDrama` etc., one file per genre, appended in `byGenre`). Rules for new names: parody puns only, no real people, no verbatim real titles, unique case-insensitively (Phase31Tests checks). Save version is 27.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

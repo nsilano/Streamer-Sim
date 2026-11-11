@@ -5,6 +5,9 @@ Save version is noted when it changes (older saves are ignored).
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Thousands more titles
+- The licensable library grew from 355 to roughly 3,900 parody titles (about 760 more drama, 620 comedy, 510 action, 430 kids, 310 anime, 240 reality, 250 docs and 450 local-language titles in a dozen-plus languages). Names no longer repeat for a very long time, and sequel-numbered repeats ("... II") are rare.
+
 ### Cleaner screens (nothing removed)
 - Company is now a hub: your cash at the top, then tiles in three groups. Money: Finances, Funding, Earnings & corporate. Operations: Tech & team, Product. Growth & strategy: Promotions, Policies, Deals.
 - Loans, investors, IPO, ownership and stakes in rivals moved together into one Funding screen.
