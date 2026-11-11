@@ -92,7 +92,7 @@ Dashboard - Markets - Content - Rivals - Company.
 
 21. **Phase 21 (done): licensing manager styles.** `CuratorMode` (passive/moderate/aggressive/custom) in `Models/Curator.swift`; `effective(_:)`/`effectiveCurator()` in `Engine/CuratorModes.swift` size presets from revenue and cash each week; `curatorRunwayBlock` stops preset buying when runway is short; carry-over weeks per mode. `hireCurator(mode:)` defaults to `.custom` for tests; the app hires on `.passive`. Save version is 24.
 
-22. **Phase 22 (done): ~3,900 parody titles.** The original 355 live in `Data/ParodyTitles.swift`; the rest in `Data/ParodyTitles<Genre>.swift` (`ParodyLibrary.moreDrama` etc., one file per genre, appended in `byGenre`). Rules for new names: parody puns only, no real people, no verbatim real titles, unique case-insensitively (Phase31Tests checks). Save version is 27.
+22. **Phase 22 (done): ~3,900 parody titles.** The original 355 live in `Data/ParodyTitles.swift`; the rest in `Data/ParodyTitles<Genre>.swift` (`ParodyLibrary.moreDrama` etc., one file per genre, appended in `byGenre`). Rules for new names: parody puns only, no real people, no verbatim real titles, unique case-insensitively (Phase31Tests checks). Save version is 27. Beyond the library, `TitleGenerator.inventedTitle` builds pun titles from real movie/show stems (`Data/PunTitles.swift`: stems are never used alone, no real people's names); the catalog UI is searchable/paged and autosave is batched for 1,500+ titles.
 
 23. **Phase 23 (done): sign-up brake** (`Engine/SignupBrake.swift`): `pausedSignups` ("all" or region ids) zeroes `adds` and switching-in; `PauseReason.region` drives a one-tap brake in the pause panel. Save version is 28.
 

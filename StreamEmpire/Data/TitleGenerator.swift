@@ -126,18 +126,23 @@ enum TitleGenerator {
 
     /// An original-sounding title (not a parody of anything) for very large catalogs. Never repeats a taken name.
     static func inventedTitle(genre: Genre, rng: inout SeededRNG, avoiding: Set<String>) -> ParodyTitle {
-        var name = makeName(genre: genre, rng: &rng)
-        var tries = 0
-        while avoiding.contains(name), tries < 40 {
+        var name = ""
+        var kind: TitleKind = .series
+        var found = false
+        for _ in 0..<60 {
+            if let pun = PunTitles.make(genre: genre, rng: &rng), !avoiding.contains(pun.name) {
+                name = pun.name; kind = pun.kind; found = true
+                break
+            }
+        }
+        if !found {
             name = makeName(genre: genre, rng: &rng)
-            tries += 1
+            kind = rng.chance(0.3) ? .movie : .series
+            if avoiding.contains(name) {
+                for suffix in romanSuffixes where !avoiding.contains("\(name) \(suffix)") { name = "\(name) \(suffix)"; break }
+            }
         }
-        if avoiding.contains(name) {
-            for suffix in romanSuffixes where !avoiding.contains("\(name) \(suffix)") { name = "\(name) \(suffix)"; break }
-        }
-        let movieShare: Double = [.drama: 0.35, .comedy: 0.4, .action: 0.55, .kids: 0.35, .anime: 0.2, .reality: 0.0, .docs: 0.4][genre] ?? 0.3
-        return ParodyTitle(name: name, kind: rng.chance(movieShare) ? .movie : .series, genre: genre,
-                           language: genre == .anime ? .japanese : .english)
+        return ParodyTitle(name: name, kind: kind, genre: genre, language: genre == .anime ? .japanese : .english)
     }
 
     /// Generates one licensable title (a fresh market listing), a parody of a real show or movie.

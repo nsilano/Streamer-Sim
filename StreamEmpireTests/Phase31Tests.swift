@@ -90,4 +90,15 @@ final class Phase31Tests: XCTestCase {
         XCTAssertEqual(taken.count, 30_000)
         XCTAssertLessThan(numbered, 900, "numbered sequels stay rare even at 30,000 titles")
     }
+
+    func testPunTitlesAreNeverABareStem() {
+        var rng = SeededRNG(seed: 21)
+        let allStems = Set(PunTitles.stems.values.flatMap { $0.movies + $0.series }.map { $0.lowercased() })
+        for genre in [Genre.drama, .comedy, .action, .kids, .anime, .reality, .docs] {
+            for _ in 0..<500 {
+                guard let pun = PunTitles.make(genre: genre, rng: &rng) else { return XCTFail("no pun for \(genre)") }
+                XCTAssertFalse(allStems.contains(pun.name.lowercased()), "bare real title: \(pun.name)")
+            }
+        }
+    }
 }
