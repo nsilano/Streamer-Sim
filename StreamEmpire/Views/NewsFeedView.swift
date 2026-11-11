@@ -57,7 +57,6 @@ struct NewsFeedView: View {
                         if post.verified { Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(Theme.teal) }
                         Text("\(post.handle) · \(Format.stamp(week: post.week))").font(.caption).foregroundStyle(Theme.text2).lineLimit(1)
                         Spacer(minLength: 0)
-                        if item.id > state.newsSeenThrough { Circle().fill(Theme.magenta).frame(width: 8, height: 8) }
                     }
                     Text(post.text).font(.subheadline).foregroundStyle(.white)
                     Text(post.detail).font(.caption).foregroundStyle(Theme.text2)
@@ -89,7 +88,7 @@ struct NewsFeedView: View {
 
     @ViewBuilder
     private func avatar(_ item: NewsItem, _ post: Chirp) -> some View {
-        if let id = item.rivalID, let rival = state.rivals.first(where: { $0.id == id }) {
+        if let id = post.authorRivalID, let rival = state.rivals.first(where: { $0.id == id }) {
             RivalBadge(name: rival.name, id: rival.id, size: 40)
         } else {
             ZStack {

@@ -9,6 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Chirp fixes
+- Rivals only post their own news (launches, milestones, prices, deals). Stories about customers switching away from a rival now come from a third-party account ("Viewer Watch") instead of the rival itself.
+- Removed the notification badges: the red counts on the tab bar, the "Chirp (N)" count and the unread dots.
+
 ### Realistic build times
 - A datacenter now takes 72 weeks (about 17 months) to build instead of 8. Apps take 30 weeks (iOS/Android), 52 (smart TV) and 64 (consoles). Launching a new country takes 16 weeks instead of 4, and extra plans take 8 (ad) or 12 (premium) weeks. Engineering staff still shave time off builds, but never more than half. Rented cloud capacity stays instant.
 - Plan ahead: growth comes slower now, so launch markets and start big builds earlier. Existing saves keep the build times they already started with.

@@ -11,18 +11,15 @@ struct RootView: View {
                     DashboardView()
                         .tabItem { Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis") }
                         .tag(0)
-                        .badge(state.pendingEvent == nil ? 0 : 1)
                     MarketsView()
                         .tabItem { Label("Markets", systemImage: "globe.europe.africa.fill") }
                         .tag(1)
                     ContentTabView()
                         .tabItem { Label("Content", systemImage: "film.stack") }
                         .tag(2)
-                        .badge(state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 8 }.count)
                     RivalsView()
                         .tabItem { Label("Rivals", systemImage: "trophy.fill") }
                         .tag(3)
-                        .badge(state.unreadNewsCount)
                     CompanyView()
                         .tabItem { Label("Company", systemImage: "building.2.fill") }
                         .tag(4)

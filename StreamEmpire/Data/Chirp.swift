@@ -25,6 +25,7 @@ struct Chirp: Identifiable, Equatable {
     var mine: Bool
     var kind: NewsKind
     var rivalID: String?
+    var authorRivalID: String?      // set only when the rival itself is the one posting
     var reply: Reply?
 
     // MARK: Building posts
@@ -60,9 +61,18 @@ struct Chirp: Identifiable, Equatable {
         var name: String
         var verified = true
         var scale: Double
-        if let id = item.rivalID, let rival = state.rivals.first(where: { $0.id == id }) {
+        // A rival only posts about its own news (launches, milestones, prices, deals). Stories where it is losing
+        // customers or being criticised come from third parties.
+        let h = item.headline
+        let thirdParty = h.contains("switch from") || h.contains(" leave ") || h.hasPrefix("Shareholders reject")
+        var authorRival: String?
+        if let id = item.rivalID, !thirdParty, let rival = state.rivals.first(where: { $0.id == id }) {
             name = rival.name
             scale = max(1, rival.totalSubs / 4_000)
+            authorRival = id
+        } else if thirdParty {
+            name = h.hasPrefix("Shareholders") ? "Wall Street Stream" : "Viewer Watch"
+            scale = max(1, 20_000 + state.totalSubscribers / 400)
         } else if item.kind == .you {
             name = state.companyName
             scale = max(1, state.totalSubscribers / 150)
@@ -107,6 +117,6 @@ struct Chirp: Identifiable, Equatable {
 
         return Chirp(id: item.id, name: name, handle: handle(name), verified: verified, text: item.headline, detail: item.body,
                      hashtags: tags, likes: likes, reposts: reposts, replies: replies, week: item.week, mine: you,
-                     kind: item.kind, rivalID: item.rivalID, reply: reply)
+                     kind: item.kind, rivalID: item.rivalID, authorRivalID: authorRival, reply: reply)
     }
 }

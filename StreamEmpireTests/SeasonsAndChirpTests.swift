@@ -187,4 +187,17 @@ final class SeasonsAndChirpTests: XCTestCase {
         s.finances.profitHistory = [-1_000_000, -1_000_000, -1_000_000, -1_000_000]
         XCTAssertNotNil(s.renewalBlock(s.catalog[0]), "tight: quality 50 is below the 60 bar")
     }
+
+    func testRivalsOnlyPostTheirOwnNews() {
+        var s = newState()
+        let rival = s.rivals[0]
+        s.addNews(.subscribers, "2.1K switch from \(rival.name) to \(s.companyName)", "Viewers are moving.", rival: rival.id)
+        s.addNews(.expansion, "\(rival.name) launches in France", "A new market.", rival: rival.id)
+        let launch = Chirp.make(s.news[0], state: s)
+        let swap = Chirp.make(s.news[1], state: s)
+        XCTAssertEqual(launch.name, rival.name)
+        XCTAssertEqual(launch.authorRivalID, rival.id)
+        XCTAssertNotEqual(swap.name, rival.name, "a rival doesn't announce that it is losing customers")
+        XCTAssertNil(swap.authorRivalID)
+    }
 }

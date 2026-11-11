@@ -50,7 +50,7 @@ struct RivalsView: View {
                         ScreenHeader(title: "Rivals", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.rivals.count) competitors · you are #\(state.rank)")
                         Picker("View", selection: $mode) {
                             ForEach(Mode.allCases) { m in
-                                Text(m == .news && state.unreadNewsCount > 0 ? "Chirp (\(state.unreadNewsCount))" : m.rawValue).tag(m)
+                                Text(m.rawValue).tag(m)
                             }
                         }
                         .pickerStyle(.segmented)
