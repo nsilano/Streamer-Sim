@@ -3,6 +3,8 @@ import Foundation
 /// A hired licensing manager who buys titles for you every week, within the limits you set.
 struct Curator: Codable, Equatable {
     var enabled = true                       // pause without firing
+    var capMode: CatalogCapMode = .auto      // how big the manager lets your catalog grow
+    var catalogCap = 100                     // used when capMode is .fixed
     var mode: CuratorMode = .custom          // presets size spending to your revenue and cash; custom uses the rules below
     var weeklyBudget = 2_000_000.0           // spending allowance added each week
     var carryBudget = 0.0                    // unspent allowance carried over (up to 3 weeks' worth)
@@ -133,4 +135,11 @@ enum ExpiryAlerts: String, Codable, CaseIterable, Identifiable {
         case .ignore: return "No reminders. Licenses your auto-renew style doesn't take simply end."
         }
     }
+}
+
+/// How the manager decides when your catalog is big enough.
+enum CatalogCapMode: String, Codable, CaseIterable, Identifiable {
+    case auto, fixed, none
+    var id: String { rawValue }
+    var title: String { self == .auto ? "Auto" : self == .fixed ? "Set a limit" : "No limit" }
 }

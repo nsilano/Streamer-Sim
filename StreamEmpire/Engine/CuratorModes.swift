@@ -6,6 +6,16 @@ extension GameState {
 
     /// Applies a preset's sizing to a set of rules (Custom is returned unchanged).
     func effective(_ rules: Curator) -> Curator {
+        var c = applyPreset(rules)
+        switch rules.capMode {
+        case .auto: break
+        case .fixed: c.targetCatalogSize = max(0, rules.catalogCap)
+        case .none: c.targetCatalogSize = Int.max / 2     // prices (see catalogSizePriceFactor) are the real limit
+        }
+        return c
+    }
+
+    private func applyPreset(_ rules: Curator) -> Curator {
         var c = rules
         let mode = c.mode
         guard mode != .custom else { return c }

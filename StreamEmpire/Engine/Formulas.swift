@@ -282,6 +282,18 @@ enum Formulas {
         min(100, 1 + max(0, totalSubscribers) / 500_000)
     }
 
+    /// Catalog size where licensing prices start climbing. Up to here, a big library costs nothing extra.
+    static let catalogFreeSize = 250
+    /// Beyond this, licenses are so expensive that nobody can realistically keep going (about x27 at 800 titles).
+    static let catalogPriceRamp = 150.0
+
+    /// Licensing price multiplier for a catalog of `count` titles: 1.0 up to 250, then rising steeply
+    /// (x2 at 400, x4.6 at 500, x9 at 600, x27 at 800, x56 at 1,000), so nobody can own everything.
+    static func catalogSizePriceFactor(count: Int) -> Double {
+        guard count > catalogFreeSize else { return 1.0 }
+        return 1 + pow(Double(count - catalogFreeSize) / catalogPriceRamp, 2.5)
+    }
+
     static func subtitleCost(_ kind: TitleKind) -> Double { kind == .movie ? 25_000 : 90_000 }
     static func dubCost(_ kind: TitleKind) -> Double { kind == .movie ? 120_000 : 450_000 }
 

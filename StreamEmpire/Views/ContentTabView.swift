@@ -86,6 +86,13 @@ struct ContentTabView: View {
             }
             Text("\(state.licenseMarket.count) of \(state.listingTarget) offers · scouting level \(state.listingReach)/\(GameState.maxListingReach)")
                 .font(.caption2).foregroundStyle(Theme.text2)
+            if state.catalogSizePriceFactor > 1.0 {
+                Label("Big catalog: licensing prices are x\(String(format: "%.1f", state.catalogSizePriceFactor)) at \(state.catalog.count) titles",
+                      systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(Theme.amber)
+            } else if state.catalog.count > Formulas.catalogFreeSize * 4 / 5 {
+                Label("Licensing prices start climbing past \(Formulas.catalogFreeSize) titles (you have \(state.catalog.count))",
+                      systemImage: "info.circle.fill").font(.caption).foregroundStyle(Theme.text2)
+            }
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(sorted(state.licenseMarket, state)) { title in
                     Button { detail = TitleRef(id: title.id) } label: {
@@ -537,6 +544,22 @@ struct CuratorSheet: View {
                 } footer: {
                     Text("Each week your manager buys the best-value titles that pass every rule below, up to 3 purchases.")
                 }
+                Section {
+                    Picker("Catalog limit", selection: $draft.capMode) {
+                        ForEach(CatalogCapMode.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    if draft.capMode == .fixed {
+                        IntFieldRow(label: "Stop at catalog size", value: $draft.catalogCap, range: 0...2_000, suffix: "titles")
+                    }
+                } header: {
+                    Text("Catalog size")
+                } footer: {
+                    Text(draft.capMode == .auto ? "Auto uses the style's own target (or your Custom rules). "
+                         : draft.capMode == .none ? "No limit: the manager keeps buying. Licensing prices climb steeply past \(Formulas.catalogFreeSize) titles, so cost is the natural brake."
+                         : "The manager stops buying at this many titles. Renewals still happen.")
+                    + Text("Licensing prices rise once a catalog passes \(Formulas.catalogFreeSize) titles (x2 at 400, x9 at 600, x27 at 800).")
+                }
                 if draft.mode == .custom {
                 Section("Spending") {
                     NumberFieldRow(label: "Max per week", value: $draft.weeklyBudget, range: 0...1_000_000_000, isMoney: true)
@@ -546,7 +569,7 @@ struct CuratorSheet: View {
                 Section("What to buy") {
                     IntFieldRow(label: "Minimum quality (0-100)", value: $draft.minQuality, range: 0...100)
                     IntFieldRow(label: "Longest license (1-5)", value: $draft.maxYears, range: 1...5, suffix: "yr")
-                    IntFieldRow(label: "Stop at catalog size", value: $draft.targetCatalogSize, range: 0...1_000, suffix: "titles")
+                    IntFieldRow(label: "Stop at catalog size (Auto)", value: $draft.targetCatalogSize, range: 0...1_000, suffix: "titles")
                     Toggle("Movies", isOn: $draft.allowMovies)
                     Toggle("Series", isOn: $draft.allowSeries)
                     Toggle("Allow exclusives", isOn: $draft.allowExclusive)

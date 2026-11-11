@@ -9,6 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Catalog limits and bigger-catalog pricing (save v29)
+- Licensing manager: new "Catalog size" setting in every style: Auto (the style's own target), Set a limit (you pick the number), or No limit.
+- Licensing prices now climb once your catalog passes 250 titles: x2 at 400, x4.6 at 500, x9 at 600, x27 at 800, x56 at 1,000. Nobody can own everything; cost is the natural brake. The licensing screen warns you as you approach and shows the multiplier.
+
 ### Emergency brake: pause new sign-ups (save v28)
 - A "Pause all new sign-ups" switch on the Dashboard shuts off new subscribers everywhere (existing subscribers stay and keep paying; marketing still costs money). Each region on Company > Tech & team also has its own switch.
 - When servers pass 90% or 100% in a region, the red pause panel offers a one-tap "Pause new sign-ups in <region>".

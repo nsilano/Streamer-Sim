@@ -30,7 +30,7 @@ extension GameState {
             var saved = stored
             saved.carryBudget = min(curatorCarryWeeks * c.weeklyBudget, max(0, c.weeklyBudget + c.carryBudget - renewal.spent))
             curator = saved
-            run.note = "Your catalog already has \(catalog.count) titles (target \(c.targetCatalogSize)).\(renewNote)"
+            run.note = "Your catalog already has \(catalog.count) titles (your limit is \(c.targetCatalogSize)).\(renewNote)"
             return run
         }
 

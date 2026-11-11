@@ -120,7 +120,11 @@ extension GameState {
         guard let license = title.license else { return 0 }
         return license.cost * (1 - Formulas.licenseDiscount(contentLevel: staff.effectiveLevel(.content)))
             * Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers) * costScale
+            * catalogSizePriceFactor
     }
+
+    /// Licensing prices rise once your catalog gets very big (see `Formulas.catalogSizePriceFactor`).
+    var catalogSizePriceFactor: Double { Formulas.catalogSizePriceFactor(count: catalog.count) }
 
     var loanRate: Double {
         max(0.04, Formulas.loanRate(profitable: finances.recentWeeklyProfit >= 0)
