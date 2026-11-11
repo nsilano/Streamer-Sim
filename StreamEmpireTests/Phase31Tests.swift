@@ -48,4 +48,32 @@ final class Phase31Tests: XCTestCase {
         XCTAssertEqual(taken.count, 1_500)
         XCTAssertLessThan(repeats, 150, "sequel-numbered repeats stay rare")
     }
+
+    func testAnEightThousandTitleLibraryIsPossibleWithUniqueNames() {
+        var rng = SeededRNG(seed: 4)
+        var taken = Set<String>()
+        var invented = 0, numbered = 0
+        for i in 0..<8_500 {
+            let t = TitleGenerator.generate(id: i, rng: &rng, avoiding: taken)
+            XCTAssertFalse(taken.contains(t.name), "duplicate at \(i): \(t.name)")
+            taken.insert(t.name)
+            if t.name.range(of: #" [IVX]+$"#, options: .regularExpression) != nil { numbered += 1 }
+            if !(ParodyLibrary.all.contains { $0.name == t.name }) { invented += 1 }
+        }
+        XCTAssertEqual(taken.count, 8_500)
+        XCTAssertGreaterThan(invented, 1_000, "past the parody pool the game invents original-sounding titles")
+        XCTAssertLessThan(numbered, 1_200, "numbered sequels stay a minority even at Netflix scale")
+    }
+
+    func testInventedTitlesAreUniqueAndSensible() {
+        var rng = SeededRNG(seed: 5)
+        var taken = Set<String>()
+        for _ in 0..<300 {
+            let t = TitleGenerator.inventedTitle(genre: .drama, rng: &rng, avoiding: taken)
+            XCTAssertFalse(taken.contains(t.name))
+            XCTAssertFalse(t.name.isEmpty)
+            taken.insert(t.name)
+        }
+        XCTAssertEqual(TitleGenerator.inventedTitle(genre: .anime, rng: &rng, avoiding: []).language, .japanese)
+    }
 }

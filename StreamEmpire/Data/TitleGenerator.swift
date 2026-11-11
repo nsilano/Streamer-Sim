@@ -61,10 +61,35 @@ enum TitleGenerator {
         return base
     }
 
+    /// An original-sounding title (not a parody of anything) for very large catalogs. Never repeats a taken name.
+    static func inventedTitle(genre: Genre, rng: inout SeededRNG, avoiding: Set<String>) -> ParodyTitle {
+        var name = makeName(genre: genre, rng: &rng)
+        var tries = 0
+        while avoiding.contains(name), tries < 40 {
+            name = makeName(genre: genre, rng: &rng)
+            tries += 1
+        }
+        if avoiding.contains(name) {
+            for suffix in romanSuffixes where !avoiding.contains("\(name) \(suffix)") { name = "\(name) \(suffix)"; break }
+        }
+        let movieShare: Double = [.drama: 0.35, .comedy: 0.4, .action: 0.55, .kids: 0.35, .anime: 0.2, .reality: 0.0, .docs: 0.4][genre] ?? 0.3
+        return ParodyTitle(name: name, kind: rng.chance(movieShare) ? .movie : .series, genre: genre,
+                           language: genre == .anime ? .japanese : .english)
+    }
+
     /// Generates one licensable title (a fresh market listing), a parody of a real show or movie.
     static func generate(id: Int, rng: inout SeededRNG, avoiding: Set<String> = []) -> Title {
         let genre = rng.pickWeighted(genreWeights)
-        let parody = pickParody(genre: genre, rng: &rng, avoiding: avoiding)
+        var parody = pickParody(genre: genre, rng: &rng, avoiding: avoiding)
+        // Once most of a genre's parodies are in use (huge catalogs), invent original-sounding names instead of
+        // reusing parodies with sequel numbers.
+        if genre != .local {
+            let pool = ParodyLibrary.byGenre[genre]?.count ?? 0
+            let taken = avoiding.count
+            if pool > 0, taken * 8 > pool, rng.chance(min(0.9, Double(taken) / Double(pool))) {
+                parody = inventedTitle(genre: genre, rng: &rng, avoiding: avoiding)
+            }
+        }
         let kind = parody.kind
         let language = parody.language
 

@@ -407,7 +407,7 @@ enum ParodyLibrary {
 
     /// Every parody, by genre.
     static let byGenre: [Genre: [ParodyTitle]] = [
-        .drama: parse(drama + "\n" + moreDrama, genre: .drama),
+        .drama: parse(drama + "\n" + moreDrama + "\n" + moreDrama2, genre: .drama),
         .comedy: parse(comedy + "\n" + moreComedy, genre: .comedy),
         .action: parse(action + "\n" + moreAction, genre: .action),
         .kids: parse(kids + "\n" + moreKids, genre: .kids),

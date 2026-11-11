@@ -9,7 +9,8 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
-Nothing waiting. New work goes here until it is sent to TestFlight.
+### Titles without limit
+- Another ~360 hand-written drama parodies, and once most of a genre's parodies are in use (huge catalogs) the market invents original-sounding titles ("The Crimson Harbor") instead of repeating parodies with sequel numbers. An 8,000-title library now has unique names, with numbered repeats a minority.
 
 ## Build 23 (TestFlight, 2026-11-11) - 5560c34
 
