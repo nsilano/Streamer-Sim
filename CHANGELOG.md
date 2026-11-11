@@ -15,6 +15,7 @@ Builds 16 and 17 were the same code.
 - **Reputation:** the brand-trust bar is now called Reputation. Changing any policy moves it straight away (harsh options cost reputation, friendly ones earn it back) and shows the change in the policy news.
 - **Fewer stops, more automation:** Settings > Automation lets you choose what stops the sim: only disasters (new default: game over, out of cash, servers at full capacity), important things too, or everything. Servers can scale themselves: cloud is rented when a region passes 85% load and given back when quiet.
 - **Licensing manager renewals:** new renewal rules (term of 1-5 years, a quality bar, let the weakest 10/25/50% lapse, always keep sought-after titles) plus a per-title "Include in auto-renew" switch on each title.
+- **Smarter manager:** renewals now follow your finances. Rich and profitable (cash of $5M+, 20+ weeks of costs, making money) renews everything without hesitation, up to 3x the old price. Short on cash or losing money, it only renews quality 60+ titles at no more than you paid, lets the weakest 25% lapse and keeps a bigger cash cushion. An Adapt to my finances switch in the renewal rules turns it off and shows the current mode.
 - **Company tab:** the tiles are compact, one row of icon + title + one line, in a single grid.
 - Fixed: the older tests for Shop now and subtitles after a dub match the new rules.
 

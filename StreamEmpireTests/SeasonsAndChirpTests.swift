@@ -150,4 +150,38 @@ final class SeasonsAndChirpTests: XCTestCase {
         XCTAssertEqual(s.catalog[0].license?.years, 3)
         XCTAssertThrowsError(try s.updateRenewalRules(RenewalRules(years: 9)))
     }
+
+    func testRenewalPostureFollowsFinances() {
+        var s = newState()
+        s.finances.cash = 80_000_000
+        s.finances.profitHistory = [2_000_000, 2_000_000, 2_000_000, 2_000_000]
+        s.finances.lastWeek.costs = 1_000_000
+        XCTAssertEqual(s.renewalPosture, .flush)
+        s.finances.cash = 3_000_000
+        s.finances.profitHistory = [-1_000_000, -1_000_000, -1_000_000, -1_000_000]
+        XCTAssertEqual(s.renewalPosture, .tight)
+        s.finances.cash = 40_000_000
+        s.finances.profitHistory = [100_000, 100_000, 100_000, 100_000]
+        s.finances.lastWeek.costs = 5_000_000
+        XCTAssertEqual(s.renewalPosture, .normal)
+        s.renewalRules.adaptToFinances = false
+        s.finances.cash = 1_000
+        XCTAssertEqual(s.renewalPosture, .normal, "switched off")
+    }
+
+    func testRichCompanyRenewsMediocreTitlesAndPoorOneDropsThem() {
+        var s = newState()
+        s.renewalMode = .careful
+        var t = expiringTitle(quality: 50)
+        t.paidPrice = 100_000
+        t.popularityAtPurchase = 70
+        s.catalog = [t]
+        s.finances.lastWeek.costs = 1_000_000
+        s.finances.cash = 80_000_000
+        s.finances.profitHistory = [2_000_000, 2_000_000, 2_000_000, 2_000_000]
+        XCTAssertNil(s.renewalBlock(s.catalog[0]), "flush: no hesitation, even for a mediocre title")
+        s.finances.cash = 5_000_000
+        s.finances.profitHistory = [-1_000_000, -1_000_000, -1_000_000, -1_000_000]
+        XCTAssertNotNil(s.renewalBlock(s.catalog[0]), "tight: quality 50 is below the 60 bar")
+    }
 }
