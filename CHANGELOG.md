@@ -9,6 +9,17 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Bug fixes from the playtest bots (save version 30)
+- Licensing manager: pressing Shop now several times in one week no longer stacks the weekly budget. A seller who walked away from talks can't be bought from until the block ends.
+- Titles licensed out to a rival no longer lose an extra week of rights and age when they return.
+- Policy running costs now scale with difficulty; policy sign-up boosts respect each market's subscriber ceiling.
+- Takeovers: you can't buy or sell shares in a company while your bid for it is pending; acquired cash is capped; acquired library titles are no longer treated as your originals; rival-bundle deals end when the last rival in that country is gone.
+- Leaving a market or ending an output deal needs the cash; those and other CEO actions are blocked after the game ends. Borrowed money no longer raises your own credit limit.
+- Output deals deliver titles of the deal's genre and don't double count their fees. Movie sequels in the same franchise get unique numbers. Subtitles can't be bought for a language a title is already dubbed in.
+- Server prices shown in Tech now match what you are charged. Territory extensions use the same price multipliers as licenses.
+- Batches of expiring or expired licenses show as one alert instead of hundreds. Expiry alerts also catch titles that come back from a loan with little time left.
+- Buybacks and dividends are no longer counted as operating costs. Titles nobody watched now show up as weakest in the Content tab.
+
 ### Titles without limit (now 30,000+)
 - Beyond the hand-written parodies, new titles are now puns on real movies and shows ("The Godfather Cheese", "Rocky Meets Jaws", "Breaking Bad Salad"), built from ~1,200 famous movie/show names and ~190 twists: hundreds of thousands of combinations, never a real title on its own.
 - The plain name generator (250+ adjectives, 290+ nouns and about a dozen templates per genre, so well over 30,000 unique titles exist (a test generates 30,000 with no duplicates and almost no numbered repeats).
