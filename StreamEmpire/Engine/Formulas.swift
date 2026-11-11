@@ -359,7 +359,9 @@ extension Formulas {
     static let datacenterUpkeeps: [Double] = [6_000, 15_000, 40_000, 90_000, 200_000]
     static let datacenterUpgradeCosts: [Double] = [1_000_000, 3_000_000, 9_000_000, 25_000_000]   // from level 1...4
     static let datacenterBuildCost = 750_000.0
-    static let datacenterBuildWeeks = 8
+    /// Real build times: a datacenter takes well over a year, a new country about four months to launch.
+    static let datacenterBuildWeeks = 72
+    static let marketLaunchWeeks = 16
     static let maxDatacentersPerRegion = 4
     static let maxDatacenterLevel = 5
     /// Cloud is instant but about 8x pricier per viewer than a datacenter.
@@ -401,7 +403,11 @@ extension Formulas {
     static func licenseDiscount(contentLevel: Double) -> Double { 0.02 * contentLevel }
     static func originalQualityBonus(contentLevel: Double) -> Double { 2.0 * contentLevel }
     static func marketingBoost(marketingLevel: Double) -> Double { 1.0 + 0.06 * marketingLevel }
-    static func buildWeeks(base: Int, engineeringLevel: Double) -> Int { max(2, base - Int(engineeringLevel.rounded())) }
+    /// Each engineering level shaves a little off, but never more than half the time.
+    static func buildWeeks(base: Int, engineeringLevel: Double) -> Int {
+        let perLevel = max(1, base / 16)
+        return max(max(2, base / 2), base - Int(engineeringLevel.rounded()) * perLevel)
+    }
     static func cdnCostMultiplier(engineeringLevel: Double) -> Double { max(0.3, 1.0 - 0.05 * engineeringLevel) }
     static func fineMultiplier(legalLevel: Double) -> Double { max(0.1, 1.0 - 0.15 * legalLevel) }
     static func regulationCostMultiplier(legalLevel: Double) -> Double { max(0.2, 1.0 - 0.10 * legalLevel) }
@@ -511,8 +517,8 @@ extension Formulas {
     static func tierLaunchWeeks(_ tier: Tier) -> Int {
         switch tier {
         case .standard: return 0
-        case .ad: return 3
-        case .premium: return 4
+        case .ad: return 8
+        case .premium: return 12
         }
     }
 

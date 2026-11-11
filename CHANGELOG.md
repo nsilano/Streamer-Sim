@@ -9,6 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Realistic build times
+- A datacenter now takes 72 weeks (about 17 months) to build instead of 8. Apps take 30 weeks (iOS/Android), 52 (smart TV) and 64 (consoles). Launching a new country takes 16 weeks instead of 4, and extra plans take 8 (ad) or 12 (premium) weeks. Engineering staff still shave time off builds, but never more than half. Rented cloud capacity stays instant.
+- Plan ahead: growth comes slower now, so launch markets and start big builds earlier. Existing saves keep the build times they already started with.
+
 ### Map layout, Prices screen, sim stops off the dashboard
 - **World map:** the map box now hugs the map instead of leaving huge dark bars above and below it.
 - **Prices moved to Company:** a new Prices tile (Company tab) with the same-price-everywhere tool, the scale-to-fair-price slider and, new, every live country's own prices per tier with its fair price and how far you are from it. The old Prices button on the World screen is gone.

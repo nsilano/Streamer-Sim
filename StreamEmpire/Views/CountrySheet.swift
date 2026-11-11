@@ -93,7 +93,7 @@ struct CountrySheet: View {
         return VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: "Launch here", icon: "paperplane.fill", tint: Theme.violet)
             LabeledValue(label: "Launch cost", value: Format.money(state.launchPrice(country)))
-            LabeledValue(label: "Setup time", value: "4 weeks")
+            LabeledValue(label: "Setup time", value: "\(Formulas.marketLaunchWeeks) weeks")
             if let blocker {
                 Label(blocker, systemImage: "lock.fill").font(.footnote).foregroundStyle(Theme.amber)
             }
@@ -110,7 +110,7 @@ struct CountrySheet: View {
         VStack(alignment: .leading, spacing: 8) {
             SectionTitle(text: "Launching", icon: "hourglass", tint: Theme.amber)
             Text("Going live in \(weeks) week\(weeks == 1 ? "" : "s").").foregroundStyle(.white)
-            StatBar(label: "Setup", value: Double(4 - weeks) / 4, text: "\(4 - weeks)/4 weeks", tint: Theme.amber)
+            StatBar(label: "Setup", value: Double(Formulas.marketLaunchWeeks - weeks) / Double(Formulas.marketLaunchWeeks), text: "\(Formulas.marketLaunchWeeks - weeks)/\(Formulas.marketLaunchWeeks) weeks", tint: Theme.amber)
         }
         .artCard(tint: Theme.amber)
     }

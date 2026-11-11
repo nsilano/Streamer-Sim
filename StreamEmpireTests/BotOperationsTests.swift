@@ -128,7 +128,7 @@ private final class Fuzz {
             if a == b { continue }
             var ok = false
             if b == .notLaunched && a != .notLaunched { ok = true }                    // exitMarket
-            if a == .notLaunched && b == .launching(weeksLeft: 4) { ok = true }      // launchMarket
+            if a == .notLaunched && b == .launching(weeksLeft: Formulas.marketLaunchWeeks) { ok = true }      // launchMarket
             expect(ok, "illegal market status change by an action in \(code): \(a) -> \(b)")
         }
         finite(s.finances.cash, "cash after action")

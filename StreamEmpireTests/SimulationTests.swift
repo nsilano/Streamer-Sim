@@ -268,10 +268,10 @@ final class SimulationTests: XCTestCase {
     func testLaunchMarketTakesFourWeeks() throws {
         var s = newState()
         try s.launchMarket(code: "NZ")
-        XCTAssertEqual(s.markets["NZ"]?.status, .launching(weeksLeft: 4))
+        XCTAssertEqual(s.markets["NZ"]?.status, .launching(weeksLeft: Formulas.marketLaunchWeeks))
         XCTAssertEqual(s.finances.cash, 25_000_000 - CountryData.country("NZ")!.launchCost, accuracy: 0.01)
         XCTAssertThrowsError(try s.launchMarket(code: "NZ"))
-        for _ in 0..<3 { s = SimulationEngine.advanceWeek(s) }
+        for _ in 0..<(Formulas.marketLaunchWeeks - 1) { s = SimulationEngine.advanceWeek(s) }
         XCTAssertNotEqual(s.markets["NZ"]?.status, .live)
         s = SimulationEngine.advanceWeek(s)
         XCTAssertEqual(s.markets["NZ"]?.status, .live)

@@ -55,8 +55,10 @@ final class Phase4Tests: XCTestCase {
         s.staff.engineering = 3
         try s.startPlatform(.smartTV)
         XCTAssertEqual(s.builds[0].weeksLeft, 9)
-        XCTAssertEqual(Formulas.buildWeeks(base: 8, engineeringLevel: 5), 3)
-        XCTAssertEqual(Formulas.buildWeeks(base: 8, engineeringLevel: 99), 2, "never instant")
+        XCTAssertEqual(Formulas.buildWeeks(base: 8, engineeringLevel: 2), 6)
+        XCTAssertEqual(Formulas.buildWeeks(base: 72, engineeringLevel: 5), 52)
+        XCTAssertEqual(Formulas.buildWeeks(base: 8, engineeringLevel: 99), 4, "never less than half the time")
+        XCTAssertEqual(Formulas.buildWeeks(base: 72, engineeringLevel: 99), 36)
     }
 
     func testMoreReachMeansMoreSignups() {

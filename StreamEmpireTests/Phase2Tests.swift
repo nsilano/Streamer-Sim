@@ -91,7 +91,7 @@ final class Phase2Tests: XCTestCase {
         XCTAssertNil(s.launchBlocker(code: "US"))
         s.finances.cash = 100_000_000
         try s.launchMarket(code: "US")
-        XCTAssertEqual(s.markets["US"]?.status, .launching(weeksLeft: 4))
+        XCTAssertEqual(s.markets["US"]?.status, .launching(weeksLeft: Formulas.marketLaunchWeeks))
 
         var t = newState()
         t.markets["IE"]?.subs = TierSet(ad: 0, standard: 1_200_000, premium: 0)
@@ -192,7 +192,7 @@ final class Phase2Tests: XCTestCase {
     func testSecondMarketGoesLiveAndEarnsRevenue() throws {
         var s = newState()
         try s.launchMarket(code: "NZ")
-        for _ in 0..<4 { s = SimulationEngine.advanceWeek(s) }
+        for _ in 0..<Formulas.marketLaunchWeeks { s = SimulationEngine.advanceWeek(s) }
         XCTAssertTrue(s.markets["NZ"]!.isLive)
         s.markets["NZ"]?.subs = TierSet(ad: 0, standard: 1_000, premium: 0)
         s = SimulationEngine.advanceWeek(s)

@@ -14,7 +14,7 @@ extension GameState {
         if let best = affordable.max(by: { value(of: $0) < value(of: $1) }) {
             items.append(Advice(id: "rec-launch-\(best.code)", icon: "globe.europe.africa.fill", urgent: false,
                                 title: "Open \(best.name) \(best.flag)",
-                                detail: "\(best.sizeHint), \(best.incomeHint.lowercased()). Launching costs \(Format.money(launchPrice(best))) and takes 4 weeks."))
+                                detail: "\(best.sizeHint), \(best.incomeHint.lowercased()). Launching costs \(Format.money(launchPrice(best))) and takes \(Formulas.marketLaunchWeeks) weeks."))
         }
 
         let live = liveMarketCodes

@@ -18,7 +18,7 @@ struct HowToPlayView: View {
                     tip("megaphone", "Marketing builds awareness",
                         "Awareness fades without spending. Pair it with a good catalog, because ads can't fix a weak lineup.")
                     tip("globe.europe.africa.fill", "Expand across the map",
-                        "Tap any country on the world map. Launching costs money and takes 4 weeks. USA, India and Japan unlock with enough subscribers or titles.")
+                        "Tap any country on the world map. Launching costs money and takes about 4 months. USA, India and Japan unlock with enough subscribers or titles.")
                     tip("trophy.fill", "Rivals fight back",
                         "Twelve rivals bid for licenses, cut prices and expand. If you start dominating a country, they'll launch price wars and pull your subscribers away.")
                     tip("clapperboard", "Make your own shows",

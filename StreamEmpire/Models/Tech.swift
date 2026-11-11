@@ -34,9 +34,9 @@ enum Platform: String, Codable, CaseIterable, Identifiable {
     var buildWeeks: Int {
         switch self {
         case .web: return 0
-        case .ios, .android: return 8
-        case .smartTV: return 12
-        case .consoles: return 16
+        case .ios, .android: return 30
+        case .smartTV: return 52
+        case .consoles: return 64
         }
     }
     var weeklyUpkeep: Double {

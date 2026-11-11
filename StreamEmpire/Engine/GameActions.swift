@@ -83,9 +83,9 @@ extension GameState {
         }
         finances.cash -= price
         finances.ledger.launch += price
-        markets[code]?.status = .launching(weeksLeft: 4)
+        markets[code]?.status = .launching(weeksLeft: Formulas.marketLaunchWeeks)
         addNews(.you, "\(companyName) begins launching in \(country.name)",
-                "\(country.flag) Setup takes 4 weeks and costs \(Format.money(price)). Subscribers can join once it's live.")
+                "\(country.flag) Setup takes \(Formulas.marketLaunchWeeks) weeks and costs \(Format.money(price)). Subscribers can join once it's live.")
     }
 
     mutating func setPrices(code: String, prices: TierSet) throws {
