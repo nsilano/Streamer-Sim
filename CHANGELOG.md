@@ -9,6 +9,7 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+## Build 24 (TestFlight, 2026-11-11) - 658fe11
 ### Chirp, seasons, reputation and less micromanaging (save version 31)
 - **Chirp:** the news is now a social feed. Every story is a post with an author, hashtags and likes/reposts/replies, and stories about you pull a reply from a fan or a critic that follows your reputation. It replaces the News view in the Rivals tab.
 - **Seasons:** winter and the holidays bring more sign-ups and less churn, summer slows things down (milder in the south and tropics). News flags the holiday rush, the summer slowdown and the return indoors.
