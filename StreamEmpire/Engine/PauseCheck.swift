@@ -6,6 +6,7 @@ struct PauseReason: Identifiable, Equatable {
     var icon: String
     var title: String
     var detail: String
+    var region: String? = nil      // set when a one-tap "pause sign-ups here" makes sense
 }
 
 /// Compares the week before and after and lists what the player needs to react to.
@@ -32,11 +33,13 @@ enum PauseCheck {
             if was < 1, now >= 1 {
                 out.append(PauseReason(id: "load100-\(region.rawValue)", icon: "exclamationmark.triangle.fill",
                                        title: "Servers overloaded in \(region.displayName)",
-                                       detail: "Load is \(Format.percent(now)) of capacity. Viewers are buffering and cancelling, and a crash is likely. Rent cloud capacity or build a datacenter (Company > Tech)."))
+                                       detail: "Load is \(Format.percent(now)) of capacity. Viewers are buffering and cancelling, and a crash is likely. Pause sign-ups below, or rent cloud capacity / build a datacenter (Company > Tech & team).",
+                                       region: region.rawValue))
             } else if was < loadWarning, now >= loadWarning {
                 out.append(PauseReason(id: "load90-\(region.rawValue)", icon: "server.rack",
                                        title: "Servers nearly full in \(region.displayName)",
-                                       detail: "Load is \(Format.percent(now)) of capacity. Add capacity before you grow further (Company > Tech)."))
+                                       detail: "Load is \(Format.percent(now)) of capacity. Add capacity before you grow further (Company > Tech & team), or pause sign-ups here if it keeps climbing.",
+                                       region: region.rawValue))
             }
         }
         for event in after.lastReport?.events ?? [] {

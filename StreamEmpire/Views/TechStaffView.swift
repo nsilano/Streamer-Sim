@@ -118,6 +118,12 @@ struct TechStaffView: View {
             }
             StatBar(label: "\(Format.count(subs)) viewers of \(Format.count(capacity)) capacity",
                     value: min(1.3, load) / 1.3, text: Format.percent(load), tint: tint, compact: true)
+            Toggle(isOn: Binding(get: { state.signupsPaused(in: region) },
+                                 set: { on in store.perform { try $0.setSignupsPaused(scope: region.rawValue, paused: on) } })) {
+                Text("Pause new sign-ups in \(region.displayName)").font(.caption.weight(.semibold)).foregroundStyle(.white)
+            }
+            .tint(Theme.danger)
+            .disabled(state.pausedSignups.contains(GameState.allScope))
             if (state.outages[region.rawValue] ?? 0) > 0 {
                 Label("Recovering from a crash", systemImage: "wrench.and.screwdriver.fill").font(.caption).foregroundStyle(Theme.danger)
             }

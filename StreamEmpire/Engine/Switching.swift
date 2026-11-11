@@ -51,6 +51,7 @@ enum Switching {
             guard theirs > 0 else { continue }
             let rate = Formulas.switchRate(score: score(s, rival: s.rivals[i], country: country, appeal: appeal, service: service),
                                            awareness: market.awareness)
+            if rate > 0, s.signupsPaused(in: country.region) { continue }   // nobody new joins while sign-ups are shut
             if rate > 0 {
                 let moved = theirs * rate
                 s.rivals[i].subs[code] = theirs - moved

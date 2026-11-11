@@ -41,6 +41,11 @@ extension GameState {
             }
         }
 
+        if anySignupsPaused {
+            items.append(Advice(id: "rec-signups", icon: "person.crop.circle.badge.xmark", urgent: false,
+                                title: "New sign-ups are paused \(pausedSignupsText)",
+                                detail: "You're not gaining customers there. Switch it off (Dashboard or Company > Tech & team) once your servers have headroom."))
+        }
         if !sportsOffers.isEmpty {
             items.append(Advice(id: "rec-sports", icon: "sportscourt.fill", urgent: false, title: "Sports rights are up for auction",
                                 detail: "Live sport cuts churn in its region. See Company > Business."))

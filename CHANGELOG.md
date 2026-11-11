@@ -9,7 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
-Nothing waiting. New work goes here until it is sent to TestFlight.
+### Emergency brake: pause new sign-ups (save v28)
+- A "Pause all new sign-ups" switch on the Dashboard shuts off new subscribers everywhere (existing subscribers stay and keep paying; marketing still costs money). Each region on Company > Tech & team also has its own switch.
+- When servers pass 90% or 100% in a region, the red pause panel offers a one-tap "Pause new sign-ups in <region>".
+- Customers switching over from rivals are blocked too while the brake is on, and the advisor reminds you if you leave it on.
 
 ## Build 22 (TestFlight, 2026-11-11) - 92d32d6
 

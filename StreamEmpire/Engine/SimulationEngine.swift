@@ -167,8 +167,9 @@ enum SimulationEngine {
             let promo = s.promoEffects(for: code)
             let piracy = Formulas.piracy(price: price, tolerance: country.priceTolerance, appeal: appeal)
             let trend = Trends.effects(week: s.week)
-            let adds = min(gross * policy.adds * promo.adds * trend.adds * feats.adds * sports.adds * partner.adds
-                           * (1 - 0.2 * piracy), headroom)
+            let signupsOpen = !s.signupsPaused(in: country.region)
+            let adds = signupsOpen ? min(gross * policy.adds * promo.adds * trend.adds * feats.adds * sports.adds * partner.adds
+                                         * (1 - 0.2 * piracy), headroom) : 0
             let baseChurn = Formulas.churnRate(appeal: appeal, price: price,
                                                tolerance: country.priceTolerance,
                                                serviceQuality: quality,

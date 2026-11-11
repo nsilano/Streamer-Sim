@@ -149,6 +149,16 @@ struct DashboardView: View {
                 Text("1x").tag(1.0); Text("2x").tag(0.5); Text("4x").tag(0.25); Text("8x").tag(0.12)
             }
             .pickerStyle(.segmented)
+            Toggle(isOn: Binding(get: { state.pausedSignups.contains(GameState.allScope) },
+                                 set: { on in store.perform { try $0.setSignupsPaused(scope: GameState.allScope, paused: on) } })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Pause all new sign-ups").font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                    Text(state.anySignupsPaused ? "Closed \(state.pausedSignupsText). Existing subscribers keep paying. Marketing still costs money."
+                                                : "Emergency brake for overloaded servers.")
+                        .font(.caption2).foregroundStyle(state.anySignupsPaused ? Theme.danger : Theme.text2)
+                }
+            }
+            .tint(Theme.danger)
             HStack {
                 Text(store.autoAdvance ? "Running. It pauses by itself when something needs you." : "Paused at week \(state.week).")
                     .font(.caption).foregroundStyle(Theme.text2)
@@ -179,6 +189,15 @@ struct DashboardView: View {
                             Text(reason.title).font(.subheadline.weight(.bold)).foregroundStyle(.white)
                             Text(reason.detail).font(.caption).foregroundStyle(Theme.text2)
                         }
+                    }
+                }
+                ForEach(store.pauseReasons.compactMap(\.region), id: \.self) { region in
+                    if let name = Region(rawValue: region)?.displayName,
+                       store.state?.pausedSignups.contains(region) != true, store.state?.pausedSignups.contains(GameState.allScope) != true {
+                        Button("Pause new sign-ups in \(name)") {
+                            store.perform { try $0.setSignupsPaused(scope: region, paused: true) }
+                        }
+                        .buttonStyle(SoftButtonStyle(tint: Theme.amber))
                     }
                 }
                 if store.pauseReasons.contains(where: { $0.id == "expiring" }) {
