@@ -9,6 +9,9 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Map fix
+- Norway's marker and label sat on top of Sweden, because the map used the middle of all Norway's land (including far-away Svalbard). Markers now sit on each country's main landmass. Norway, Canada, the US, Chile, Indonesia, New Zealand, India, Italy, the UK, Japan, Morocco and Sweden were nudged.
+
 ### Dubs and subtitles without the chores (save version 32)
 - New Company > Dubs & subs screen. **Automatic:** pick Subtitles (Off / Every title) and Dubbing (Off / Top titles / Every title) once; every week your team localizes the catalog for the languages of the countries you operate in, within a weekly budget you type. New games start with subtitles on. **Do it now:** one tap subtitles the whole catalog for every language of your live markets, or dubs your top 20 titles per language, with the price shown. **Coverage** shows how far along each language is.
 - The per-country buttons and per-title pickers still exist for fine control.
