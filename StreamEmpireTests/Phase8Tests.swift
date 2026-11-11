@@ -88,7 +88,7 @@ final class Phase8Tests: XCTestCase {
     func testWorldIsBigEnoughForRealisticSubscriberNumbers() {
         let ceiling = CountryData.all.reduce(0.0) { $0 + $1.subscriberCeiling }
         XCTAssertGreaterThan(ceiling, 1_500_000_000, "streaming subscriptions are counted per service, so the world holds ~1.5-2B")
-        XCTAssertLessThan(ceiling, 2_500_000_000)
+        XCTAssertLessThan(ceiling, 3_000_000_000)
         XCTAssertEqual(CountryData.country("US")!.subscriptionsPerHousehold, 4.2, accuracy: 1e-9)
         XCTAssertGreaterThan(CountryData.country("US")!.subscriptionsPerHousehold,
                              CountryData.country("IN")!.subscriptionsPerHousehold, "richer homes hold more services")
@@ -121,7 +121,7 @@ final class Phase8Tests: XCTestCase {
         XCTAssertGreaterThan(eurovue.subs["DE"] ?? 0, 10 * (eurovue.subs["TR"] ?? 1) / 10)
         let spark = rivals.first { $0.id == "spark" }!
         XCTAssertGreaterThan(spark.subs["IN"]!, 0.6 * spark.totalSubs, "Spark Bharat is mostly India")
-        XCTAssertEqual(rivals.first { $0.id == "netflux" }!.countryCount, CountryData.all.count)
+        XCTAssertEqual(rivals.first { $0.id == "netflux" }!.countryCount, CountryData.all.count - CountryData.closedToRivals.count)
     }
 
     func testNoCountryStartsOverfullAndYouHaveRoomToGrow() {

@@ -67,6 +67,7 @@ enum RivalData {
             // Spread the rival's total over its footprint in proportion to country size x footprint weight.
             var weights: [String: Double] = [:]
             for country in CountryData.all {
+                if CountryData.closedToRivals.contains(country.code) { continue }
                 let weight = def.countries[country.code] ?? def.regions[country.region] ?? 0
                 if weight > 0 { weights[country.code] = country.subscriberCeiling * weight }
             }

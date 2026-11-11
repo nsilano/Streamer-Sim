@@ -10,6 +10,9 @@ enum Language: String, Codable, CaseIterable {
     case english, spanish, french, german, portuguese, italian, dutch, polish, turkish
     case arabic, hindi, japanese, korean, mandarin, indonesian, thai, swedish
     case danish, norwegian, finnish, czech, greek, romanian, hebrew, vietnamese
+    case hungarian, slovak, slovenian, croatian, serbian, bulgarian, ukrainian, russian, lithuanian, latvian, estonian
+    case albanian, macedonian, georgian, armenian, azerbaijani, persian, bengali, sinhala, nepali, kazakh, uzbek
+    case mongolian, khmer, lao, burmese, amharic, swahili
     var displayName: String { rawValue.capitalized }
 }
 

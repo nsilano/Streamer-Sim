@@ -23,8 +23,8 @@ final class Phase2Tests: XCTestCase {
     // MARK: Country table
 
     func testThirtyCountriesInSixRegions() {
-        XCTAssertEqual(CountryData.all.count, 50)
-        XCTAssertEqual(Set(CountryData.all.map(\.code)).count, 50)
+        XCTAssertEqual(CountryData.all.count, 132)
+        XCTAssertEqual(Set(CountryData.all.map(\.code)).count, 132)
         for region in Region.allCases {
             XCTAssertFalse(CountryData.all.filter { $0.region == region }.isEmpty, "\(region) is empty")
         }
@@ -42,7 +42,7 @@ final class Phase2Tests: XCTestCase {
     }
 
     func testStarterPicksAndBigMarketUnlocks() {
-        XCTAssertEqual(CountryData.starters.count, 50, "any country can be your starting market")
+        XCTAssertEqual(CountryData.starters.count, 129, "any country can be your starting market")
         for code in ["US", "IN", "JP"] {
             XCTAssertNotNil(CountryData.country(code)?.unlock, code)
         }
@@ -63,7 +63,7 @@ final class Phase2Tests: XCTestCase {
         let hulo = rivals.first { $0.id == "hulo" }!
         XCTAssertEqual(Set(hulo.subs.keys), ["US", "JP"])
         let netflux = rivals.first { $0.id == "netflux" }!
-        XCTAssertEqual(netflux.countryCount, CountryData.all.count)
+        XCTAssertEqual(netflux.countryCount, CountryData.all.count - CountryData.closedToRivals.count)
     }
 
     func testNoMarketStartsOverfull() {

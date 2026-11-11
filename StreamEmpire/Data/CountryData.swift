@@ -1,6 +1,6 @@
 import Foundation
 
-/// The 50-country table (6 regions).
+/// The country table (6 regions): the original 50 here, 82 more in `CountryDataMore.swift`.
 enum CountryData {
     // MARK: Genre taste profiles
 
@@ -9,7 +9,7 @@ enum CountryData {
         [.drama: d, .comedy: c, .action: a, .kids: k, .anime: an, .reality: r, .docs: doc, .local: l]
     }
 
-    private static func regionTaste(_ region: Region) -> [Genre: Double] {
+    static func regionTaste(_ region: Region) -> [Genre: Double] {
         switch region {
         case .northAmerica: return profile(1.1, 1.1, 1.1, 1.0, 0.7, 1.0, 0.9, 0.8)
         case .latinAmerica: return profile(1.2, 1.1, 1.0, 1.0, 0.9, 1.0, 0.8, 1.3)
@@ -22,7 +22,7 @@ enum CountryData {
 
     // MARK: Table
 
-    private static func make(_ code: String, _ name: String, _ flag: String, _ region: Region,
+    static func make(_ code: String, _ name: String, _ flag: String, _ region: Region,
                              households: Double, tolerance: Double, ads: Double,
                              language: Language, quota: Double, launchMillions: Double, risk: Double,
                              unlock: UnlockRequirement? = nil, starter: Bool = false,
@@ -35,7 +35,13 @@ enum CountryData {
                 unlock: unlock, isStarterPick: starter)
     }
 
-    static let all: [Country] = [
+    /// Every country in the game, 132 markets.
+    static let all: [Country] = base + more
+
+    /// Markets rivals never enter (closed to foreign streamers), so they are yours alone once unlocked.
+    static let closedToRivals: Set<String> = ["CN", "IR", "CU"]
+
+    private static let base: [Country] = [
         // North America
         make("US", "United States", "🇺🇸", .northAmerica, households: 115, tolerance: 15, ads: 1.0,
              language: .english, quota: 0.10, launchMillions: 30, risk: 0.10,
@@ -163,7 +169,7 @@ enum CountryData {
     static func country(_ code: String) -> Country? { byCode[code] }
 
     /// Every country can be your starting market. `isStarterPick` marks the gentle ones for the start screen.
-    static var starters: [Country] { all }
+    static var starters: [Country] { all.filter { !closedToRivals.contains($0.code) } }
 
     /// Sensible opening prices, rounded to the nearest 50 cents.
     static func defaultPrices(for country: Country) -> TierSet {

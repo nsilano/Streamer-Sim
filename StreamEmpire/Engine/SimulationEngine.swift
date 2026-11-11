@@ -602,7 +602,7 @@ enum SimulationEngine {
     }
 
     private static func advanceRivals(_ s: inout GameState, events: inout [GameEvent]) {
-        let allCodes = CountryData.all.map { $0.code }
+        let allCodes = CountryData.all.map { $0.code }.filter { !CountryData.closedToRivals.contains($0) }
         var announcedExpansion = false
         var announcedPriceCut = false
         var announcedPriceWar = false
