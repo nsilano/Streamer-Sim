@@ -100,6 +100,8 @@ Dashboard - Markets - Content - Rivals - Company.
 
 25. **Phase 25 (done): social + calm automation.** `Data/Chirp.swift` (news as microblog posts, pure/derived, replies follow `brandTrust`, shown as "Reputation"), `Data/Seasons.swift` (winter/holiday vs summer, hemisphere strength per region, multiplies adds and churn), policy changes shift reputation at once (`setPolicy`), `PauseSensitivity` (critical/important/everything; the app starts on critical) and `autoScale` (cloud) in `Models/Automation.swift` + `Engine/AutoScale.swift`, `RenewalRules` + `Title.noAutoRenew` (`Engine/Renewals.swift`). The user wants fewer stops and more automation: add new stop reasons to `PauseCheck` with the right sensitivity level, not as new pop-ups. Save version is 31.
 
+26. **Phase 26 (done): layout + pricing home.** Company > Prices (`Views/PricesView.swift`: global, scale slider, per-country per-tier via `setPrices`), World map container uses the map's aspect ratio, and auto-advance stops whenever the Dashboard tab/root disappears (`DashboardView.onDisappear`, `RootView` tab change). The sim only runs while the player watches the dashboard (user request). No save change.
+
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).
 - Rival originals/events that visibly react to the player; difficulty levels.

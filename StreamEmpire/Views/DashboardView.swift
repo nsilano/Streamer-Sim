@@ -24,6 +24,8 @@ struct DashboardView: View {
             }
             .artScreen()
             .toolbar(.hidden, for: .navigationBar)
+            // The sim only runs while you watch the dashboard: leaving it (another tab, or a screen opened from it) stops it.
+            .onDisappear { store.autoAdvance = false }
             .sheet(isPresented: $store.showReport) {
                 if let report = store.state?.lastReport { WeeklyReportView(report: report) }
             }

@@ -14,7 +14,6 @@ struct MarketsView: View {
     @State private var mode: Mode = .map
     @State private var selected: String?
     @State private var sheet: CountryRef?
-    @State private var showPrices = false
 
     var body: some View {
         NavigationStack {
@@ -37,7 +36,6 @@ struct MarketsView: View {
             .artScreen()
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $sheet) { ref in CountrySheet(code: ref.id) }
-            .sheet(isPresented: $showPrices) { PriceToolSheet() }
         }
     }
 
@@ -45,12 +43,7 @@ struct MarketsView: View {
 
     private func header(_ state: GameState) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            ScreenHeader(title: "World", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.liveMarketCodes.count) of \(CountryData.all.count) markets live") {
-                Button { showPrices = true } label: {
-                    Label("Prices", systemImage: "tag.fill")
-                }
-                .buttonStyle(SoftButtonStyle(tint: Theme.amber))
-            }
+            ScreenHeader(title: "World", subtitle: "\(GameCalendar.dateText(week: state.week)) · Week \(state.week) · \(state.liveMarketCodes.count) of \(CountryData.all.count) markets live")
             HStack(spacing: 10) {
                 miniStat("Subscribers", Format.count(state.totalSubscribers))
                 miniStat("Rank", "#\(state.rank)")
@@ -82,7 +75,7 @@ struct MarketsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
             .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 1))
-            .frame(maxHeight: 520)
+            .aspectRatio(WorldMapStore.shared.width / WorldMapStore.shared.height, contentMode: .fit)
             .padding(.horizontal, 12)
 
             legend
@@ -183,75 +176,5 @@ struct MarketsView: View {
             }
         }
         .artCard(tint: MapPalette.color(status))
-    }
-}
-
-/// Set every market's prices in one go: exact dollars, or scaled to each country's fair price.
-struct PriceToolSheet: View {
-    @EnvironmentObject var store: GameStore
-    @Environment(\.dismiss) private var dismiss
-    @State private var prices = TierSet(ad: 4.99, standard: 10.99, premium: 16.99)
-    @State private var level = 1.0
-    @State private var loaded = false
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        SectionTitle(text: "Exact dollar prices", icon: "dollarsign.circle.fill", tint: Theme.amber)
-                        Text("Type any monthly price in dollars and apply it to every country you've launched. Check each country's page for its fair price and what rivals charge.")
-                            .font(.footnote).foregroundStyle(Theme.text2)
-                        ForEach(Tier.allCases) { tier in
-                            HStack {
-                                Text(tier.displayName).foregroundStyle(.white)
-                                Spacer()
-                                PriceField(value: prices[tier]) { prices[tier] = $0 }
-                            }
-                        }
-                        Button("Apply these prices to all my markets") {
-                            store.perform { try $0.applyPrices(prices) }
-                            dismiss()
-                        }
-                        .buttonStyle(GlowButtonStyle(tint: Theme.amber))
-                    }
-                    .artCard(tint: Theme.amber)
-
-                    VStack(alignment: .leading, spacing: 10) {
-                        SectionTitle(text: "Or scale to each country", icon: "slider.horizontal.3", tint: Theme.teal)
-                        Text("A $10 plan is cheap in the US but dear in India. This sets every country to the same share of its own fair price.")
-                            .font(.footnote).foregroundStyle(Theme.text2)
-                        Text("\(Format.percent(level)) of fair price").font(Theme.number(24)).foregroundStyle(.white)
-                        Slider(value: $level, in: 0.4...2.0, step: 0.05).tint(Theme.teal)
-                        Text(hint).font(.caption).foregroundStyle(Theme.text2)
-                        Button("Apply scaled prices") {
-                            store.perform { try $0.applyPriceLevel(level) }
-                            dismiss()
-                        }
-                        .buttonStyle(SoftButtonStyle(tint: Theme.teal))
-                    }
-                    .artCard(tint: Theme.teal)
-                }
-                .padding(16)
-            }
-            .artScreen()
-            .navigationTitle("Subscription prices")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-            .onAppear {
-                if !loaded, let state = store.state, let code = state.liveMarketCodes.first, let market = state.markets[code] {
-                    prices = market.prices
-                    loaded = true
-                }
-            }
-        }
-    }
-
-    private var hint: String {
-        if level > 1.3 { return "Well above fair: fat margins, but slow sign-ups and high churn." }
-        if level > 1.05 { return "A bit above fair: more profit per subscriber, fewer sign-ups." }
-        if level < 0.7 { return "Bargain pricing: fast growth, thin margins." }
-        if level < 0.95 { return "A bit below fair: faster growth, a little less money." }
-        return "At the fair price: balanced growth and income."
     }
 }

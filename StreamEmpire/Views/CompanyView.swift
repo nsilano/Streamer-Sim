@@ -21,6 +21,7 @@ struct CompanyView: View {
                             HubTile(icon: "chart.bar.doc.horizontal.fill", title: "Earnings", subtitle: "Quarters, buybacks, FX", tint: Theme.amber) { AnyView(BusinessView(tab: .earnings)) },
                             HubTile(icon: "server.rack", title: "Tech & team", subtitle: "Apps, servers, staff", tint: Theme.teal) { AnyView(TechStaffView()) },
                             HubTile(icon: "iphone.gen3", title: "Product", subtitle: "Features, ad load", tint: Theme.violet) { AnyView(BusinessView(tab: .product)) },
+                            HubTile(icon: "tag.fill", title: "Prices", subtitle: "Global and per country", tint: Theme.amber) { AnyView(PricesView()) },
                             HubTile(icon: "megaphone.fill", title: "Promotions", subtitle: state.promotions.isEmpty ? "Short campaigns" : "\(state.promotions.count) running", tint: Theme.magenta) { AnyView(PromotionsView()) },
                             HubTile(icon: "list.bullet.clipboard.fill", title: "Policies", subtitle: "Reputation \(Int(state.brandTrust))", tint: Theme.violet) { AnyView(PoliciesView()) },
                             HubTile(icon: "shippingbox.fill", title: "Deals", subtitle: "Sports, bundles, buys", tint: Theme.good) { AnyView(BusinessView(tab: .deals)) },

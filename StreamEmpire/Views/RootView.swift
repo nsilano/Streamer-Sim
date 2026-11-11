@@ -2,26 +2,33 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var store: GameStore
+    @State private var tab = 0
 
     var body: some View {
         Group {
             if let state = store.state {
-                TabView {
+                TabView(selection: $tab) {
                     DashboardView()
                         .tabItem { Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis") }
+                        .tag(0)
                         .badge(state.pendingEvent == nil ? 0 : 1)
                     MarketsView()
                         .tabItem { Label("Markets", systemImage: "globe.europe.africa.fill") }
+                        .tag(1)
                     ContentTabView()
                         .tabItem { Label("Content", systemImage: "film.stack") }
+                        .tag(2)
                         .badge(state.expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 8 }.count)
                     RivalsView()
                         .tabItem { Label("Rivals", systemImage: "trophy.fill") }
+                        .tag(3)
                         .badge(state.unreadNewsCount)
                     CompanyView()
                         .tabItem { Label("Company", systemImage: "building.2.fill") }
+                        .tag(4)
                 }
                 .tint(Theme.magenta)
+                .onChange(of: tab) { old, _ in if old == 0 { store.autoAdvance = false } }
                 .fullScreenCover(isPresented: Binding(get: { state.outcome != .playing }, set: { _ in })) {
                     if let current = store.state { GameOverView(state: current) }
                 }

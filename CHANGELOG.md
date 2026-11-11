@@ -9,6 +9,11 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Map layout, Prices screen, sim stops off the dashboard
+- **World map:** the map box now hugs the map instead of leaving huge dark bars above and below it.
+- **Prices moved to Company:** a new Prices tile (Company tab) with the same-price-everywhere tool, the scale-to-fair-price slider and, new, every live country's own prices per tier with its fair price and how far you are from it. The old Prices button on the World screen is gone.
+- **Auto-advance stops when you leave the Dashboard:** switching tabs, or opening a screen from the dashboard, pauses the sim. Press Play again when you're back.
+
 ## Build 24 (TestFlight, 2026-11-11) - 658fe11
 ### Chirp, seasons, reputation and less micromanaging (save version 31)
 - **Chirp:** the news is now a social feed. Every story is a post with an author, hashtags and likes/reposts/replies, and stories about you pull a reply from a fan or a critic that follows your reputation. It replaces the News view in the Rivals tab.
