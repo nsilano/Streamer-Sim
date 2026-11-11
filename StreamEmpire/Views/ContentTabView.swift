@@ -945,6 +945,11 @@ extension RenewalModePicker {
                 Text("Always keep sought-after titles").font(.subheadline).foregroundStyle(.white)
             }
             .tint(Theme.good)
+            Toggle(isOn: Binding(get: { rules.adaptToFinances }, set: { v in set { $0.adaptToFinances = v } })) {
+                Text("Adapt to my finances").font(.subheadline).foregroundStyle(.white)
+            }
+            .tint(Theme.good)
+            Text("Now: \(state.renewalPosture.title). \(state.renewalPosture.blurb)").font(.caption).foregroundStyle(Theme.text2)
             Text("You can also exclude a single title from auto-renew on its detail page.").font(.caption).foregroundStyle(Theme.text2)
         }
     }

@@ -77,6 +77,42 @@ extension GameState {
         return renewed
     }
 
+    /// How freely the manager renews, from your finances: rich and profitable renews without hesitation,
+    /// poor or losing money renews only the best titles at fair prices.
+    enum RenewalPosture: String {
+        case flush, normal, tight
+
+        var title: String { self == .flush ? "Flush" : self == .tight ? "Tight" : "Steady" }
+        var blurb: String {
+            switch self {
+            case .flush: return "You're rich and profitable, so everything renews without hesitation (up to 3x the old price)."
+            case .normal: return "Finances are steady, so renewals follow your style and rules."
+            case .tight: return "Cash is short or you're losing money, so only strong titles at fair prices renew: quality 60+, the weakest 25% lapse, nothing over what you paid."
+            }
+        }
+    }
+
+    var renewalPosture: RenewalPosture {
+        guard renewalRules.adaptToFinances else { return .normal }
+        let costs = max(finances.lastWeek.costs, 100_000)
+        let cash = finances.cash
+        let profit = finances.recentWeeklyProfit
+        if cash >= 5_000_000, profit > 0, cash >= 20 * costs { return .flush }
+        if cash < 6 * costs || (profit < 0 && (finances.runwayWeeks ?? 99) < 30) { return .tight }
+        return .normal
+    }
+
+    /// Your renewal rules after the finances adjustment.
+    var effectiveRenewalRules: RenewalRules {
+        var rules = renewalRules
+        switch renewalPosture {
+        case .flush: rules.minQuality = 0; rules.dropWeakestShare = 0
+        case .tight: rules.minQuality = max(rules.minQuality, 60); rules.dropWeakestShare = max(rules.dropWeakestShare, 0.25)
+        case .normal: break
+        }
+        return rules
+    }
+
     /// Why a renewal can't happen automatically under your renewal style, or nil if it can.
     func renewalBlock(_ title: Title) -> String? {
         let mode = renewalMode
@@ -87,22 +123,27 @@ extension GameState {
         let price = renewalPrice(title, years: renewalRules.years)
         let paidPerYear = max(1, (title.paidPrice > 0 ? title.paidPrice : licensePrice(title)) / Double(max(1, license.years)))
         let ratio = price / Double(renewalRules.years) / paidPerYear
-        if ratio > mode.maxPriceRatio {
+        let posture = renewalPosture
+        let ratioLimit = posture == .flush ? max(mode.maxPriceRatio, 3.0) : posture == .tight ? min(mode.maxPriceRatio, 1.0) : mode.maxPriceRatio
+        let cashShare = posture == .flush ? max(mode.cashShare, 0.25) : posture == .tight ? mode.cashShare * 0.5 : mode.cashShare
+        if ratio > ratioLimit {
             return "Price jumped to \(String(format: "%.1f", ratio))x what you paid per year"
         }
-        if price > mode.cashShare * max(0, finances.cash) {
-            return "Costs \(Format.money(price)), over \(Format.percent(mode.cashShare)) of your cash"
+        if price > cashShare * max(0, finances.cash) {
+            return "Costs \(Format.money(price)), over \(Format.percent(cashShare)) of your cash"
         }
-        let reserve = 4 * max(finances.lastWeek.costs, 100_000)
-        if finances.cash - price < reserve { return "Would leave less than 4 weeks of costs in the bank" }
+        let reserveWeeks = posture == .tight ? 8.0 : 4.0
+        let reserve = reserveWeeks * max(finances.lastWeek.costs, 100_000)
+        if finances.cash - price < reserve { return "Would leave less than \(Int(reserveWeeks)) weeks of costs in the bank" }
         return nil
     }
 
     /// Your quality bar and "let the weakest lapse" rule, or nil if the title passes. Sought-after titles skip both if you keep them.
     func renewalPerformanceBlock(_ title: Title) -> String? {
-        if title.sought, renewalRules.keepSought { return nil }
-        if title.quality < renewalRules.minQuality { return "Quality \(title.quality) is below your bar of \(renewalRules.minQuality)" }
-        let share = renewalRules.dropWeakestShare
+        let rules = effectiveRenewalRules
+        if title.sought, rules.keepSought { return nil }
+        if title.quality < rules.minQuality { return "Quality \(title.quality) is below the bar of \(rules.minQuality)" }
+        let share = rules.dropWeakestShare
         guard share > 0, catalog.count >= 10 else { return nil }
         let mine = stats(for: title)
         guard mine.weeksLive >= 8 else { return nil }            // too new to judge
@@ -151,7 +192,8 @@ extension GameState {
         for title in expiringTitles where (title.weeksRemaining ?? 99) <= 8 {
             guard title.quality >= c.minQuality, !title.noAutoRenew, renewalPerformanceBlock(title) == nil else { continue }
             let price = renewalPrice(title, years: c.renewYears)
-            if price > c.renewMaxPrice || spent + price > allowance || finances.cash - price < c.cashReserve { skipped += 1; continue }
+            let priceCap = c.renewMaxPrice * (renewalPosture == .flush ? 3 : renewalPosture == .tight ? 0.5 : 1)
+            if price > priceCap || spent + price > allowance || finances.cash - price < c.cashReserve { skipped += 1; continue }
             if (try? renewLicense(titleID: title.id, years: c.renewYears)) != nil {
                 spent += price
                 names.append(title.name)

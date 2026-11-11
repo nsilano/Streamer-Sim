@@ -131,6 +131,7 @@ struct RenewalRules: Codable, Equatable {
     var minQuality = 0             // don't renew titles below this quality
     var dropWeakestShare = 0.0     // let the weakest share of your catalog (by viewers) lapse; 0 renews everything that passes
     var keepSought = true          // sought-after titles are always worth renewing (if the price is accepted)
+    var adaptToFinances = true     // renew freely when rich and profitable, carefully when poor or losing money
 }
 
 /// What an expiring license that didn't auto-renew does to your game.
