@@ -34,11 +34,11 @@ final class Phase4Tests: XCTestCase {
         let cash = s.finances.cash
         try s.startPlatform(.ios)
         XCTAssertEqual(s.finances.cash, cash - Platform.ios.unlockCost, accuracy: 0.01)
-        XCTAssertEqual(s.builds, [PlatformBuild(platform: .ios, weeksLeft: 8)])
+        XCTAssertEqual(s.builds, [PlatformBuild(platform: .ios, weeksLeft: Platform.ios.buildWeeks)])
         XCTAssertThrowsError(try s.startPlatform(.ios), "already in development")
         XCTAssertThrowsError(try s.startPlatform(.web), "already built")
 
-        for _ in 0..<7 { s = SimulationEngine.advanceWeek(s) }
+        for _ in 0..<(Platform.ios.buildWeeks - 1) { s = SimulationEngine.advanceWeek(s) }
         XCTAssertFalse(s.platforms.contains(.ios))
         s = SimulationEngine.advanceWeek(s)
         XCTAssertTrue(s.platforms.contains(.ios))

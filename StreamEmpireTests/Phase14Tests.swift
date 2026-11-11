@@ -127,10 +127,12 @@ final class Phase14Tests: XCTestCase {
         try s.hireCurator()
         XCTAssertTrue(headlines(s).contains("Test Co hires a licensing manager"))
 
-        for _ in 0..<12 { s = SimulationEngine.advanceWeek(s) }
+        for _ in 0..<Formulas.marketLaunchWeeks { s = SimulationEngine.advanceWeek(s) }
         XCTAssertTrue(headlines(s).contains("Test Co goes live in New Zealand"))
         XCTAssertTrue(headlines(s).contains("Test Co adds a Ad-supported plan in Ireland"))
+        for _ in Formulas.marketLaunchWeeks..<Platform.ios.buildWeeks { s = SimulationEngine.advanceWeek(s) }
         XCTAssertTrue(headlines(s).contains("Test Co launches its iOS app"))
+        for _ in Platform.ios.buildWeeks..<(Formulas.datacenterBuildWeeks + 1) { s = SimulationEngine.advanceWeek(s) }
         XCTAssertTrue(s.news.contains { $0.headline.contains("comes online") })
         XCTAssertTrue(s.news.filter { [$0.headline.contains("goes live"), $0.headline.contains("adds a")].contains(true) }.allSatisfy { $0.kind == .you })
     }

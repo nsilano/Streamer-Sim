@@ -253,8 +253,9 @@ private struct ContentFuzzBot {
             let genre = Genre.allCases[rng.nextInt(in: 0...(Genre.allCases.count - 1))]
             _ = try? s.signOutputDeal(genre: genre)
         } else if let deal = choose(s.outputDeals) {
-            _ = try? s.cancelOutputDeal(id: deal.id)
-            if s.outputDeals.contains(where: { $0.id == deal.id }) { note("cancelOutputDeal left the deal in place") }
+            if (try? s.cancelOutputDeal(id: deal.id)) != nil, s.outputDeals.contains(where: { $0.id == deal.id }) {
+                note("cancelOutputDeal left the deal in place")
+            }
         }
         if s.outputDeals.count > GameState.maxOutputDeals { note("more than \(GameState.maxOutputDeals) output deals") }
     }
