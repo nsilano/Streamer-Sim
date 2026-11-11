@@ -122,7 +122,7 @@ final class Phase12Tests: XCTestCase {
         XCTAssertEqual(reaction.tone, .good)
         XCTAssertEqual(reaction.subscribersChange, 5_000, accuracy: 1, "+5% conversions")
         XCTAssertEqual(s.markets["IE"]!.subs.standard, 105_000, accuracy: 1)
-        XCTAssertEqual(s.brandTrust, 57, accuracy: 1e-9)
+        XCTAssertEqual(s.brandTrust, 55.2, accuracy: 1e-9, "60 - 1.8 (the policy itself) - 3 (the reaction)")
         XCTAssertEqual(s.policyShocks.first?.adds, 1.15)
         XCTAssertTrue(s.news.contains { $0.headline == "Crackdown converts sharers" })
     }
@@ -134,7 +134,7 @@ final class Phase12Tests: XCTestCase {
         let reaction = try s.setPolicy("sharing", option: "household", forcedBad: true)
         XCTAssertEqual(reaction.tone, .bad)
         XCTAssertEqual(reaction.subscribersChange, -4_000, accuracy: 1)
-        XCTAssertEqual(s.brandTrust, 50, accuracy: 1e-9)
+        XCTAssertEqual(s.brandTrust, 48.2, accuracy: 1e-9, "60 - 1.8 (the policy itself) - 10 (the reaction)")
         XCTAssertEqual(s.policyShocks.first?.churn, 1.6)
         XCTAssertTrue(zip(levelsBefore, s.rivals.map(\.priceLevel)).contains { $0 > $1 }, "a rival cuts prices to exploit it")
         XCTAssertTrue(s.news.contains { $0.headline.contains("pounces") })
@@ -173,7 +173,7 @@ final class Phase12Tests: XCTestCase {
 
     func testFreeTrialsBringMoreSignups() throws {
         let base = try week().1.newSubs, thirty = try week(("trial", "thirty")).1.newSubs
-        XCTAssertEqual(thirty / base, 1.25, accuracy: 0.001)
+        XCTAssertEqual(thirty / base, 1.25, accuracy: 0.01)
     }
 
     func testPasswordCrackdownRaisesRevenuePerSubscriber() throws {

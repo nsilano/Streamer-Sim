@@ -112,10 +112,13 @@ final class SeasonsAndChirpTests: XCTestCase {
     // MARK: Renewal rules
 
     private func expiringTitle(quality: Int = 80) -> Title {
-        Title(id: 5_555, name: "Renew Me", kind: .series, genre: .drama, language: .english,
+        var t = Title(id: 5_555, name: "Renew Me", kind: .series, genre: .drama, language: .english,
               quality: quality, popularity: 70, ageWeeks: 30, isOriginal: false,
               license: LicenseTerms(cost: 100_000, years: 2, regions: [], exclusive: false),
               weeksRemaining: 6, listingWeeksLeft: 0)
+        t.paidPrice = 100_000
+        t.popularityAtPurchase = 70
+        return t
     }
 
     func testRenewalRulesBlockExcludedAndLowQualityTitles() throws {
