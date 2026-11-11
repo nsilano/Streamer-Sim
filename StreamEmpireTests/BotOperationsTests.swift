@@ -326,7 +326,7 @@ private final class Fuzz {
             for b in m.tierBuilds { expect(b.weeksLeft >= 1, "expired tier build in \(code)") }
             switch m.status {
             case .launching(let w):
-                expect(w >= 1 && w <= 4, "launching weeksLeft out of range in \(code): \(w)")
+                expect(w >= 1 && w <= Formulas.marketLaunchWeeks, "launching weeksLeft out of range in \(code): \(w)")
                 expect(m.subs.total == 0, "subscribers in a market that is still launching: \(code)")
             case .notLaunched:
                 expect(m.subs.total == 0, "subscribers in a market that is not launched: \(code)")
