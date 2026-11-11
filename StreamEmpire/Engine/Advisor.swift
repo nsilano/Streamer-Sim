@@ -23,15 +23,6 @@ extension GameState {
                                 detail: "\(catalog.count) titles is thin for \(live.count) market\(live.count == 1 ? "" : "s"). More titles raise appeal and cut churn. Try renewals, a library deal or a licensing manager."))
         }
 
-        let blocked = catalog.reduce(0) { total, title in
-            total + live.filter { title.blockReason(in: $0) != nil || !title.inTerritory($0) }.count
-        }
-        if blocked >= 3 {
-            items.append(Advice(id: "rec-blocked", icon: "exclamationmark.shield.fill", urgent: false,
-                                title: "\(blocked) title-market pairs are blocked",
-                                detail: "Local rules or license territories keep titles off some of your markets. Open a title to pay for a local edit or add worldwide rights."))
-        }
-
         for code in live {
             let market = markets[code]!
             if market.piracy > 0.15, let country = CountryData.country(code) {

@@ -9,6 +9,9 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### No more regional blocking
+- Removed regional blocking entirely: no banned genres, no strict-country local edits, and no territory-limited licenses. Every title plays in every market you operate in, new licenses are always worldwide, and the "title-market pairs are blocked" warning, the "Not playing in" list and the edit and worldwide-rights buttons are gone. Titles can still be marked mature, which only affects how audiences see them.
+
 ### Chirp fixes
 - Rivals only post their own news (launches, milestones, prices, deals). Stories about customers switching away from a rival now come from a third-party account ("Viewer Watch") instead of the rival itself.
 - Removed the notification badges: the red counts on the tab bar, the "Chirp (N)" count and the unread dots.

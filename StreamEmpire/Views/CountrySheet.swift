@@ -348,9 +348,6 @@ struct CountrySheet: View {
             StatBar(label: "Regulatory risk", value: country.regulatoryRisk,
                     tint: country.regulatoryRisk > 0.25 ? Theme.danger : Theme.good, compact: true)
             StatBar(label: "Local content quota", value: country.localQuota, tint: Theme.teal, compact: true)
-            if let rules = CountryRules.summary(country.code) {
-                Label(rules, systemImage: "exclamationmark.shield.fill").font(.caption).foregroundStyle(Theme.amber)
-            }
             if let market = store.state?.markets[country.code], market.isLive {
                 StatBar(label: "Piracy (lost to pirates)", value: market.piracy / 0.6, text: Format.percent(market.piracy),
                         tint: Theme.danger, compact: true)

@@ -40,20 +40,9 @@ struct Title: Codable, Identifiable, Equatable {
     var noAutoRenew = false        // you never want this one renewed automatically
     var talksBlockedUntil = 0      // listing only: the seller refuses counter-offers until this week
 
-    /// Do the license territories cover this country?
-    func inTerritory(_ countryCode: String) -> Bool {
-        guard let license = license else { return true }
-        return license.regions.isEmpty || license.regions.contains(countryCode)
-    }
-
-    /// Why local rules keep this title off the service in a country, or nil if it is fine.
-    func blockReason(in countryCode: String) -> String? {
-        if CountryRules.bannedGenres(countryCode).contains(genre) { return "\(genre.displayName) is banned there" }
-        if mature, CountryRules.isStrict(countryCode), !cleared.contains(countryCode) { return "Needs a local edit" }
-        return nil
-    }
-
-    func isAvailable(in countryCode: String) -> Bool {
-        inTerritory(countryCode) && blockReason(in: countryCode) == nil
-    }
+    /// Regional blocking (license territories, banned genres, local edits) was removed at the player's request:
+    /// every title plays in every market you operate in. These stay so callers don't need to special-case it.
+    func inTerritory(_ countryCode: String) -> Bool { true }
+    func blockReason(in countryCode: String) -> String? { nil }
+    func isAvailable(in countryCode: String) -> Bool { true }
 }

@@ -97,14 +97,6 @@ final class BotEconomyTests: XCTestCase {
                 let weeks = weeksOptions[index(weeksOptions.count)]
                 _ = try? s.licenseOut(titleID: id, weeks: weeks)
             }
-            if roll(0.1), !s.catalog.isEmpty {
-                _ = try? s.extendTerritory(titleID: s.catalog[index(s.catalog.count)].id)
-            }
-            if roll(0.1), !s.catalog.isEmpty {
-                let id = s.catalog[index(s.catalog.count)].id
-                let code = CountryData.all[index(CountryData.all.count)].code
-                _ = try? s.editForMarket(titleID: id, code: code)
-            }
 
             // Listing market controls.
             if roll(0.04) { _ = try? s.refreshListings() }
@@ -267,9 +259,7 @@ final class BotEconomyTests: XCTestCase {
                 ("renewalPrice", s.renewalPrice(t, years: 2)),
                 ("buyoutPrice", s.buyoutPrice(t)),
                 ("sublicenseFee", s.sublicenseFee(t, weeks: 13)),
-                ("askingPrice", s.askingPrice(t, years: 2, exclusive: false)),
-                ("territoryExtensionPrice", s.territoryExtensionPrice(t)),
-                ("editCost", s.editCost(t))]
+                ("askingPrice", s.askingPrice(t, years: 2, exclusive: false))]
             for (name, value) in values {
                 report.check(value.isFinite && value >= 0, "price.\(name)", "\(ctx): \(name)(\(t.name)) = \(value)")
             }

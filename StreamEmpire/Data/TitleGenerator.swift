@@ -184,17 +184,8 @@ enum TitleGenerator {
         let popularity2 = sought ? max(popularity, 85) : popularity
         let baseCost = Formulas.licenseCost(kind: kind, quality: quality2, popularity: popularity2,
                                             years: years, ageWeeks: age, exclusive: exclusive)
-        var cost = sought ? baseCost * Formulas.soughtPremium : baseCost
-        // Rights are often sold by territory: cheaper, but only some regions.
-        var regions: [String] = []
-        if rng.chance(0.25) {
-            let count = rng.chance(0.5) ? 1 : 2
-            var picked: [Region] = []
-            while picked.count < count { let r = rng.pick(Region.allCases); if !picked.contains(r) { picked.append(r) } }
-            regions = CountryRules.codes(in: picked)
-            let share = Double(regions.count) / Double(CountryData.all.count)
-            cost *= Formulas.territoryPriceFactor(share: share)
-        }
+        let cost = sought ? baseCost * Formulas.soughtPremium : baseCost
+        let regions: [String] = []     // rights are always worldwide
         let mature = rng.chance(Formulas.matureChance(genre))
         let controversial = rng.chance(0.08)
         let evergreen = rng.chance(0.1)

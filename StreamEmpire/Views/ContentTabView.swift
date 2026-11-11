@@ -452,7 +452,6 @@ struct TitleDetailSheet: View {
                     Text("Territory: only \(license.regions.count) of \(CountryData.all.count) countries. Cheaper, but it won't play elsewhere.")
                         .font(.caption).foregroundStyle(Theme.amber)
                 }
-                if title.mature { Text("Mature: strict countries need a local edit.").font(.caption).foregroundStyle(Theme.text2) }
             }
             Button("Buy for \(Format.money(price))") {
                 store.perform { try $0.buyLicense(titleID: titleID) }
@@ -491,45 +490,9 @@ struct TitleDetailSheet: View {
         .artCard(tint: Theme.teal)
     }
 
-    @ViewBuilder
-    private func restrictions(_ title: Title, _ state: GameState) -> some View {
-        let live = state.liveMarketCodes
-        let blocked = live.compactMap { code -> (Country, String)? in
-            guard let country = CountryData.country(code) else { return nil }
-            if !title.inTerritory(code) { return (country, "Outside your license territory") }
-            if let reason = title.blockReason(in: code) { return (country, reason) }
-            return nil
-        }
-        if !blocked.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Not playing in").font(.caption.weight(.bold)).foregroundStyle(Theme.amber)
-                ForEach(blocked, id: \.0.code) { item in
-                    HStack {
-                        Text("\(item.0.flag) \(item.0.name): \(item.1)").font(.caption).foregroundStyle(Theme.text2)
-                        Spacer()
-                        if item.1 == "Needs a local edit" {
-                            Button("Edit \(Format.money(state.editCost(title)))") {
-                                store.perform { try $0.editForMarket(titleID: title.id, code: item.0.code) }
-                            }
-                            .font(.caption.weight(.bold)).buttonStyle(.bordered).tint(Theme.amber)
-                        }
-                    }
-                }
-                if let license = title.license, !license.regions.isEmpty {
-                    let price = state.territoryExtensionPrice(title)
-                    Button("Add worldwide rights · \(Format.money(price))") {
-                        store.perform { try $0.extendTerritory(titleID: title.id) }
-                    }
-                    .buttonStyle(SoftButtonStyle(tint: Theme.teal)).disabled(state.finances.cash < price)
-                }
-            }
-        }
-    }
-
     private func rightsCard(_ title: Title, _ state: GameState) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(text: "Rights", icon: "signature", tint: Theme.amber)
-            restrictions(title, state)
             if title.license != nil, title.weeksRemaining != nil {
                 let price = state.buyoutPrice(title)
                 Text("Own it forever: no expiry, no renewals.").font(.caption).foregroundStyle(Theme.text2)

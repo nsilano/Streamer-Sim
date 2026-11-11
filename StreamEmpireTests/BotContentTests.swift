@@ -223,46 +223,9 @@ private struct ContentFuzzBot {
         }
     }
 
-    private mutating func edit(_ s: inout GameState) {
-        guard let t = choose(s.catalog) else { return }
-        var strict: [String] = []
-        for c in CountryData.all where CountryRules.isStrict(c.code) { strict.append(c.code) }
-        guard let code = choose(strict) else { return }
-        let price = s.editCost(t)
-        let cashBefore = s.finances.cash
-        let ledgerBefore = s.finances.ledger.localization
-        do {
-            try s.editForMarket(titleID: t.id, code: code)
-            if let m = spendProblem("editForMarket", cashBefore: cashBefore, ledgerBefore: ledgerBefore,
-                                    ledgerAfter: s.finances.ledger.localization, expected: price, after: s) { note(m) }
-            if let now = s.catalog.first(where: { $0.id == t.id }), !now.cleared.contains(code) {
-                note("editForMarket paid but did not clear \(code)")
-            }
-        } catch {
-            if s.finances.cash != cashBefore { note("a refused editForMarket still changed cash") }
-        }
-    }
-
-    private mutating func extend(_ s: inout GameState) {
-        var regional: [Title] = []
-        for t in s.catalog { if let l = t.license, !l.regions.isEmpty { regional.append(t) } }
-        var pick = choose(regional)
-        if pick == nil { pick = choose(s.catalog) }
-        guard let t = pick else { return }
-        let price = s.territoryExtensionPrice(t)
-        let cashBefore = s.finances.cash
-        let ledgerBefore = s.finances.ledger.licensing
-        do {
-            try s.extendTerritory(titleID: t.id)
-            if let m = spendProblem("extendTerritory", cashBefore: cashBefore, ledgerBefore: ledgerBefore,
-                                    ledgerAfter: s.finances.ledger.licensing, expected: price, after: s) { note(m) }
-            if let now = s.catalog.first(where: { $0.id == t.id }), !(now.license?.regions.isEmpty ?? false) {
-                note("extendTerritory did not make the rights worldwide")
-            }
-        } catch {
-            if s.finances.cash != cashBefore { note("a refused extendTerritory still changed cash") }
-        }
-    }
+    // Regional blocking (local edits, license territories) was removed from the game, so there is nothing to fuzz.
+    private mutating func edit(_ s: inout GameState) {}
+    private mutating func extend(_ s: inout GameState) {}
 
     private mutating func remove(_ s: inout GameState) {
         guard let t = choose(s.catalog) else { return }
@@ -847,21 +810,4 @@ final class BotContentTests: XCTestCase {
         XCTAssertLessThanOrEqual(expired.count, 3, "\(expired.count) separate 'license expired' pause reasons for one week")
     }
 
-    /// BUG (LOW, debatable) Restrictions.swift:29-37: territoryExtensionPrice ignores `catalogSizePriceFactor` and the
-    /// content-staff discount that `licensePrice` applies, so at a 4,000-title library (x9 licensing prices) widening
-    /// rights costs the same as in a tiny library: a loophole for buying cheap regional rights then extending them.
-    func testBug_territoryExtensionIgnoresTheCatalogSizePrice() {
-        var s = newState()
-        var regional = filler(8_000)
-        regional.isOriginal = false
-        regional.license = LicenseTerms(cost: 1_000_000, years: 3, regions: ["IE", "GB"], exclusive: false)
-        regional.weeksRemaining = 100
-        s.catalog = [regional]
-        let small = s.territoryExtensionPrice(regional)
-        var big = [regional]
-        for i in 0..<4_000 { big.append(filler(8_001 + i)) }
-        s.catalog = big
-        let large = s.territoryExtensionPrice(regional)
-        XCTAssertGreaterThan(large, small * 2, "extension price \(large) at 4,000 titles vs \(small) at 1 title (licensePrice is x\(s.catalogSizePriceFactor))")
-    }
 }

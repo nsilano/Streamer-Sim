@@ -20,28 +20,11 @@ final class Phase18Tests: XCTestCase {
               weeksRemaining: 100, listingWeeksLeft: 0, paidPrice: 1_000_000, invested: 1_000_000, mature: mature)
     }
 
-    func testBannedGenresAndStrictness() {
-        XCTAssertTrue(title(genre: .reality).blockReason(in: "SA") != nil)
-        XCTAssertFalse(title(genre: .reality).isAvailable(in: "SA"))
-        XCTAssertTrue(title(genre: .reality).isAvailable(in: "IE"))
-        XCTAssertNotNil(title(mature: true).blockReason(in: "IN"))
-        XCTAssertNil(title(mature: true).blockReason(in: "IE"))
-        XCTAssertNil(title(mature: false).blockReason(in: "IN"))
-        XCTAssertNotNil(CountryRules.summary("SA"))
-        XCTAssertNil(CountryRules.summary("IE"))
-    }
-
-    func testLocalEditUnlocksMatureTitlesButNotBannedGenres() throws {
-        var s = newState()
-        s.catalog = [title(mature: true), title(id: 2, genre: .reality, mature: true)]
-        let cash = s.finances.cash
-        let cost = s.editCost(s.catalog[0])
-        try s.editForMarket(titleID: 1, code: "IN")
-        XCTAssertTrue(s.catalog[0].isAvailable(in: "IN"))
-        XCTAssertEqual(s.finances.cash, cash - cost, accuracy: 0.01)
-        XCTAssertThrowsError(try s.editForMarket(titleID: 1, code: "IN"), "already edited")
-        XCTAssertThrowsError(try s.editForMarket(titleID: 2, code: "SA"), "banned genre cannot be edited")
-        XCTAssertThrowsError(try s.editForMarket(titleID: 1, code: "IE"), "not strict")
+    func testNothingIsBlockedByRegion() {
+        XCTAssertNil(title(genre: .reality).blockReason(in: "SA"))
+        XCTAssertTrue(title(genre: .reality).isAvailable(in: "SA"))
+        XCTAssertTrue(title(mature: true).isAvailable(in: "IN"))
+        XCTAssertTrue(title(regions: ["IE"]).isAvailable(in: "US"), "even an old regional license plays everywhere")
     }
 
     func testRestrictedTitlesAreLeftOutOfAMarketsCatalog() {
@@ -54,37 +37,19 @@ final class Phase18Tests: XCTestCase {
         _ = sa
     }
 
-    func testTerritoryLicensesAreCheaperAndCanBeExtended() throws {
-        var s = newState()
-        let regions = CountryRules.codes(in: [.europe])
-        var t = title(regions: regions)
-        t.license?.cost = 1_000_000 * Formulas.territoryPriceFactor(share: Double(regions.count) / 30)
-        s.catalog = [t]
-        XCTAssertTrue(s.catalog[0].isAvailable(in: "IE"))
-        XCTAssertFalse(s.catalog[0].isAvailable(in: "US"))
-        let price = s.territoryExtensionPrice(s.catalog[0])
-        XCTAssertGreaterThan(price, 0)
-        let cash = s.finances.cash
-        try s.extendTerritory(titleID: 1)
-        XCTAssertEqual(s.finances.cash, cash - price, accuracy: 0.01)
-        XCTAssertTrue(s.catalog[0].isAvailable(in: "US"))
-        XCTAssertEqual(s.territoryExtensionPrice(s.catalog[0]), 0)
-        XCTAssertThrowsError(try s.extendTerritory(titleID: 1))
-    }
-
     func testGeneratedListingsIncludeTheNewVariety() {
         var rng = SeededRNG(seed: 3)
         var regional = 0, mature = 0, embargo = 0, controversial = 0, evergreen = 0
         for i in 0..<1_000 {
             let t = TitleGenerator.generate(id: i, rng: &rng)
-            if !t.license!.regions.isEmpty { regional += 1 }
+            if !t.license!.regions.isEmpty { regional += 1 }   // never: rights are always worldwide
             if t.mature { mature += 1 }
             if t.embargoWeeks > 0 { embargo += 1; XCTAssertGreaterThan(t.listingWeeksLeft, t.embargoWeeks) }
             if t.controversial { controversial += 1 }
             if t.evergreen { evergreen += 1 }
         }
-        for n in [regional, mature, embargo, controversial, evergreen] { XCTAssertGreaterThan(n, 20) }
-        XCTAssertLessThan(regional, 500)
+        for n in [mature, embargo, controversial, evergreen] { XCTAssertGreaterThan(n, 20) }
+        XCTAssertEqual(regional, 0)
     }
 
     func testEmbargoedListingsCannotBeBoughtUntilTheyOpen() throws {
@@ -160,7 +125,6 @@ final class Phase18Tests: XCTestCase {
     func testBatchOneStateRoundTrips() throws {
         var s = newState()
         s.catalog = [title(mature: true)]
-        try s.editForMarket(titleID: 1, code: "IN")
         s = SimulationEngine.advanceWeek(s)
         let loaded = try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(s))
         XCTAssertEqual(loaded, s)
