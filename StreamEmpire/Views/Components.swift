@@ -27,6 +27,21 @@ struct TrendCard: View {
 
     private func label(_ v: Double) -> String { metric == .subs ? Format.count(v) : Format.money(v) }
 
+    /// The visible range, with a little room at each end so the first and last date labels aren't clipped.
+    private func xDomain(_ first: Int, _ last: Int) -> ClosedRange<Date> {
+        let span = max(1, last - first)
+        let pad = max(1, Int((Double(span) * 0.06).rounded(.up)))
+        let week: TimeInterval = 7 * 86_400
+        return GameCalendar.date(week: first).addingTimeInterval(-Double(pad) * week)...GameCalendar.date(week: max(last, first + 1)).addingTimeInterval(Double(pad) * week)
+    }
+
+    /// Date labels evenly spaced from the very first week to the last, so the start of your history is always labelled.
+    private func tickDates(_ first: Int, _ last: Int) -> [Date] {
+        let span = max(1, last - first)
+        let step = max(1, Int((Double(span) / 4).rounded(.up)))
+        return stride(from: first, through: last, by: step).map { GameCalendar.date(week: $0) }
+    }
+
     var body: some View {
         let shown = span == .year ? Array(points.suffix(52)) : points
         let first = shown.first, last = shown.last
@@ -75,8 +90,7 @@ struct TrendCard: View {
                     RuleMark(y: .value("Zero", 0)).foregroundStyle(Color.white.opacity(0.35))
                 }
             }
-            .chartXScale(domain: (first.map { GameCalendar.date(week: $0.week) } ?? GameCalendar.date(week: 1))
-                         ... (last.map { GameCalendar.date(week: max($0.week, (first?.week ?? 1) + 1)) } ?? GameCalendar.date(week: 2)))
+            .chartXScale(domain: xDomain(first?.week ?? 1, last?.week ?? 2))
             .chartYAxis {
                 AxisMarks(position: .trailing) { mark in
                     AxisGridLine().foregroundStyle(Color.white.opacity(0.08))
@@ -86,9 +100,10 @@ struct TrendCard: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                AxisMarks(values: tickDates(first?.week ?? 1, last?.week ?? 2)) { _ in
                     AxisGridLine().foregroundStyle(Color.white.opacity(0.05))
-                    AxisValueLabel(format: span == .year ? .dateTime.month(.abbreviated) : .dateTime.month(.abbreviated).year(.twoDigits))
+                    AxisValueLabel(format: span == .year ? .dateTime.month(.abbreviated).year(.twoDigits)
+                                                          : .dateTime.month(.abbreviated).year())
                         .foregroundStyle(Theme.text2)
                 }
             }

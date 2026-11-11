@@ -9,6 +9,9 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Chart dates
+- The Dashboard chart's date labels now start at the very first week of your game and run evenly to the latest week (with the year), instead of only marking each January, so it's clear the "All time" view covers everything. There's a little padding at both ends so the first and last labels aren't cut off.
+
 ### 132 countries (save version 33)
 - 82 more countries to go live in, bringing the map to 132 markets: more of Europe (Russia, Ukraine, Hungary, the Baltics, the Balkans, the Caucasus...), Latin America and the Caribbean, the Middle East (Iran, Iraq, Kuwait...), Asia (China, Bangladesh, Kazakhstan, Cambodia, Myanmar...) and Africa (Algeria, Ethiopia, Tanzania, Angola, Senegal...). Each has its own language, size, fair price, launch cost and regulatory risk, and 28 new languages exist for dubs and subtitles.
 - China (launch cost $45M, needs 5M subscribers and 60 titles) and Russia (1M subscribers and 30 titles) unlock late. China, Iran and Cuba are closed to rival streamers, so they are yours alone once you get in, but they can't be your starting country.
