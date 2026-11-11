@@ -23,7 +23,7 @@ extension GameState {
 
     // MARK: Servers & datacenters
 
-    private var serverCostMultiplier: Double {
+    var serverCostMultiplier: Double {
         Formulas.cdnCostMultiplier(engineeringLevel: staff.effectiveLevel(.engineering))
     }
 
