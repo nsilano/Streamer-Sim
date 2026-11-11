@@ -9,7 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
-### Titles without limit
+### Titles without limit (now 30,000+)
+- The title-name generator now has 250+ adjectives, 290+ nouns and about a dozen templates per genre, so well over 30,000 unique titles exist (a test generates 30,000 with no duplicates and almost no numbered repeats).
+- Content > Catalog has search, a genre filter and sorting (Best, Most watched, Newest, Expiring first, A to Z), and shows 60 titles at a time ("Show 60 more"), so a 20,000-title library stays fast.
+- Autosave batches itself for libraries over 1,500 titles (written at most every couple of seconds) so huge saves don't lag the game.
 - Another ~360 hand-written drama parodies, and once most of a genre's parodies are in use (huge catalogs) the market invents original-sounding titles ("The Crimson Harbor") instead of repeating parodies with sequel numbers. An 8,000-title library now has unique names, with numbered repeats a minority.
 
 ## Build 23 (TestFlight, 2026-11-11) - 5560c34

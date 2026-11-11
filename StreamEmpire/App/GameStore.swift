@@ -49,6 +49,8 @@ final class GameStore: ObservableObject {
         autoAdvance = false
         showSettings = false
         showReport = false
+        saveTask?.cancel()
+        saveTask = nil
         SaveManager.delete()
         state = nil
     }
@@ -97,9 +99,24 @@ final class GameStore: ObservableObject {
         }
     }
 
+    private var saveTask: Task<Void, Never>?
+
+    /// Autosaves after every change. Huge libraries (thousands of titles) make a save slow, so those are
+    /// batched: the latest state is written at most once every couple of seconds.
     private func persist() {
         guard let state else { return }
-        try? SaveManager.save(state)
+        if state.catalog.count < 1_500 {
+            saveTask?.cancel()
+            try? SaveManager.save(state)
+            return
+        }
+        guard saveTask == nil else { return }
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard let self else { return }
+            self.saveTask = nil
+            if let latest = self.state { try? SaveManager.save(latest) }
+        }
     }
 
     private func startAutoAdvance() {

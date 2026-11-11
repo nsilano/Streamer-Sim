@@ -76,4 +76,18 @@ final class Phase31Tests: XCTestCase {
         }
         XCTAssertEqual(TitleGenerator.inventedTitle(genre: .anime, rng: &rng, avoiding: []).language, .japanese)
     }
+
+    func testThirtyThousandUniqueTitlesAreAvailable() {
+        var rng = SeededRNG(seed: 11)
+        var taken = Set<String>()
+        var numbered = 0
+        for i in 0..<30_000 {
+            let t = TitleGenerator.generate(id: i, rng: &rng, avoiding: taken)
+            XCTAssertFalse(taken.contains(t.name), "duplicate at \(i): \(t.name)")
+            taken.insert(t.name)
+            if t.name.range(of: #" [IVX]+$"#, options: .regularExpression) != nil { numbered += 1 }
+        }
+        XCTAssertEqual(taken.count, 30_000)
+        XCTAssertLessThan(numbered, 900, "numbered sequels stay rare even at 30,000 titles")
+    }
 }

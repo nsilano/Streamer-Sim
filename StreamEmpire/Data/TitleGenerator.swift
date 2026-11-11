@@ -6,20 +6,77 @@ enum TitleGenerator {
         "Crimson", "Silent", "Broken", "Golden", "Midnight", "Hidden", "Electric", "Frozen", "Wild", "Last",
         "Hollow", "Velvet", "Burning", "Paper", "Neon", "Lonely", "Iron", "Gentle", "Savage", "Distant",
         "Rusty", "Cosmic", "Quiet", "Bitter", "Lucky", "Scarlet", "Wandering", "Stolen", "Sunny", "Foggy",
+        "Amber", "Ashen", "Azure", "Barren", "Bashful", "Blazing", "Bleak", "Blind", "Blue", "Bold",
+        "Brave", "Brazen", "Bright", "Brittle", "Bronze", "Burnt", "Calm", "Careless", "Chilled", "Clever",
+        "Cloudy", "Cobalt", "Cold", "Copper", "Coral", "Crooked", "Cruel", "Crystal", "Curious", "Dark",
+        "Dawn", "Dazzling", "Deadly", "Deep", "Defiant", "Dizzy", "Dusty", "Eager", "Eastern", "Ebony",
+        "Emerald", "Empty", "Endless", "Fading", "Fallen", "Fearless", "Feral", "Fierce", "Fiery", "Flaming",
+        "Fleeting", "Flickering", "Floating", "Forbidden", "Forgotten", "Fragile", "Frantic", "Frosty", "Furious", "Gilded",
+        "Glass", "Gleaming", "Glimmering", "Gloomy", "Glorious", "Grand", "Gray", "Greedy", "Green", "Grim",
+        "Hasty", "Haunted", "Heavy", "Hesitant", "Hushed", "Icy", "Idle", "Indigo", "Ivory", "Jade",
+        "Jaded", "Jolly", "Keen", "Kind", "Lavender", "Lazy", "Leaden", "Liquid", "Little", "Lofty",
+        "Loud", "Lucid", "Lunar", "Magic", "Marble", "Meek", "Mellow", "Mercury", "Mighty", "Misty",
+        "Modest", "Molten", "Mossy", "Muted", "Mystic", "Naked", "Narrow", "Noble", "Northern", "Obsidian",
+        "Odd", "Olive", "Opal", "Orange", "Pale", "Patient", "Pearl", "Phantom", "Pink", "Plain",
+        "Polar", "Proud", "Purple", "Quick", "Radiant", "Rapid", "Raven", "Reckless", "Restless", "Rogue",
+        "Rose", "Royal", "Ruby", "Sable", "Sacred", "Sandy", "Sapphire", "Secret", "Shadow", "Sharp",
+        "Shattered", "Shimmering", "Shiny", "Silver", "Sleepy", "Slender", "Slow", "Smoky", "Solar", "Solemn",
+        "Somber", "Southern", "Spare", "Spicy", "Spiral", "Splendid", "Stark", "Steady", "Steel", "Stormy",
+        "Strange", "Sweet", "Swift", "Tangled", "Tender", "Thorny", "Thunder", "Tidal", "Timid", "Tiny",
+        "Topaz", "Twilight", "Ultra", "Umber", "Unbroken", "Unseen", "Urban", "Vacant", "Vagrant", "Vast",
+        "Verdant", "Vermilion", "Violet", "Vivid", "Wicked", "Windy", "Winter", "Wistful", "Woven", "Yellow",
+        "Young", "Zesty", "Zinc", "Amber-Eyed", "Brave-Hearted", "Half-Moon", "Hard-Boiled", "Long-Lost", "Moonlit", "Sunlit",
+        "Starlit", "Salt-Stained", "Sun-Baked", "Tough", "Loyal", "Nameless", "Painted", "Patchwork", "Perfect", "Pocket",
+        "Prickly", "Rowdy", "Sassy", "Scruffy", "Shabby", "Spooky", "Sticky", "Stubborn", "Sulky", "Sunburnt",
+        "Thrifty", "Tipsy", "Wobbly",
     ]
     private static let nouns = [
         "Harbor", "Orchard", "Empire", "Signal", "Garden", "Kingdom", "Letters", "Horizon", "Tide", "Archive",
         "Circus", "Frontier", "Lighthouse", "Promise", "Mirage", "Station", "Carnival", "Compass", "River", "District",
         "Atlas", "Bakery", "Cabin", "Engine", "Valley", "Parade", "Vault", "Summit", "Thread", "Echo",
+        "Abbey", "Alley", "Anchor", "Arcade", "Arrow", "Aviary", "Balcony", "Banner", "Barn", "Basin",
+        "Beacon", "Bell", "Bench", "Blossom", "Boulevard", "Bridge", "Brook", "Cafe", "Canal", "Canyon",
+        "Cargo", "Castle", "Cathedral", "Cave", "Chapel", "Chateau", "Chimney", "Cinder", "Citadel", "Clock",
+        "Cloud", "Cobbler", "Comet", "Cottage", "Crater", "Crossing", "Crown", "Current", "Dagger", "Dawn",
+        "Delta", "Desert", "Diner", "Dock", "Dome", "Dragon", "Drift", "Dune", "Dynasty", "Eclipse",
+        "Embassy", "Ember", "Estate", "Fable", "Factory", "Falcon", "Fathom", "Ferry", "Fjord", "Flame",
+        "Flight", "Forest", "Fortress", "Fountain", "Fox", "Furnace", "Gallery", "Gate", "Gazette", "Glacier",
+        "Glade", "Grove", "Guild", "Gulf", "Hamlet", "Hangar", "Harvest", "Haven", "Heath", "Heron",
+        "Hideout", "Highway", "Hill", "Hive", "Hotel", "Hourglass", "Island", "Jungle", "Junction", "Kennel",
+        "Key", "Kitchen", "Knight", "Ladder", "Lagoon", "Lake", "Lantern", "Lattice", "Ledger", "Legend",
+        "Library", "Lodge", "Loft", "Lotus", "Manor", "Marsh", "Meadow", "Mill", "Mine", "Monastery",
+        "Monument", "Moon", "Motel", "Mountain", "Museum", "Nest", "Night", "Oasis", "Observatory", "Ocean",
+        "Orbit", "Outpost", "Palace", "Pantry", "Paradise", "Pasture", "Pavilion", "Peak", "Pier", "Pilgrim",
+        "Pillar", "Pirate", "Plaza", "Pond", "Port", "Portal", "Prairie", "Prism", "Prophet", "Quarry",
+        "Quartet", "Quest", "Rail", "Rampart", "Reef", "Refuge", "Relic", "Ridge", "Rocket", "Roost",
+        "Sail", "Salon", "Sanctuary", "Scholar", "Seaside", "Shipyard", "Shore", "Shrine", "Skyline", "Smithy",
+        "Snowfall", "Sparrow", "Spire", "Spring", "Stable", "Stage", "Stairway", "Star", "Storm", "Street",
+        "Studio", "Sunrise", "Sunset", "Swan", "Tavern", "Temple", "Terrace", "Theater", "Throne", "Tower",
+        "Trail", "Treasure", "Tribe", "Tunnel", "Twin", "Vineyard", "Voyage", "Wagon", "Warden", "Warehouse",
+        "Watchtower", "Waterfall", "Wharf", "Whisper", "Willow", "Windmill", "Wolf", "Workshop", "Yard", "Zenith",
+        "Zephyr", "Zoo", "Alibi", "Ambush", "Anthem", "Apprentice", "Bandit", "Bargain", "Bounty", "Brawl",
+        "Brigade", "Cadet", "Cannon", "Caper", "Chase", "Clue", "Codex", "Conspiracy", "Courier", "Detour",
+        "Diplomat", "Disguise", "Duel", "Escape", "Exile", "Fugitive", "Gambit", "Getaway", "Heist", "Hostage",
+        "Hunter", "Impostor", "Informant", "Intruder", "Jackpot", "Labyrinth", "Locksmith", "Manifesto", "Maverick", "Mercenary",
+        "Mission", "Mutiny", "Negotiator", "Nomad", "Outlaw", "Pursuit", "Quarrel", "Rebel", "Rival", "Rogue",
+        "Saboteur", "Sentinel", "Showdown", "Smuggler", "Sniper", "Stakeout", "Syndicate", "Tactician", "Thief", "Traitor",
+        "Trap", "Vendetta", "Vigilante", "Warrant",
     ]
     private static let templates: [Genre: [String]] = [
-        .drama: ["The {A} {N}", "{N} of the {A}", "Beyond the {N}", "{A} Hearts"],
-        .comedy: ["Awkward {N}", "Dad's {A} {N}", "The {N} Club", "Totally {A}"],
-        .action: ["{A} Strike", "Operation {N}", "Code {N}", "The {A} Protocol"],
-        .kids: ["Captain {N}", "{N} Pals", "The Little {N}", "Bubbles and the {A} {N}"],
-        .anime: ["{A} Blade Chronicles", "Spirit of the {N}", "Star {N} Academy", "{N} Rider Z"],
-        .reality: ["Love on the {N}", "Survive the {N}", "The {A} Challenge", "Swipe Right Island"],
-        .docs: ["Inside the {A} {N}", "The Secret Life of {N}s", "Rise of the {N}", "Planet {A}"],
+        .drama: ["The {A} {N}", "{N} of the {A}", "Beyond the {N}", "{A} Hearts", "The Last {N}", "{A} Waters", "Under the {A} {N}",
+                 "Letters to a {N}", "The {N} Years", "A {A} {N}", "{N} Road", "The {A} Hour", "What the {N} Knew", "{A} Season"],
+        .comedy: ["Awkward {N}", "Dad's {A} {N}", "The {N} Club", "Totally {A}", "My {A} {N}", "{A} Neighbors", "Not Another {N}",
+                  "Oops, {N}!", "The {A} Roommates", "Mom vs. the {N}", "{N} Night", "Friends with a {N}", "{A} Business"],
+        .action: ["{A} Strike", "Operation {N}", "Code {N}", "The {A} Protocol", "{N} Force", "Last {N} Standing", "Fast {N}",
+                  "{A} Vengeance", "{N} Down", "Rogue {N}", "The {A} Contract", "Mission: {N}", "{A} Fury"],
+        .kids: ["Captain {N}", "{N} Pals", "The Little {N}", "Bubbles and the {A} {N}", "{N} Adventures", "Super {N}", "{A} Friends",
+                "The {N} Squad", "Detective {N}", "Hello, {N}!", "{N} Town", "The {A} Little {N}", "Professor {N}'s Lab"],
+        .anime: ["{A} Blade Chronicles", "Spirit of the {N}", "Star {N} Academy", "{N} Rider Z", "Legend of the {A} {N}",
+                 "{A} Knight {N}", "Beyond the {A} {N}", "The {N} Alchemist", "{A} Moon {N}", "Hero of the {N}", "{N} Tactics"],
+        .reality: ["Love on the {N}", "Survive the {N}", "The {A} Challenge", "Swipe Right Island", "Race to the {N}", "{A} Wives of {N}",
+                   "The {N} Showdown", "Kitchen {N}", "Dating on the {N}", "{A} Housemates", "Chef vs. {N}", "The {N} Games"],
+        .docs: ["Inside the {A} {N}", "The Secret Life of {N}s", "Rise of the {N}", "Planet {A}", "Chasing the {N}", "The {A} Files",
+                "Anatomy of a {N}", "Inside {N} City", "The Last {N}", "Hunting the {A} {N}", "{N}: A History", "The Truth About {N}s"],
         .local: ["{A} {N}", "Tales of the {N}", "Family {N}"],
     ]
     private static let genreWeights: [(Genre, Double)] = [
@@ -37,9 +94,15 @@ enum TitleGenerator {
         let template = rng.pick(templates[genre] ?? ["{A} {N}"])
         let adjective = rng.pick(adjectives)
         let noun = rng.pick(nouns)
-        return template
+        var name = template
             .replacingOccurrences(of: "{A}", with: adjective)
             .replacingOccurrences(of: "{N}", with: noun)
+        // "{N}s" plurals: Library -> Libraries, Fox -> Foxes
+        for wrong in ["\(noun)s"] where name.contains(wrong) && (noun.hasSuffix("y") || noun.hasSuffix("s") || noun.hasSuffix("x")) {
+            let plural = noun.hasSuffix("y") ? String(noun.dropLast()) + "ies" : (noun.hasSuffix("s") ? noun : noun + "es")
+            name = name.replacingOccurrences(of: wrong, with: plural)
+        }
+        return name
     }
 
     private static let romanSuffixes = ["II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]

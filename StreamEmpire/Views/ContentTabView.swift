@@ -21,6 +21,15 @@ struct ContentTabView: View {
     @State private var detail: TitleRef?
     @State private var showCurator = false
     @State private var showSettings = false
+    @State private var catalogQuery = ""
+    @State private var catalogGenre: Genre?
+    @State private var catalogSort: CatalogSort = .best
+    @State private var catalogShown = 60
+
+    enum CatalogSort: String, CaseIterable, Identifiable {
+        case best = "Best", watched = "Most watched", newest = "Newest", expiring = "Expiring first", name = "A to Z"
+        var id: String { rawValue }
+    }
 
     private let columns = [GridItem(.adaptive(minimum: 140), spacing: 12, alignment: .top)]
 
@@ -248,8 +257,13 @@ struct ContentTabView: View {
             .frame(maxWidth: .infinity)
             .artCard()
         } else {
+            catalogControls(state)
+            let rows = filteredCatalog(state)
+            if rows.isEmpty {
+                Text("No titles match.").font(.footnote).foregroundStyle(Theme.text2).frame(maxWidth: .infinity)
+            }
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(state.catalog.sorted { $0.quality > $1.quality }) { title in
+                ForEach(rows.prefix(catalogShown)) { title in
                     Button { detail = TitleRef(id: title.id) } label: {
                         TitleCell(title: title, state: state, priceText: nil,
                                   footnote: footnote(title, state))
@@ -257,7 +271,61 @@ struct ContentTabView: View {
                     .buttonStyle(.plain)
                 }
             }
+            if rows.count > catalogShown {
+                Button("Show 60 more (\(rows.count - catalogShown) left)") { catalogShown += 60 }
+                    .buttonStyle(SoftButtonStyle(tint: Theme.violet))
+            }
         }
+    }
+
+    /// Search, genre filter and sort for big catalogs.
+    private func catalogControls(_ state: GameState) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "magnifyingglass").foregroundStyle(Theme.text2)
+                TextField("Search \(state.catalog.count) titles", text: $catalogQuery)
+                    .textFieldStyle(.plain).foregroundStyle(.white).autocorrectionDisabled()
+                if !catalogQuery.isEmpty { Button { catalogQuery = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.text2) } }
+            }
+            .padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.08)))
+            HStack {
+                Menu {
+                    Picker("Genre", selection: $catalogGenre) {
+                        Text("All genres").tag(Genre?.none)
+                        ForEach(Genre.allCases) { Text($0.displayName).tag(Genre?.some($0)) }
+                    }
+                } label: {
+                    Label(catalogGenre?.displayName ?? "All genres", systemImage: "line.3.horizontal.decrease.circle").font(.caption.weight(.semibold))
+                }
+                Spacer()
+                Menu {
+                    Picker("Sort", selection: $catalogSort) { ForEach(CatalogSort.allCases) { Text($0.rawValue).tag($0) } }
+                } label: {
+                    Label(catalogSort.rawValue, systemImage: "arrow.up.arrow.down").font(.caption.weight(.semibold))
+                }
+            }
+        }
+        .onChange(of: catalogQuery) { _, _ in catalogShown = 60 }
+        .onChange(of: catalogGenre) { _, _ in catalogShown = 60 }
+        .onChange(of: catalogSort) { _, _ in catalogShown = 60 }
+    }
+
+    /// Filter and sort once per render (keys are computed up front so 30,000 titles stay fast).
+    private func filteredCatalog(_ state: GameState) -> [Title] {
+        let query = catalogQuery.trimmingCharacters(in: .whitespaces).lowercased()
+        var items = state.catalog.filter { title in
+            (catalogGenre == nil || title.genre == catalogGenre) && (query.isEmpty || title.name.lowercased().contains(query))
+        }
+        switch catalogSort {
+        case .best: items.sort { ($0.quality, $1.id) > ($1.quality, $0.id) }
+        case .watched:
+            let keyed = items.map { ($0, state.titleStats[$0.id]?.weeklyViewers ?? 0) }
+            items = keyed.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0.id < $1.0.id }.map(\.0)
+        case .newest: items.sort { $0.ageWeeks != $1.ageWeeks ? $0.ageWeeks < $1.ageWeeks : $0.id < $1.id }
+        case .expiring: items.sort { ($0.weeksRemaining ?? .max) != ($1.weeksRemaining ?? .max) ? ($0.weeksRemaining ?? .max) < ($1.weeksRemaining ?? .max) : $0.id < $1.id }
+        case .name: items.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }
+        return items
     }
 }
 
