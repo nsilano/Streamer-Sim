@@ -14,6 +14,8 @@ extension GameState {
     mutating func curatorShop() -> CuratorRun? {
         guard let stored = curator, let c = effectiveCurator() else { return nil }
         var run = CuratorRun()
+        // The weekly allowance is granted once per week, however often you press Shop now.
+        let weekly = stored.budgetWeek == week ? 0 : c.weeklyBudget
         if c.enabled, let block = curatorRunwayBlock {
             run.note = block
             return run
@@ -23,12 +25,13 @@ extension GameState {
             return run
         }
         var renewal = (names: [String](), spent: 0.0, skipped: 0)
-        if c.autoRenew { renewal = curatorRenew(c, allowance: c.weeklyBudget + c.carryBudget) }
+        if c.autoRenew { renewal = curatorRenew(c, allowance: weekly + c.carryBudget) }
         let renewNote = renewal.names.isEmpty && renewal.skipped == 0 ? "" :
             " Renewed \(renewal.names.count) (\(Format.money(renewal.spent)))\(renewal.skipped > 0 ? ", \(renewal.skipped) too pricey to renew" : "")."
         guard catalog.count < c.targetCatalogSize else {
             var saved = stored
-            saved.carryBudget = min(curatorCarryWeeks * c.weeklyBudget, max(0, c.weeklyBudget + c.carryBudget - renewal.spent))
+            saved.carryBudget = min(curatorCarryWeeks * c.weeklyBudget, max(0, weekly + c.carryBudget - renewal.spent))
+            saved.budgetWeek = week
             curator = saved
             run.note = "Your catalog already has \(catalog.count) titles (your limit is \(c.targetCatalogSize)).\(renewNote)"
             return run
@@ -39,7 +42,7 @@ extension GameState {
             if let language = CountryData.country(code)?.language { languages.insert(language) }
         }
 
-        let available = c.weeklyBudget + c.carryBudget - renewal.spent
+        let available = weekly + c.carryBudget - renewal.spent
         run.available = available
         var rejected: [String: Int] = [:]
         var passing: [Title] = []
@@ -68,6 +71,7 @@ extension GameState {
 
         var saved = stored
         saved.carryBudget = min(curatorCarryWeeks * c.weeklyBudget, max(0, available - run.spent))
+        saved.budgetWeek = week
         curator = saved
 
         if !run.bought.isEmpty {

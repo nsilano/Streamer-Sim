@@ -28,6 +28,7 @@ enum Scenarios {
         let subs = s.totalSubscribers / 1_000
         let cash = max(0, s.finances.cash) / 100_000
         let timeBonus = Double(max(0, (s.scenario.deadline ?? s.week) - s.week)) * 5
-        return Int(subs + cash + timeBonus)
+        let total = subs + cash + timeBonus
+        return total.isFinite ? Int(min(total, 1e12)) : 0
     }
 }

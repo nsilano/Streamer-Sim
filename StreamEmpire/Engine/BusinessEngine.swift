@@ -153,6 +153,14 @@ extension GameState {
             addNews(.you, "Partnership in \(CountryData.country(p.country)?.name ?? p.country) ends", "The \(p.kind.displayName.lowercased()) has run its course.")
         }
         partnerships.removeAll { $0.weeksLeft <= 0 }
+        endOrphanedBundles()
+    }
+
+    /// A rival-bundle deal needs a rival to bundle with: it ends when the last one in that country is gone.
+    mutating func endOrphanedBundles() {
+        partnerships.removeAll { p in
+            p.kind == .rivalBundle && !rivals.contains { ($0.subs[p.country] ?? 0) > 0 }
+        }
     }
 
     // MARK: Acquisitions

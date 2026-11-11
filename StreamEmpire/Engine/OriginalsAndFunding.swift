@@ -59,11 +59,26 @@ extension GameState {
                               release: ReleaseStyle = .binge, star: StarTier = .none) throws {
         guard let title = catalog.first(where: { $0.id == titleID }) else { throw ActionError.titleNotFound }
         if let reason = canContinue(title) { throw ActionError.invalidProject(reason) }
-        let next = title.seasons + 1
-        let name = title.kind == .series ? title.name : "\(title.name.replacingOccurrences(of: #" [IVX]+$"#, with: "", options: .regularExpression)) \(GameState.roman(next))"
+        var next = title.seasons + 1
+        let strip: (String) -> String = { $0.replacingOccurrences(of: #" [IVX]+$"#, with: "", options: .regularExpression) }
+        let base = strip(title.name)
+        if title.kind == .movie {
+            // Every film in a franchise counts, so two sequels can never end up with the same number.
+            let franchise = catalog.filter { $0.kind == .movie && strip($0.name) == base }.map(\.seasons)
+                + projects.filter { $0.kind == .movie && strip($0.name) == base }.map { GameState.romanValue($0.name) }
+            next = max(next, (franchise.max() ?? 0) + 1)
+        }
+        if title.kind == .movie, next > 10 { throw ActionError.invalidProject("This franchise has run its course.") }
+        let name = title.kind == .series ? title.name : "\(base) \(GameState.roman(next))"
         try commissionOriginal(kind: title.kind, genre: title.genre, language: title.language, budget: budget,
                                weeks: weeks, studioID: studioID, release: release, star: star,
                                sequelOf: titleID, name: name)
+    }
+
+    /// The sequel number at the end of a name ("Heat III" -> 3), or 1 if it has none.
+    static func romanValue(_ name: String) -> Int {
+        guard let last = name.split(separator: " ").last, let index = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"].firstIndex(of: String(last)) else { return 1 }
+        return index + 1
     }
 
     static func roman(_ n: Int) -> String {
@@ -78,6 +93,9 @@ extension GameState {
         let title = catalog[index]
         guard title.language != language else {
             throw ActionError.invalidProject("\"\(title.name)\" is already in \(language.displayName).")
+        }
+        if !dub, title.dubs.contains(language) {
+            throw ActionError.invalidProject("It's already dubbed in \(language.displayName); subtitles would add nothing.")
         }
         if dub ? title.dubs.contains(language) : title.subtitles.contains(language) {
             throw ActionError.invalidProject("Already done.")
@@ -94,7 +112,7 @@ extension GameState {
     var outstandingDebt: Double { loans.reduce(0) { $0 + $1.balance } }
 
     var creditLimit: Double {
-        Formulas.creditLimit(annualRevenue: finances.annualizedRevenue, cash: finances.cash)
+        Formulas.creditLimit(annualRevenue: finances.annualizedRevenue, cash: max(0, finances.cash - outstandingDebt))   // borrowed money does not raise your own limit
     }
     var creditRoom: Double { max(0, creditLimit - outstandingDebt) }
 

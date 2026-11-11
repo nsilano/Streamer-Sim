@@ -31,8 +31,9 @@ extension GameState {
         let share = Double(license.regions.count) / Double(CountryData.all.count)
         let worldwide = license.cost / Formulas.territoryPriceFactor(share: share)
         let remaining = Double(title.weeksRemaining ?? license.weeks) / Double(max(1, license.weeks))
-        return (worldwide - license.cost) * Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers)
-            * costScale * min(1, max(0.3, remaining))
+        // Same multipliers as a normal license price (audience, difficulty, catalog size, Content discount).
+        let multiplier = license.cost > 0 ? licensePrice(title) / license.cost : 1
+        return (worldwide - license.cost) * multiplier * min(1, max(0.3, remaining))
     }
 
     mutating func extendTerritory(titleID: Int) throws {

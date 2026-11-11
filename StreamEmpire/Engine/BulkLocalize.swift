@@ -16,7 +16,7 @@ extension GameState {
             let a = Formulas.titleAppeal($0, in: country), b = Formulas.titleAppeal($1, in: country)
             return a != b ? a > b : $0.id < $1.id
         }
-        return limit.map { Array(ranked.prefix($0)) } ?? ranked
+        return limit.map { Array(ranked.prefix(max(0, $0))) } ?? ranked
     }
 
     func bulkLocalizePrice(code: String, dub: Bool, limit: Int? = nil) -> Double {

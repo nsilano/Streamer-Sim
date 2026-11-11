@@ -63,6 +63,7 @@ struct SpendLedger: Codable, Equatable {
     var localization: Double = 0
     var other: Double = 0
     var promotions: Double = 0
+    var capital: Double = 0         // buybacks and dividends: paid from cash at once, not an operating cost, so not in `total`
     var licenseIncome: Double = 0   // received (already in cash); not part of `total`, which is spending
 
     var total: Double { licensing + launch + localization + other + promotions }

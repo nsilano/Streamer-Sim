@@ -96,7 +96,7 @@ Dashboard - Markets - Content - Rivals - Company.
 
 23. **Phase 23 (done): sign-up brake** (`Engine/SignupBrake.swift`): `pausedSignups` ("all" or region ids) zeroes `adds` and switching-in; `PauseReason.region` drives a one-tap brake in the pause panel. Save version is 28.
 
-24. **Phase 24 (done): catalog size economics.** `Formulas.catalogSizePriceFactor(count:)` (free to 300 titles, then 1 + ((n-300)/1000)^1.6: x27 at 8,000, deliberately reachable because the user wants a Netflix-sized 8,000-title library eventually) multiplies `licensePrice`; `Curator.capMode` (auto/fixed/none) + `catalogCap` override the manager's target in `effective(_:)`. The user wants players able to cap the manager or run it uncapped, with prices (not a hard wall) as the brake. Save version is 29.
+24. **Phase 24 (done): catalog size economics.** `Formulas.catalogSizePriceFactor(count:)` (free to 300 titles, then 1 + ((n-300)/1000)^1.6: x27 at 8,000, deliberately reachable because the user wants a Netflix-sized 8,000-title library eventually) multiplies `licensePrice`; `Curator.capMode` (auto/fixed/none) + `catalogCap` override the manager's target in `effective(_:)`. The user wants players able to cap the manager or run it uncapped, with prices (not a hard wall) as the brake. Save version is 30 (bot-found bug fixes: `Curator.budgetWeek`, `SpendLedger.capital`).
 
 ## Ideas not yet built
 - Win-condition tuning with human playtests (the bot never uses originals, funding, pricing changes or staff).

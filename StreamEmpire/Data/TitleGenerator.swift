@@ -113,6 +113,7 @@ enum TitleGenerator {
         let pool = ParodyLibrary.byGenre[genre] ?? []
         let fresh = pool.filter { !avoiding.contains($0.name) }
         if !fresh.isEmpty { return rng.pick(fresh) }
+        guard !pool.isEmpty else { return inventedTitle(genre: genre == .local ? .drama : genre, rng: &rng, avoiding: avoiding) }
         var base = rng.pick(pool)
         for suffix in romanSuffixes {
             let candidate = "\(base.name) \(suffix)"
@@ -149,8 +150,8 @@ enum TitleGenerator {
     }
 
     /// Generates one licensable title (a fresh market listing), a parody of a real show or movie.
-    static func generate(id: Int, rng: inout SeededRNG, avoiding: Set<String> = []) -> Title {
-        let genre = rng.pickWeighted(genreWeights)
+    static func generate(id: Int, rng: inout SeededRNG, avoiding: Set<String> = [], forcedGenre: Genre? = nil) -> Title {
+        let genre = forcedGenre ?? rng.pickWeighted(genreWeights)
         var parody = pickParody(genre: genre, rng: &rng, avoiding: avoiding)
         // Once most of a genre's parodies are in use (huge catalogs), invent original-sounding names instead of
         // reusing parodies with sequel numbers.

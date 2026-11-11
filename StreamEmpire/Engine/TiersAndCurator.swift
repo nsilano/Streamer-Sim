@@ -44,9 +44,11 @@ extension GameState {
     mutating func fireCurator() { curator = nil }
 
     mutating func updateCurator(_ new: Curator) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard curator != nil else { throw ActionError.invalidProject("Hire a licensing manager first.") }
         guard new.weeklyBudget >= 0, new.maxPricePerTitle >= 0, new.cashReserve >= 0,
-              (0...100).contains(new.minQuality), new.targetCatalogSize >= 0, (1...5).contains(new.maxYears) else {
+              (0...100).contains(new.minQuality), new.targetCatalogSize >= 0, (1...5).contains(new.maxYears),
+              (1...5).contains(new.renewYears), new.purchasesPerWeek >= 1, new.carryBudget >= 0 else {
             throw ActionError.invalidAmount
         }
         curator = new

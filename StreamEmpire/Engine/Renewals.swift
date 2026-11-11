@@ -52,7 +52,7 @@ extension GameState {
     /// lists everything expiring within 8 weeks, so one pause covers a whole batch.
     var newlyExpiring: [Title] {
         guard expiryAlerts == .stop, week - lastExpiryStopWeek >= GameState.expiryStopCooldown else { return [] }
-        let hit = catalog.contains { $0.license != nil && $0.weeksRemaining == GameState.expiryStopWeeks }
+        let hit = catalog.contains { $0.license != nil && ($0.weeksRemaining ?? 99) <= GameState.expiryStopWeeks && ($0.weeksRemaining ?? 0) > 0 }
         guard hit else { return [] }
         return expiringTitles.filter { ($0.weeksRemaining ?? 99) <= 8 }
     }

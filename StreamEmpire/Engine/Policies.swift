@@ -89,7 +89,14 @@ extension GameState {
         if result.subsPct != 0 {
             for code in markets.keys.sorted() {
                 guard var market = markets[code], market.isLive else { continue }
-                for tier in Tier.allCases { market.subs[tier] *= (1 + result.subsPct) }
+                var factor = 1 + result.subsPct
+                if factor > 1, let country = CountryData.country(code), market.subs.total > 0 {
+                    // A boost can't push the market past its subscriber ceiling.
+                    let rivalSubs = rivals.reduce(0.0) { $0 + ($1.subs[code] ?? 0) }
+                    let room = max(market.subs.total, country.subscriberCeiling - rivalSubs)
+                    factor = min(factor, room / market.subs.total)
+                }
+                for tier in Tier.allCases { market.subs[tier] *= factor }
                 markets[code] = market
             }
         }

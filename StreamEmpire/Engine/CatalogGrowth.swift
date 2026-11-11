@@ -85,7 +85,7 @@ extension GameState {
 
     mutating func finalizeTitleStats() {
         for title in catalog {
-            guard var stats = titleStats[title.id] else { continue }
+            var stats = titleStats[title.id, default: TitleStats()]   // titles nobody watched still age
             stats.totalViews += stats.weeklyViewers
             stats.lifetimeRevenue += stats.weeklyRevenue
             stats.peakViewers = max(stats.peakViewers, stats.weeklyViewers)
@@ -117,6 +117,9 @@ func progressLoans(_ s: inout GameState, events: inout [GameEvent]) {
                                       "\"\(loan.title.name)\" ran out of rights while licensed to \(loan.to)."))
         } else if loan.weeksLeft <= 0 {
             loan.title.listingWeeksLeft = 0
+            // The catalog ages the title again later this same week: give that week back.
+            loan.title.ageWeeks = max(0, loan.title.ageWeeks - 1)
+            if let left = loan.title.weeksRemaining { loan.title.weeksRemaining = left + 1 }
             s.catalog.append(loan.title)
             events.append(s.makeEvent(.news, "\"\(loan.title.name)\" is back",
                                       "\(loan.to) is done with it. It's on your service again."))

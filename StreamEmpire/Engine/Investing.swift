@@ -45,6 +45,7 @@ extension GameState {
         guard let index = rivals.firstIndex(where: { $0.id == rivalID }) else {
             throw ActionError.invalidProject("That company isn't for sale.")
         }
+        guard takeover?.rivalID != rivalID else { throw ActionError.invalidProject("Your bid for this company is in progress.") }
         guard (0.005...0.25).contains(percent) else { throw ActionError.invalidAmount }
         let current = stake(in: rivalID)
         guard current + percent <= Formulas.openMarketLimit + 1e-9 else {
@@ -75,6 +76,7 @@ extension GameState {
     mutating func sellShares(rivalID: String, percent: Double) throws {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = rivals.firstIndex(where: { $0.id == rivalID }) else { throw ActionError.invalidAmount }
+        guard takeover?.rivalID != rivalID else { throw ActionError.invalidProject("You can't sell shares while your bid is pending.") }
         let current = stake(in: rivalID)
         guard percent > 0, percent <= current + 1e-9 else { throw ActionError.invalidAmount }
         let sold = min(percent, current)
@@ -145,13 +147,14 @@ extension GameState {
             market.subs.standard += inherited
             markets[code] = market
         }
-        finances.cash += rival.cash * 0.5
+        finances.cash += min(rival.cash * 0.5, marketCap(rival) * 0.1)   // capped: rival cash grows without limit
         let titles = min(8, Int(rival.catalogStrength / 12))
         for _ in 0..<titles {
             let id = takeID()
             var title = TitleGenerator.generate(id: id, rng: &rng,
                                                 avoiding: Set(catalog.map(\.name) + licenseMarket.map(\.name)))
-            title.isOriginal = true
+            title.isOriginal = false     // acquired library: no awards, seasons or write-off benefit
+            title.invested = 0
             title.license = nil
             title.weeksRemaining = nil
             title.listingWeeksLeft = 0
@@ -163,6 +166,7 @@ extension GameState {
         stakes[rival.id] = nil
         stakeBasis[rival.id] = nil
         rivals.remove(at: index)
+        endOrphanedBundles()
         addNews(.you, "\(companyName) acquires \(rival.name)!",
                 "A landmark deal: \(rival.name)'s \(Format.count(rival.totalSubs)) subscribers in \(rival.countryCount) countries, its cash and \(titles) library titles now belong to \(companyName).")
     }

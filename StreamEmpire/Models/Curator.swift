@@ -8,6 +8,7 @@ struct Curator: Codable, Equatable {
     var catalogCap = 100                     // used when capMode is .fixed
     var mode: CuratorMode = .custom          // presets size spending to your revenue and cash; custom uses the rules below
     var weeklyBudget = 2_000_000.0           // spending allowance added each week
+    var budgetWeek = -1                      // week the weekly allowance was last granted
     var carryBudget = 0.0                    // unspent allowance carried over (up to 3 weeks' worth)
     var maxPricePerTitle = 3_000_000.0
     var minQuality = 55

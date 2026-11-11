@@ -83,8 +83,10 @@ extension GameState {
 
     /// Ending early costs 8 weeks of fees.
     mutating func cancelOutputDeal(id: Int) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = outputDeals.firstIndex(where: { $0.id == id }) else { throw ActionError.invalidAmount }
         let penalty = outputDeals[index].weeklyFee * 8
+        guard finances.cash >= penalty else { throw ActionError.insufficientFunds(needed: penalty) }
         finances.cash -= penalty
         finances.ledger.other += penalty
         let deal = outputDeals.remove(at: index)
@@ -103,8 +105,7 @@ extension GameState {
             outputDeals[i].delivered += 1
             let deal = outputDeals[i]
             let taken = Set(catalog.map(\.name) + licenseMarket.map(\.name) + projects.map(\.name) + loanedOut.map(\.title.name))
-            var title = TitleGenerator.generate(id: takeID(), rng: &rng, avoiding: taken)
-            title.genre = deal.genre
+            var title = TitleGenerator.generate(id: takeID(), rng: &rng, avoiding: taken, forcedGenre: deal.genre)
             title.quality = Int(Formulas.clamp(Double(title.quality), 55, 82))
             title.ageWeeks = 0
             title.license = LicenseTerms(cost: deal.weeklyFee * Double(Self.outputDeliveryEvery), years: 3, regions: [], exclusive: true)
@@ -112,7 +113,7 @@ extension GameState {
             title.listingWeeksLeft = 0
             title.embargoWeeks = 0
             title.paidPrice = deal.weeklyFee * Double(Self.outputDeliveryEvery)
-            title.invested = title.paidPrice
+            title.invested = 0   // the weekly fees are already booked as licensing; don't count them twice
             title.popularityAtPurchase = title.popularity
             catalog.append(title)
             events.append(makeEvent(.news, "\(deal.studio) delivers \"\(title.name)\"",
@@ -139,6 +140,7 @@ extension GameState {
             throw ActionError.invalidProject("You can't leave your only live market.")
         }
         let cost = exitPrice(country)
+        guard finances.cash >= cost else { throw ActionError.insufficientFunds(needed: cost) }
         finances.cash -= cost
         finances.ledger.other += cost
         let lost = market.subs.total
@@ -153,6 +155,7 @@ extension GameState {
 
     /// Stop a production. Money already spent is gone.
     mutating func cancelProduction(id: Int) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = projects.firstIndex(where: { $0.id == id }) else { throw ActionError.invalidAmount }
         let project = projects.remove(at: index)
         let spent = project.weeklyCost * Double(project.weeksTotal - project.weeksLeft)
@@ -161,6 +164,7 @@ extension GameState {
 
     /// Pull a licensed title from the service (no refund), or write off an original for a 10% tax benefit.
     mutating func removeTitle(titleID: Int) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = catalog.firstIndex(where: { $0.id == titleID }) else { throw ActionError.titleNotFound }
         let title = catalog.remove(at: index)
         titleStats[title.id] = nil
@@ -197,7 +201,7 @@ extension GameState {
         let price = buybackPrice(percent: amount)
         guard finances.cash >= price else { throw ActionError.insufficientFunds(needed: price) }
         finances.cash -= price
-        finances.ledger.other += price
+        finances.ledger.capital += price
         equity.ownership += amount
         earningsSentiment = min(1.35, earningsSentiment + 0.02)
         addNews(.you, "\(companyName) buys back shares", "\(Format.percent(amount)) of the company for \(Format.money(price)). You now own \(Format.percent(equity.ownership)).")
@@ -212,7 +216,7 @@ extension GameState {
         guard finances.cash >= price else { throw ActionError.insufficientFunds(needed: price) }
         guard week - lastDividendWeek >= 13 else { throw ActionError.invalidProject("At most one dividend per quarter.") }
         finances.cash -= price
-        finances.ledger.other += price
+        finances.ledger.capital += price
         lastDividendWeek = week
         earningsSentiment = min(1.35, earningsSentiment + 0.04)
         addNews(.you, "\(companyName) pays a dividend", "\(Format.money(price)) goes back to shareholders. Investors cheer.")

@@ -64,9 +64,9 @@ extension GameState {
 
     func policyPrice(_ option: PolicyOption) -> Double { scaled(option.cost) }
 
-    func datacenterUpkeepPrice(level: Int) -> Double { scaled(Formulas.datacenterUpkeep(level: level)) }
+    func datacenterUpkeepPrice(level: Int) -> Double { scaled(Formulas.datacenterUpkeep(level: level) * serverCostMultiplier) }
 
-    var cloudUnitPrice: Double { scaled(Formulas.cloudUnitCostPerWeek) }
+    var cloudUnitPrice: Double { scaled(Formulas.cloudUnitCostPerWeek * serverCostMultiplier) }
 
     func studioUpkeepPrice(_ studio: Studio) -> Double { scaled(Formulas.studioUpkeep(level: studio.level)) * staff.studioPay }
 }

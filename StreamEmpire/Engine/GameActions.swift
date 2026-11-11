@@ -48,6 +48,9 @@ extension GameState {
         guard licenseMarket[index].embargoWeeks == 0 else {
             throw ActionError.invalidProject("Rights go on sale in \(licenseMarket[index].embargoWeeks) weeks.")
         }
+        guard licenseMarket[index].talksBlockedUntil <= week else {
+            throw ActionError.invalidProject("The seller won't deal again until week \(licenseMarket[index].talksBlockedUntil).")
+        }
         let price = licensePrice(licenseMarket[index])
         guard finances.cash >= price else {
             throw ActionError.insufficientFunds(needed: price)

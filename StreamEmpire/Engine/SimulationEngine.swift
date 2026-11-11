@@ -263,7 +263,7 @@ enum SimulationEngine {
         }
 
         fin.streaming = billedSubs * Formulas.streamingCostPerSubWeek * policy.streamingCost * s.costScale
-        fin.policies = policy.flatCost + policy.overhead * fin.revenue
+        fin.policies = policy.flatCost * s.costScale + policy.overhead * fin.revenue
         fin.studios = s.weeklyStudioCost
         applyAttrition(&s, events: &events)
         fin.staff = Formulas.baseStaffCostPerWeek * s.costScale + s.weeklySalaries + Formulas.overheadRate * fin.revenue
@@ -395,6 +395,7 @@ enum SimulationEngine {
     // MARK: Steps
 
     private static func ageCatalog(_ s: inout GameState, events: inout [GameEvent]) {
+        var warn: [Int: [Title]] = [:]
         for i in s.catalog.indices {
             s.catalog[i].ageWeeks += 1
             if let left = s.catalog[i].weeksRemaining { s.catalog[i].weeksRemaining = left - 1 }
@@ -409,19 +410,29 @@ enum SimulationEngine {
                           "Viewers are talking, and not everyone is happy. Brand trust dips a little.")
             }
             if let left = s.catalog[i].weeksRemaining, left == 12 || left == 4 {
-                let title = s.catalog[i]
-                s.addNews(.licensing, "\"\(title.name)\" expires in \(left) weeks",
-                          "Renew it from the Content tab for \(Format.money(s.renewalPrice(title, years: 2))) (2 years), or it leaves your catalog.")
-                events.append(s.makeEvent(.warning, left == 4 ? "License expiring in 4 weeks" : "License expiring in 12 weeks",
-                                          "\"\(title.name)\" leaves in \(left) weeks. Renew it from the Dashboard or the Content tab."))
+                warn[left, default: []].append(s.catalog[i])
             }
+        }
+        // One note per batch, not per title: a manager's bulk purchase expires together.
+        func names(_ titles: [Title]) -> String {
+            let shown = titles.prefix(3).map { "\"\($0.name)\"" }.joined(separator: ", ")
+            return titles.count > 3 ? "\(shown) and \(titles.count - 3) more" : shown
+        }
+        for left in warn.keys.sorted() {
+            let titles = warn[left] ?? []
+            let price = titles.reduce(0.0) { $0 + s.renewalPrice($1, years: 2) }
+            s.addNews(.licensing, titles.count == 1 ? "\"\(titles[0].name)\" expires in \(left) weeks" : "\(titles.count) licenses expire in \(left) weeks",
+                      "\(names(titles)). Renew from the Content tab (\(Format.money(price)) for 2 years), or they leave your catalog.")
+            events.append(s.makeEvent(.warning, left == 4 ? "License expiring in 4 weeks" : "License expiring in 12 weeks",
+                                      "\(names(titles)) leave\(titles.count == 1 ? "s" : "") in \(left) weeks. Renew from the Dashboard or the Content tab."))
         }
         let expired = s.catalog.filter { ($0.weeksRemaining ?? 1) <= 0 }
         s.catalog.removeAll { ($0.weeksRemaining ?? 1) <= 0 }
-        for title in expired {
-            s.titleStats[title.id] = nil
+        for title in expired { s.titleStats[title.id] = nil }
+        if !expired.isEmpty {
             events.append(s.makeEvent(.licenseExpired, "License expired",
-                                      "\"\(title.name)\" has left your catalog."))
+                                      expired.count == 1 ? "\"\(expired[0].name)\" has left your catalog."
+                                                         : "\(names(expired)) have left your catalog."))
         }
     }
 
@@ -511,9 +522,9 @@ enum SimulationEngine {
                 title.quality = finalQuality
                 title.popularity = finalPopularity
                 title.mature = parent.mature
-                title.seasons = parent.seasons + 1
+                title.seasons = project.kind == .movie ? max(parent.seasons + 1, GameState.romanValue(project.name)) : parent.seasons + 1
                 title.awards = 0
-                s.catalog[pi].seasons = title.seasons
+                if project.kind == .series { s.catalog[pi].seasons = title.seasons }   // each film keeps its own number
                 if project.kind == .series {
                     // A new season refreshes the same show.
                     s.catalog[pi].quality = finalQuality
