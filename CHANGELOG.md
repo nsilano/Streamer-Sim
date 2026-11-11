@@ -9,6 +9,10 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+Nothing waiting. New work goes here until it is sent to TestFlight.
+
+## Build 23 (TestFlight, 2026-11-11) - 5560c34
+
 ### Catalog limits and bigger-catalog pricing (save v29)
 - Licensing manager: new "Catalog size" setting in every style: Auto (the style's own target), Set a limit (you pick the number), or No limit.
 - Licensing prices climb once your catalog passes 300 titles: about x1.6 at 1,000, x3.3 at 2,000, x9 at 4,000, x27 at 8,000 (a Netflix-sized library, affordable only to a giant) and x52 at 12,000. Nobody can own everything; cost is the natural brake. The licensing screen warns you as you approach and shows the multiplier.
