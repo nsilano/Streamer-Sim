@@ -54,7 +54,7 @@ final class Phase4Tests: XCTestCase {
         var s = newState()
         s.staff.engineering = 3
         try s.startPlatform(.smartTV)
-        XCTAssertEqual(s.builds[0].weeksLeft, 9)
+        XCTAssertEqual(s.builds[0].weeksLeft, 43, "52 weeks minus 3 per engineering level")
         XCTAssertEqual(Formulas.buildWeeks(base: 8, engineeringLevel: 2), 6)
         XCTAssertEqual(Formulas.buildWeeks(base: 72, engineeringLevel: 5), 52)
         XCTAssertEqual(Formulas.buildWeeks(base: 8, engineeringLevel: 99), 4, "never less than half the time")

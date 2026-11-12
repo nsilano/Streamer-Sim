@@ -62,7 +62,7 @@ final class Phase7Tests: XCTestCase {
         var s = newState()
         s.staff.engineering = 3
         try s.buildDatacenter(region: .europe)
-        XCTAssertEqual(s.datacenters[0].weeksToBuild, 5)
+        XCTAssertEqual(s.datacenters[0].weeksToBuild, 60, "72 weeks minus 4 per engineering level")
     }
 
     func testDatacenterLimitsAndUpgrades() throws {

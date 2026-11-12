@@ -83,12 +83,12 @@ final class Phase9Tests: XCTestCase {
         let cash = s.finances.cash
         try s.launchTier(.ad, code: "IE")
         XCTAssertEqual(s.finances.cash, cash - cost, accuracy: 0.01)
-        XCTAssertEqual(s.markets["IE"]!.tierBuilds, [TierBuild(tier: .ad, weeksLeft: 3)])
+        XCTAssertEqual(s.markets["IE"]!.tierBuilds, [TierBuild(tier: .ad, weeksLeft: Formulas.tierLaunchWeeks(.ad))])
         XCTAssertThrowsError(try s.launchTier(.ad, code: "IE"), "already in progress")
         XCTAssertThrowsError(try s.launchTier(.standard, code: "IE"), "always live")
         XCTAssertThrowsError(try s.launchTier(.premium, code: "NZ"), "market not live")
 
-        for _ in 0..<2 { s = SimulationEngine.advanceWeek(s) }
+        for _ in 0..<(Formulas.tierLaunchWeeks(.ad) - 1) { s = SimulationEngine.advanceWeek(s) }
         XCTAssertFalse(s.markets["IE"]!.liveTiers.contains(.ad))
         s = SimulationEngine.advanceWeek(s)
         XCTAssertTrue(s.markets["IE"]!.liveTiers.contains(.ad))
