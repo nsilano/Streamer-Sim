@@ -43,12 +43,13 @@ final class Phase16Tests: XCTestCase {
         var s = newState()
         s.catalog = [owned(left: 10)]
         let price = s.renewalPrice(s.catalog[0], years: 3)
+        let basePerYear = s.catalog[0].paidPrice / Double(s.catalog[0].license!.years)
         let cash = s.finances.cash
         try s.renewLicense(titleID: 1, years: 3)
         XCTAssertEqual(s.catalog[0].weeksRemaining, 10 + 156)
         XCTAssertEqual(s.finances.cash, cash - price, accuracy: 0.01)
         XCTAssertEqual(s.finances.ledger.licensing, price, accuracy: 0.01)
-        XCTAssertEqual(s.catalog[0].paidPrice, price, accuracy: 0.01)
+        XCTAssertEqual(s.catalog[0].paidPrice, basePerYear * 3, accuracy: 0.01, "the per-year base stays put, so renewals never ratchet down")
     }
 
     func testRenewRules() {

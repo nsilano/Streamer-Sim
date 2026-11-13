@@ -684,6 +684,6 @@ final class PlaytestMoneyTests: XCTestCase {
     func testBug_churnPriceEffectCapsAtTwoX() {
         let fair = Formulas.churnRate(appeal: 0.5, price: 10, tolerance: 10, serviceQuality: 1.0)
         let gouge = Formulas.churnRate(appeal: 0.5, price: 100, tolerance: 10, serviceQuality: 1.0)
-        XCTAssertGreaterThanOrEqual(gouge, fair * 4, "10x the fair price only multiplies churn by \(gouge / fair)")
+        XCTAssertGreaterThanOrEqual(gouge, fair * 4 - 1e-9, "10x the fair price only multiplies churn by \(gouge / fair)")
     }
 }

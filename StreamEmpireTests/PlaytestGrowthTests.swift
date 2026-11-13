@@ -640,7 +640,8 @@ final class PlaytestGrowthTests: XCTestCase {
                                quality: 80, popularity: 70, ageWeeks: 20, isOriginal: true, license: nil,
                                weeksRemaining: nil, listingWeeksLeft: 0))
         do { try s.orderSeason(titleID: id, budget: 5_000_000, weeks: 6) } catch { return XCTFail("orderSeason: \(error)") }
-        do { try s.licenseOut(titleID: id, weeks: 13) } catch { return XCTFail("licenseOut: \(error)") }
+        // Licensing the show out while its new season is in production is refused, so it can't be duplicated.
+        XCTAssertThrowsError(try s.licenseOut(titleID: id, weeks: 13))
         for _ in 0..<8 {
             s.finances.cash = 1e12
             s = SimulationEngine.advanceWeek(s)

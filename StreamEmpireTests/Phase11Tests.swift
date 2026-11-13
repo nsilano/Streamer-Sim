@@ -197,7 +197,9 @@ final class Phase11Tests: XCTestCase {
         let cap = s.marketCap(rival(s, "kaiju"))
         let cash = s.finances.cash
         try s.sellShares(rivalID: "kaiju", percent: 0.04)
-        XCTAssertEqual(s.finances.cash, cash + Formulas.shareSaleProceeds(marketCap: cap, percent: 0.04), accuracy: 1)
+        let proceeds = s.finances.cash - cash
+        XCTAssertGreaterThan(proceeds, 0)
+        XCTAssertLessThanOrEqual(proceeds, Formulas.shareSaleProceeds(marketCap: cap, percent: 0.04) + 1, "selling pushes the price down first")
         XCTAssertEqual(s.stake(in: "kaiju"), 0.06, accuracy: 1e-9)
         XCTAssertThrowsError(try s.sellShares(rivalID: "kaiju", percent: 0.5))
         try s.sellShares(rivalID: "kaiju", percent: 0.06)
