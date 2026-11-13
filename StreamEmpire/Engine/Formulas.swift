@@ -228,7 +228,7 @@ enum Formulas {
     static func churnRate(appeal: Double, price: Double, tolerance: Double,
                           serviceQuality: Double, rivalHeat: Double = 0) -> Double {
         let content = 1.6 - appeal                                   // 0.6 ... 1.6
-        let priceEffect = clamp(0.8 + 0.4 * price / tolerance, 0.6, 2.0)
+        let priceEffect = clamp(0.8 + 0.4 * price / tolerance, 0.6, 5.0)
         let service = 1.0 + (1.0 - clamp(serviceQuality, 0, 1)) * 3.0
         return baseChurn * content * priceEffect * service * (1.0 + 0.3 * rivalHeat)
     }

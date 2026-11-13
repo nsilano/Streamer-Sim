@@ -33,7 +33,7 @@ extension GameState {
         let year = Formulas.licenseCost(kind: title.kind, quality: title.quality, popularity: title.popularity,
                                         years: 1, ageWeeks: title.ageWeeks, exclusive: false)
         return year * Formulas.sublicenseShare * Double(weeks) / 52.0
-            * Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers) * costScale * (title.sought ? Formulas.soughtPremium : 1)
+            * min(8, Formulas.licenseAudienceScale(totalSubscribers: totalSubscribers).squareRoot()) * costScale * (title.sought ? Formulas.soughtPremium : 1)
     }
 
     /// Take a title off your service for a while and collect a fee from another service.
@@ -43,6 +43,9 @@ extension GameState {
         guard Formulas.sublicenseTerms.contains(weeks) else { throw ActionError.invalidProject("Pick 13, 26, 52 or 104 weeks.") }
         if let left = catalog[index].weeksRemaining, left <= weeks {
             throw ActionError.invalidProject("You only hold the rights for \(left) more weeks.")
+        }
+        guard !projects.contains(where: { $0.sequelOf == titleID }) else {
+            throw ActionError.invalidProject("A new season is in production; wait until it's done.")
         }
         let fee = sublicenseFee(catalog[index], weeks: weeks)
         let title = catalog.remove(at: index)

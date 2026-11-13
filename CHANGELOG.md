@@ -9,6 +9,15 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Playtest fixes
+- Renewals no longer get cheaper and cheaper each time you renew a title; the per-year price stays anchored.
+- License-out fees no longer count as steady yearly revenue (they inflated credit limits, valuation and IPO eligibility), and they scale with your audience more gently, so flipping output-deal titles can't print money.
+- A season finishing while its show is licensed out no longer creates a duplicate show; licensing a show out is blocked while a new season is in production.
+- Buying then selling a rival's shares in one turn can't profit any more, and an IPO followed by a buyback is no longer free money (buybacks cost 1.5x).
+- Very high prices now drive churn much harder (up to 5x), so gouging an installed base stops being a free win.
+- Challenge scores ignore borrowed cash. Bad numbers (NaN prices, infinite marketing) are rejected, and dividends and buybacks stop after game over.
+- Auto-scale servers no longer rent and release the same block every week. Chirp no longer treats a rival's story as yours just because your company name is part of its name.
+
 ### Chart dates
 - The Dashboard chart's date labels now start at the very first week of your game and run evenly to the latest week (with the year), instead of only marking each January, so it's clear the "All time" view covers everything. There's a little padding at both ends so the first and last labels aren't cut off.
 

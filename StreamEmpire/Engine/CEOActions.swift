@@ -190,9 +190,10 @@ extension GameState {
     }
 
     /// Public companies only: buy back `percent` (1-10%) of shares at a 10% premium to raise your ownership.
-    func buybackPrice(percent: Double) -> Double { valuation * percent * 1.1 }
+    func buybackPrice(percent: Double) -> Double { valuation * percent * 1.5 }   // above the 1.4x IPO price: no free money in selling then buying back
 
     mutating func buyBackShares(percent: Double) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard equity.ipoDone else { throw ActionError.invalidProject("Only public companies can buy back shares.") }
         guard (0.01...0.10).contains(percent) else { throw ActionError.invalidAmount }
         let room = 1 - equity.ownership
@@ -211,6 +212,7 @@ extension GameState {
     func dividendPrice() -> Double { valuation * 0.01 }
 
     mutating func payDividend() throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard equity.ipoDone else { throw ActionError.invalidProject("Only public companies pay dividends.") }
         let price = dividendPrice()
         guard finances.cash >= price else { throw ActionError.insufficientFunds(needed: price) }

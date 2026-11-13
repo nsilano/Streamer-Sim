@@ -90,7 +90,7 @@ extension GameState {
 
     mutating func setPrices(code: String, prices: TierSet) throws {
         guard markets[code] != nil else { throw ActionError.countryNotFound }
-        for tier in Tier.allCases where prices[tier] < 0 || prices[tier] > 100 {
+        for tier in Tier.allCases where !(prices[tier] >= 0 && prices[tier] <= 100) {   // also rejects NaN
             throw ActionError.invalidPrice
         }
         changePrices(code: code, to: prices)
@@ -105,6 +105,7 @@ extension GameState {
 
     mutating func setMarketing(code: String, weeklyBudget: Double) throws {
         guard markets[code] != nil else { throw ActionError.countryNotFound }
+        guard weeklyBudget.isFinite else { throw ActionError.invalidAmount }
         markets[code]?.marketingBudget = max(0, weeklyBudget)
     }
 }

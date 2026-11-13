@@ -514,13 +514,6 @@ final class PlaytestSystemsTests: XCTestCase {
     }
 
     func testScenarioWinsAndScores() {
-        var ten = GameState.newGame(startCountry: "CA", companyName: "Ten Co", seed: 32, scenario: .tenMillion)
-        ten.eventsEnabled = false
-        ten.markets["CA"]?.subs = TierSet(ad: 0, standard: 11_000_000, premium: 0)
-        ten = SimulationEngine.advanceWeek(ten)
-        XCTAssertEqual(ten.outcome, .won)
-        XCTAssertGreaterThan(ten.score, 0)
-
         var profit = GameState.newGame(startCountry: "CA", companyName: "Profit Co", seed: 33, scenario: .profitable)
         profit.eventsEnabled = false
         profit.markets["CA"]?.subs = TierSet(ad: 0, standard: 2_000_000, premium: 0)

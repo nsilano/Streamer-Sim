@@ -26,7 +26,7 @@ enum Scenarios {
     /// Points for a finished scenario: audience, cash, and weeks left on the clock.
     static func score(_ s: GameState) -> Int {
         let subs = s.totalSubscribers / 1_000
-        let cash = max(0, s.finances.cash) / 100_000
+        let cash = max(0, s.finances.cash - s.outstandingDebt) / 100_000   // borrowed money isn't yours
         let timeBonus = Double(max(0, (s.scenario.deadline ?? s.week) - s.week)) * 5
         let total = subs + cash + timeBonus
         return total.isFinite ? Int(min(total, 1e12)) : 0

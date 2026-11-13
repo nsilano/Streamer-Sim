@@ -31,11 +31,13 @@ extension GameState {
         }
         let price = renewalPrice(catalog[index], years: years)
         guard finances.cash >= price else { throw ActionError.insufficientFunds(needed: price) }
+        // Keep the per-year base (undiscounted) so repeated renewals never get cheaper and cheaper.
+        let basePerYear = (catalog[index].paidPrice > 0 ? catalog[index].paidPrice : licensePrice(catalog[index])) / Double(max(1, catalog[index].license?.years ?? 1))
         finances.cash -= price
         finances.ledger.licensing += price
         catalog[index].weeksRemaining = left + years * 52
         catalog[index].license?.years = years
-        catalog[index].paidPrice = price
+        catalog[index].paidPrice = basePerYear * Double(years)
         catalog[index].invested += price
         catalog[index].popularityAtPurchase = catalog[index].popularity
         addNews(.you, "\(companyName) renews \"\(catalog[index].name)\"",

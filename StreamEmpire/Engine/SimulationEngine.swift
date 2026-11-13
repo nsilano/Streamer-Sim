@@ -318,7 +318,7 @@ enum SimulationEngine {
         s.finances.lifetime = s.finances.lifetime.adding(fin)
         s.finances.profitHistory.append(fin.profit)
         if s.finances.profitHistory.count > 12 { s.finances.profitHistory.removeFirst() }
-        s.finances.revenueHistory.append(fin.revenue)
+        s.finances.revenueHistory.append(fin.revenue - fin.licenseOutRevenue)   // one-off license-out fees aren't recurring revenue
         if s.finances.revenueHistory.count > 52 { s.finances.revenueHistory.removeFirst() }
         s.finances.weeksInDebt = s.finances.cash < 0 ? s.finances.weeksInDebt + 1 : 0
 

@@ -56,8 +56,21 @@ struct Chirp: Identifiable, Equatable {
         "This is how you lose customers.", "Switching to a rival this week, bye.", "Nobody asked for this.",
     ]
 
+    /// True if `text` names the company as a whole word (a company called "Max" doesn't own stories about "MaxStream").
+    static func mentions(_ text: String, _ company: String) -> Bool {
+        var from = text.startIndex
+        while let r = text.range(of: company, range: from..<text.endIndex) {
+            let before = r.lowerBound == text.startIndex ? nil : text[text.index(before: r.lowerBound)]
+            let after = r.upperBound == text.endIndex ? nil : text[r.upperBound]
+            let isWord: (Character?) -> Bool = { $0.map { $0.isLetter || $0.isNumber } ?? false }
+            if !isWord(before) && !isWord(after) { return true }
+            from = r.upperBound
+        }
+        return false
+    }
+
     static func make(_ item: NewsItem, state: GameState) -> Chirp {
-        let you = item.kind == .you || item.headline.contains(state.companyName) || item.body.contains(state.companyName)
+        let you = item.kind == .you || mentions(item.headline, state.companyName) || mentions(item.body, state.companyName)
         var name: String
         var verified = true
         var scale: Double

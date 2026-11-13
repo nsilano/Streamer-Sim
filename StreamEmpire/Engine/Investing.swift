@@ -80,13 +80,14 @@ extension GameState {
         let current = stake(in: rivalID)
         guard percent > 0, percent <= current + 1e-9 else { throw ActionError.invalidAmount }
         let sold = min(percent, current)
+        // Selling pushes the price down first, mirroring how buying pushed it up: a quick buy-then-sell never profits.
+        rivals[index].sentiment = max(0.6, rivals[index].sentiment - sold * 0.5)
         finances.cash += Formulas.shareSaleProceeds(marketCap: marketCap(rivals[index]), percent: sold)
         let remaining = current - sold
         let basis = stakeBasis[rivalID] ?? 0
         stakeBasis[rivalID] = current > 0 ? basis * remaining / current : 0
         stakes[rivalID] = remaining > 1e-9 ? remaining : nil
         if stakes[rivalID] == nil { stakeBasis[rivalID] = nil }
-        rivals[index].sentiment = max(0.6, rivals[index].sentiment - sold * 0.5)
     }
 
     // MARK: Takeovers

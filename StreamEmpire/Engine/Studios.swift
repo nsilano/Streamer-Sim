@@ -77,7 +77,7 @@ extension GameState {
 
     /// Sets exact dollar prices for every launched market (0...100 per tier).
     mutating func applyPrices(_ prices: TierSet) throws {
-        for tier in Tier.allCases where prices[tier] < 0 || prices[tier] > 100 { throw ActionError.invalidPrice }
+        for tier in Tier.allCases where !(prices[tier] >= 0 && prices[tier] <= 100) { throw ActionError.invalidPrice }
         for code in markets.keys.sorted() where markets[code]?.status != .notLaunched {
             changePrices(code: code, to: prices)
         }

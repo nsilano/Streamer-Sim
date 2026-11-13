@@ -14,8 +14,11 @@ extension GameState {
             let load = effectiveLoad(region)
             if load >= 0.85, units < Formulas.maxCloudUnits, finances.cash > cloudUnitPrice * 12 {
                 cloudUnits[region.rawValue] = units + 1
-            } else if load < 0.45, units > 0 {
-                cloudUnits[region.rawValue] = units - 1
+            } else if units > 0 {
+                // Release a block only if the region would still be comfortable without it (no rent/release flapping).
+                let capacity = serverCapacity(region)
+                let after = load * capacity / max(1, capacity - Formulas.cloudUnitCapacity)
+                if after < 0.7 { cloudUnits[region.rawValue] = units - 1 }
             }
         }
     }
