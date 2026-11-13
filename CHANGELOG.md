@@ -9,6 +9,17 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+### Appeal curve, rivals and exploit fixes (save version 34)
+- **Content appeal:** 25 titles is no longer almost full appeal. A core of about 25 good titles still gets you most of the way (about 70%), but the last stretch needs hundreds: roughly 90% at 300 titles and 98% at 1,000. Big libraries finally matter.
+- **Free and very cheap plans:** the sign-up bonus for low prices is capped, and a free ad tier no longer swallows nearly every new subscriber.
+- **Rival poaching:** a rival only pulls customers away when it really charges less than you, in proportion to the gap.
+- **Closed markets (China, Iran, Cuba):** Iran and Cuba now need an unlock (Iran 1.5M subscribers or 35 titles, Cuba 1M or 25) and cost more to launch ($18M and $4M). Rivals start entering them after about five years.
+- **Takeovers:** inherited countries cost half a launch to integrate (tiny footprints are skipped), and a failed bid locks you out of bidding for 26 weeks.
+- **Money:** the overdraft now costs 12% a year in interest, and a new "credit 80% used" alert stops the sim even on the default setting. Promotion stacking is capped at doubling sign-ups, and campaigns cost more as your audience grows. Refused license negotiations now cost an 8-week lockout and +12% price. Titles licensed out still count toward the catalog-size price curve.
+- **Staff:** pay above market can no longer push a department past its level cap.
+- **Capacity:** up to 8 datacenters and 40 cloud blocks per region, so a huge audience is possible.
+- Dividends, buybacks, price changes, firing and releasing cloud are blocked after game over, and listing refresh got faster.
+
 ### Playtest fixes
 - Renewals no longer get cheaper and cheaper each time you renew a title; the per-year price stays anchored.
 - License-out fees no longer count as steady yearly revenue (they inflated credit limits, valuation and IPO eligibility), and they scale with your audience more gently, so flipping output-deal titles can't print money.

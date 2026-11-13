@@ -5,6 +5,8 @@ enum Formulas {
     // Tunable constants (Phase 4 balancing pass).
     static let baseAddRate = 0.005            // share of headroom that can join per week at appeal 1.0
     static let baseChurn = 0.009              // weekly churn at neutral conditions
+    static let coreAppealShare = 0.8
+    static let depthSaturationFactor = 30.0
     static let appealSaturation = 6.0         // summed title appeal at which catalog appeal ~63%
     static let streamingCostPerSubWeek = 0.25
     static let baseStaffCostPerWeek = 20_000.0
@@ -105,7 +107,11 @@ enum Formulas {
     /// 0...1 with diminishing returns as the catalog grows.
     static func catalogAppeal(_ titles: [Title], in country: Country) -> Double {
         let sum = titles.reduce(0) { $0 + titleAppeal($1, in: country) }
-        return 1 - exp(-sum / appealSaturation)
+        // 80% comes from a core library (about 25 good titles fills most of it), 20% from depth: full appeal needs
+        // hundreds of titles, about 1,000 for ~98%.
+        let core = 1 - exp(-sum / appealSaturation)
+        let depth = 1 - exp(-sum / (appealSaturation * depthSaturationFactor))
+        return coreAppealShare * core + (1 - coreAppealShare) * depth
     }
 
     static func licenseCost(kind: TitleKind, quality: Int, popularity: Int, years: Int,
@@ -137,12 +143,12 @@ enum Formulas {
     /// 1.0 when price equals tolerance; falls steeply above it, rises below it.
     static func priceFactor(price: Double, tolerance: Double) -> Double {
         let ratio = max(price, 0.01) / tolerance
-        return 2.0 / (1.0 + pow(ratio, 2.5))
+        return min(1.6, 2.0 / (1.0 + pow(ratio, 2.5)))   // below-fair prices help, but only up to a point
     }
 
     /// Share of NEW subscribers choosing each tier (sums to 1).
     static func tierSplit(prices: TierSet, tiers: [Tier] = Tier.allCases) -> TierSet {
-        func weight(_ price: Double, _ appeal: Double) -> Double { appeal / pow(max(price, 0) + 1, 1.2) }
+        func weight(_ price: Double, _ appeal: Double) -> Double { appeal / pow(max(price, 1) + 1, 1.2) }   // a free plan doesn't swallow everyone
         // Only tiers you've launched can take new sign-ups; with none live, everyone lands on Standard.
         let live = tiers.isEmpty ? [Tier.standard] : tiers
         let ad = live.contains(.ad) ? weight(prices.ad, 1.0) : 0
@@ -362,12 +368,12 @@ extension Formulas {
     /// Real build times: a datacenter takes well over a year, a new country about four months to launch.
     static let datacenterBuildWeeks = 72
     static let marketLaunchWeeks = 16
-    static let maxDatacentersPerRegion = 4
+    static let maxDatacentersPerRegion = 8
     static let maxDatacenterLevel = 5
     /// Cloud is instant but about 8x pricier per viewer than a datacenter.
     static let cloudUnitCapacity = 500_000.0
     static let cloudUnitCostPerWeek = 25_000.0
-    static let maxCloudUnits = 10
+    static let maxCloudUnits = 40
     static let surgeLoadMultiplier = 1.3
     static let outageQualityMultiplier = 0.6
 

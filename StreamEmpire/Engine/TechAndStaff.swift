@@ -75,6 +75,7 @@ extension GameState {
     }
 
     mutating func releaseCloud(region: Region) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         let units = cloudUnits[region.rawValue] ?? 0
         guard units > 0 else { throw ActionError.invalidAmount }
         cloudUnits[region.rawValue] = units - 1
@@ -124,7 +125,7 @@ extension GameState {
     }
 
     /// Licensing prices rise once your catalog gets very big (see `Formulas.catalogSizePriceFactor`).
-    var catalogSizePriceFactor: Double { Formulas.catalogSizePriceFactor(count: catalog.count) }
+    var catalogSizePriceFactor: Double { Formulas.catalogSizePriceFactor(count: catalog.count + loanedOut.count) }
 
     var loanRate: Double {
         max(0.04, Formulas.loanRate(profitable: finances.recentWeeklyProfit >= 0)

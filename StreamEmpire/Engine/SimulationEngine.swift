@@ -282,6 +282,7 @@ enum SimulationEngine {
             principalPaid += pay
             s.loans[i].balance -= pay
         }
+        if s.finances.cash < 0 { fin.interest += -s.finances.cash * 0.12 / 52 }   // overdraft isn't free: 12% a year
         s.loans.removeAll { $0.balance <= 0.01 }
 
         for key in s.outages.keys.sorted() {
@@ -602,7 +603,7 @@ enum SimulationEngine {
     }
 
     private static func advanceRivals(_ s: inout GameState, events: inout [GameEvent]) {
-        let allCodes = CountryData.all.map { $0.code }.filter { !CountryData.closedToRivals.contains($0) }
+        let allCodes = CountryData.all.map { $0.code }.filter { !CountryData.closedToRivals.contains($0) || s.week >= CountryData.closedMarketsOpenWeek }
         var announcedExpansion = false
         var announcedPriceCut = false
         var announcedPriceWar = false
@@ -675,7 +676,10 @@ enum SimulationEngine {
             if rival.priceLevel < 0.95 {
                 for code in rival.subs.keys.sorted() {
                     guard var market = s.markets[code], market.isLive else { continue }
-                    let rate = Formulas.poachRate(priceLevel: rival.priceLevel, threat: s.countryThreat(code))
+                    // Only a rival that really undercuts you pulls customers away, in proportion to the gap.
+                    guard let theirPrice = s.rivalPrices(rival, in: code)?.standard, market.prices.standard > theirPrice else { continue }
+                    let gap = min(1, (market.prices.standard - theirPrice) / max(0.01, market.prices.standard) / 0.3)
+                    let rate = Formulas.poachRate(priceLevel: rival.priceLevel, threat: s.countryThreat(code)) * gap
                     guard rate > 0 else { continue }
                     let defected = market.subs.total * rate
                     for tier in Tier.allCases { market.subs[tier] *= (1 - rate) }

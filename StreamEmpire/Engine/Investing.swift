@@ -95,6 +95,7 @@ extension GameState {
     mutating func launchTakeover(rivalID: String, premium: Double) throws {
         guard outcome == .playing else { throw ActionError.gameOver }
         guard takeover == nil else { throw ActionError.invalidProject("You already have a takeover bid in progress.") }
+        guard week >= takeoverCooldownUntil else { throw ActionError.invalidProject("Shareholders are still angry about the last bid. Try again in week \(takeoverCooldownUntil).") }
         guard let rival = rivals.first(where: { $0.id == rivalID }) else { throw ActionError.invalidProject("That company isn't for sale.") }
         guard stake(in: rivalID) >= Formulas.disclosureStake else {
             throw ActionError.locked("Build a stake of at least \(Format.percent(Formulas.disclosureStake)) before bidding.")
@@ -124,6 +125,7 @@ extension GameState {
             let fee = bid.escrow * Formulas.takeoverFeeRate
             finances.cash += bid.escrow - fee
             finances.ledger.other += fee
+            takeoverCooldownUntil = week + 26
             rivals[index].poisonPill = true
             rivals[index].priceLevel = max(0.6, rival.priceLevel - 0.08)
             rivals[index].sentiment = min(1.6, rival.sentiment + 0.1)
@@ -140,7 +142,13 @@ extension GameState {
             guard var market = markets[code], let country = CountryData.country(code) else { continue }
             let inherited = (rival.subs[code] ?? 0) * Formulas.takeoverRetention
             if market.status != .live {
-                market.status = .live                       // you inherit their presence: no launch needed
+                // You inherit their presence without waiting for a launch, but you pay for the integration, and tiny
+                // footprints aren't worth it.
+                guard inherited >= 25_000 else { continue }
+                let integration = launchPrice(country) * 0.5
+                finances.cash -= integration
+                finances.ledger.launch += integration
+                market.status = .live
                 market.awareness = max(market.awareness, 0.35)
                 if !market.liveTiers.contains(.standard) { market.liveTiers.append(.standard) }
                 market.prices = CountryData.defaultPrices(for: country)

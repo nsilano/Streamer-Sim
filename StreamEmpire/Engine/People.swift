@@ -26,6 +26,7 @@ extension GameState {
     }
 
     mutating func fire(employeeID: Int) throws {
+        guard outcome == .playing else { throw ActionError.gameOver }
         guard let index = staff.employees.firstIndex(where: { $0.id == employeeID }) else { throw ActionError.invalidAmount }
         staff.employees.remove(at: index)
     }

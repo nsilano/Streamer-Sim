@@ -136,7 +136,7 @@ struct Staff: Codable, Equatable {
         guard raw > 0 else { return 0 }
         let output = team.reduce(0.0) { $0 + $1.output }
         let cap = Double(Formulas.maxDepartmentLevel)
-        return raw > cap ? output * cap / raw : output
+        return min(cap, raw > cap ? output * cap / raw : output)
     }
 
     /// Department level: combined skill, capped at 5. Setting it replaces the department with

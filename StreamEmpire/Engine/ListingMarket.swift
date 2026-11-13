@@ -42,9 +42,12 @@ extension GameState {
     /// Tops the market up to the target, adding at most `limit` titles.
     mutating func fillListings(limit: Int) {
         var added = 0
+        guard licenseMarket.count < listingTarget else { return }
+        var taken = Set(licenseMarket.map(\.name) + catalog.map(\.name) + projects.map(\.name) + loanedOut.map(\.title.name))
         while licenseMarket.count < listingTarget && added < limit {
-            let taken = Set(licenseMarket.map(\.name) + catalog.map(\.name) + projects.map(\.name) + loanedOut.map(\.title.name))
-            licenseMarket.append(TitleGenerator.generate(id: takeID(), rng: &rng, avoiding: taken))
+            let title = TitleGenerator.generate(id: takeID(), rng: &rng, avoiding: taken)
+            taken.insert(title.name)
+            licenseMarket.append(title)
             added += 1
         }
     }

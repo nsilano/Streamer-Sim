@@ -23,7 +23,7 @@ enum PauseSensitivity: String, Codable, CaseIterable, Identifiable {
 
     /// Whether a pause reason (see `PauseCheck`) is serious enough to stop the sim at this setting.
     func stops(_ reasonID: String) -> Bool {
-        if reasonID == "outcome" || reasonID == "cash" || reasonID.hasPrefix("load100-") { return true }
+        if reasonID == "outcome" || reasonID == "cash" || reasonID == "credit" || reasonID.hasPrefix("load100-") { return true }
         switch self {
         case .critical:
             return false

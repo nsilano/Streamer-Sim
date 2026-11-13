@@ -40,6 +40,8 @@ enum CountryData {
 
     /// Markets rivals never enter (closed to foreign streamers), so they are yours alone once unlocked.
     static let closedToRivals: Set<String> = ["CN", "IR", "CU"]
+    /// Rivals start entering the closed markets after this week (about five years in).
+    static let closedMarketsOpenWeek = 260
 
     private static let base: [Country] = [
         // North America

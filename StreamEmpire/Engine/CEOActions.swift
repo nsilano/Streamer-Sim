@@ -22,7 +22,7 @@ extension GameState {
     }
 
     /// Counter-offer on a listing. Returns true if accepted (you then own it on your terms).
-    /// A refusal makes the seller walk away from talks for 4 weeks and nudges the price up 5%.
+    /// A refusal makes the seller walk away from talks for 8 weeks and raises the price 12%.
     @discardableResult
     mutating func negotiate(titleID: Int, offer: Double, years: Int, exclusive: Bool) throws -> Bool {
         guard outcome == .playing else { throw ActionError.gameOver }
@@ -53,9 +53,9 @@ extension GameState {
             addNews(.you, "\(companyName) negotiates \"\(bought.name)\"", "Signed for \(Format.money(price)) over \(years) years.")
             return true
         }
-        licenseMarket[index].talksBlockedUntil = week + 4
-        licenseMarket[index].license?.cost *= 1.05
-        lastNegotiation = "Rejected. The rights holder for \"\(title.name)\" walked away and raised the price 5%."
+        licenseMarket[index].talksBlockedUntil = week + 8
+        licenseMarket[index].license?.cost *= 1.12
+        lastNegotiation = "Rejected. The rights holder for \"\(title.name)\" walked away and raised the price 12%."
         return false
     }
 

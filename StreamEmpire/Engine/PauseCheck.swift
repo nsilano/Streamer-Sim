@@ -56,6 +56,10 @@ enum PauseCheck {
         if before.finances.cash >= 0, after.finances.cash < 0 {
             out.append(PauseReason(id: "cash", icon: "banknote", title: "You're out of cash",
                                    detail: "Cash is \(Format.money(after.finances.cash)). Past your \(Format.money(after.overdraftLimit)) limit, or 8 weeks in debt with no funding, and it's game over. Raise money or cut costs."))
+        } else if after.finances.cash < 0, after.overdraftLimit > 0,
+                  -after.finances.cash / after.overdraftLimit >= 0.8, -before.finances.cash / max(1, before.overdraftLimit) < 0.8 {
+            out.append(PauseReason(id: "credit", icon: "exclamationmark.octagon.fill", title: "Credit nearly used up",
+                                   detail: "You've used 80% of your credit limit (\(Format.money(after.overdraftLimit))). Past it, lenders pull the plug and it's game over. Raise money or cut costs now."))
         } else if let runway = after.finances.runwayWeeks, runway < 8, (before.finances.runwayWeeks ?? 99) >= 8 {
             out.append(PauseReason(id: "runway", icon: "hourglass", title: "Only \(Int(runway)) weeks of cash left",
                                    detail: "You're losing money every week. Raise funding or cut costs (Company)."))

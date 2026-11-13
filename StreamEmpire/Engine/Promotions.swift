@@ -86,6 +86,7 @@ extension GameState {
             total.streaming *= fx.streaming
             total.awareness += fx.awareness
         }
+        total.adds = min(total.adds, 2.0)   // campaigns stack, but not past a doubling of sign-ups
         for hangover in promoHangovers where hangover.scope.isEmpty || hangover.scope == code {
             total.churn *= hangover.churn
         }
@@ -96,6 +97,8 @@ extension GameState {
         guard let last = promoLastEnded[kind.rawValue] else { return false }
         return week - last < PromoMath.fatigueWindowWeeks
     }
+
+    func scopeSubscribers(_ scope: String) -> Double { subscribers(inScope: scope) }
 
     private func subscribers(inScope scope: String) -> Double {
         if scope.isEmpty { return totalSubscribers }
@@ -108,7 +111,8 @@ extension GameState {
         let marketCount = scope.isEmpty ? max(1, liveMarketCodes.count) : 1
         let strength = PromoMath.effectiveness(promosPolicy: policyOptionID("promos"), fatigued: isPromoFatigued(kind))
         let hang = PromoMath.hangover(kind: kind, intensity: intensity, weeks: weeks)
-        return PromoQuote(cost: PromoMath.cost(kind: kind, weeks: weeks, markets: marketCount, costScale: costScale),
+        let audience = min(6, Formulas.licenseAudienceScale(totalSubscribers: scopeSubscribers(scope)).squareRoot())   // bigger audiences cost more to reach
+        return PromoQuote(cost: PromoMath.cost(kind: kind, weeks: weeks, markets: marketCount, costScale: costScale) * max(1, audience),
                           effects: PromoMath.effects(kind: kind, intensity: intensity, strength: strength),
                           strength: strength, fatigued: isPromoFatigued(kind), markets: marketCount,
                           hangoverWeeks: hang?.weeks ?? 0, hangoverChurn: hang?.churn ?? 1)
