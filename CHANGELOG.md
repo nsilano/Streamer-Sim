@@ -16,6 +16,7 @@ Builds 16 and 17 were the same code.
 - Buying then selling a rival's shares in one turn can't profit any more, and an IPO followed by a buyback is no longer free money (buybacks cost 1.5x).
 - Very high prices now drive churn much harder (up to 5x), so gouging an installed base stops being a free win.
 - Challenge scores ignore borrowed cash. Bad numbers (NaN prices, infinite marketing) are rejected, and dividends and buybacks stop after game over.
+- Switching is now fair both ways: you can lose as many customers to a better rival as you can win from a worse one (the weekly loss cap rose from 0.15% to 0.3%).
 - Auto-scale servers no longer rent and release the same block every week. Chirp no longer treats a rival's story as yours just because your company name is part of its name.
 
 ### Chart dates

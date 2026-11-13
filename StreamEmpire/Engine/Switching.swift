@@ -5,8 +5,9 @@ import Foundation
 extension Formulas {
     /// Weekly cap on the share of one rival's customers you can win in a country.
     static let maxSwitchInRate = 0.003
-    /// Weekly cap on the share of your customers that can leave for rivals in a country (all rivals together).
-    static let maxSwitchOutRate = 0.0015
+    /// Weekly cap on the share of your customers that can leave for rivals in a country (all rivals together). Equal to
+    /// the in-rate, so a mirrored offer moves the same number of customers both ways.
+    static let maxSwitchOutRate = 0.003
 
     /// Positive: you look better than this rival. Catalog counts most, then price, then service quality.
     static func switchScore(yourAppeal: Double, rivalStrength: Double, yourPrice: Double, rivalPrice: Double,
