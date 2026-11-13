@@ -367,7 +367,7 @@ enum SimulationEngine {
             s.lossReason = "Eight years passed and \(s.companyName) never became #1."
             events.append(s.makeEvent(.warning, "Challenge failed", s.lossReason ?? ""))
         } else if s.week >= minWeeksToWin, [.sandbox, .dethrone].contains(s.scenario),
-                  let topRival = s.rivals.map({ $0.totalSubs }).max(), totalAfter > topRival {
+                  let topRival = Optional(s.rivals.map({ $0.totalSubs }).max() ?? 0), totalAfter > topRival {   // no rivals left (all acquired): you win
             s.outcome = .won
             s.score = Scenarios.score(s)
             events.append(s.makeEvent(.milestone, "You're #1!",
