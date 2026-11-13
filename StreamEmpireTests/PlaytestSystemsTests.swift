@@ -178,7 +178,7 @@ private final class PSBot {
                 finite(v, "rival subs \(r.id) \(code)")
                 expect(v >= 0, "negative rival subs \(r.id) \(code)")
             }
-            for code in CountryData.closedToRivals.sorted() {
+            for code in CountryData.closedToRivals.sorted() where s.week < CountryData.closedMarketsOpenWeek {   // rivals may enter later
                 expect((r.subs[code] ?? 0) == 0, "\(r.id) has subscribers in \(code), which is closed to rivals")
             }
         }

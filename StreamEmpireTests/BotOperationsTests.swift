@@ -373,7 +373,7 @@ private final class Fuzz {
             finite(t.effectiveLoad(region), "effectiveLoad \(region.rawValue)")
             expect(t.datacenters(in: region).count <= Formulas.maxDatacentersPerRegion, "more than \(Formulas.maxDatacentersPerRegion) datacenters in \(region.rawValue)")
             let cloud = t.cloudUnits[region.rawValue] ?? 0
-            expect(cloud >= 0 && cloud <= 10, "cloud units out of range in \(region.rawValue): \(cloud)")
+            expect(cloud >= 0 && cloud <= Formulas.maxCloudUnits, "cloud units out of range in \(region.rawValue): \(cloud)")
         }
         for dc in t.datacenters {
             expect(dc.level >= 1 && dc.level <= 5, "datacenter level out of range")
