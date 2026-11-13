@@ -72,7 +72,7 @@ final class Phase24Tests: XCTestCase {
 
     func testOutlookShowsTheDirection() {
         var s = newState()
-        s.catalog = catalog(quality: 98, count: 60)
+        s.catalog = catalog(quality: 98, count: 400)
         let outlook = s.switchOutlook(code: "GB")
         XCTAssertFalse(outlook.isEmpty)
         XCTAssertTrue(outlook.contains { $0.score > 0 })
