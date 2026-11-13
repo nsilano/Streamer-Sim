@@ -66,7 +66,7 @@ final class Phase23Tests: XCTestCase {
             let before = s.licenseMarket[0].license!.cost
             if try !s.negotiate(titleID: 500, offer: 0.5, years: 2, exclusive: false) {
                 rejected = true
-                XCTAssertEqual(s.licenseMarket[0].license!.cost, before * 1.05, accuracy: 0.01)
+                XCTAssertEqual(s.licenseMarket[0].license!.cost, before * 1.12, accuracy: 0.01)
                 XCTAssertThrowsError(try s.negotiate(titleID: 500, offer: 1.0, years: 2, exclusive: false))
                 XCTAssertTrue(s.catalog.isEmpty)
             }

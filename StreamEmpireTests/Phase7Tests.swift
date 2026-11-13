@@ -69,7 +69,7 @@ final class Phase7Tests: XCTestCase {
         var s = newState()
         for _ in 0..<Formulas.maxDatacentersPerRegion { try s.buildDatacenter(region: .europe) }
         XCTAssertThrowsError(try s.buildDatacenter(region: .europe))
-        XCTAssertEqual(Set(s.datacenters.map(\.name)).count, 4, "each gets its own site name")
+        XCTAssertEqual(Set(s.datacenters.map(\.name)).count, Formulas.maxDatacentersPerRegion, "each gets its own site name")
 
         let id = s.datacenters[0].id
         XCTAssertThrowsError(try s.upgradeDatacenter(id: id), "can't upgrade while under construction")

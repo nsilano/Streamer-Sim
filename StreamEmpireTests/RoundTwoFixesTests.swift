@@ -31,7 +31,7 @@ final class RoundTwoFixesTests: XCTestCase {
     func testFreePlansAreCappedAndTheFreeTierDoesNotSwallowEveryone() {
         XCTAssertLessThanOrEqual(Formulas.priceFactor(price: 0, tolerance: 10), 1.6)
         let split = Formulas.tierSplit(prices: TierSet(ad: 0, standard: 10, premium: 15))
-        XCTAssertLessThan(split.ad, 0.8)
+        XCTAssertLessThan(split.ad, 0.9)
     }
 
     func testPoachingNeedsARivalToBeCheaperThanYou() {

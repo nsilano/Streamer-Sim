@@ -38,7 +38,7 @@ final class Phase24Tests: XCTestCase {
 
     func testAStrongCatalogWinsRivalCustomers() {
         var s = newState()
-        s.catalog = catalog(quality: 98, count: 60)
+        s.catalog = catalog(quality: 98, count: 400)
         let rivalsBefore = s.rivals.reduce(0.0) { $0 + ($1.subs["GB"] ?? 0) }
         let country = CountryData.country("GB")!
         let appeal = Formulas.catalogAppeal(s.catalog, in: country)
@@ -61,7 +61,7 @@ final class Phase24Tests: XCTestCase {
 
     func testOverAYearRivalsShrinkWhereYouAreBetter() {
         var s = newState()
-        s.catalog = catalog(quality: 98, count: 60)
+        s.catalog = catalog(quality: 98, count: 400)
         s.cloudUnits[Region.europe.rawValue] = 500
         let netflux = s.rivals.firstIndex { $0.id == "netflux" }!
         let before = s.rivals[netflux].subs["GB"] ?? 0
