@@ -27,12 +27,13 @@ struct MarketsView: View {
                     .padding(.horizontal, 16)
 
                     if mode == .map {
-                        mapArea(state)
+                        ScrollView { mapArea(state).padding(.bottom, 20) }
                     } else {
                         listArea(state)
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)   // fill the screen so the background does too
             .artScreen()
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $sheet) { ref in CountrySheet(code: ref.id) }
@@ -86,6 +87,27 @@ struct MarketsView: View {
                 Text("Tap a country to see its stats. Pinch to zoom, drag to pan.")
                     .font(.caption).foregroundStyle(Theme.text2).padding(.bottom, 8)
             }
+
+            nextMarkets(state)
+        }
+    }
+
+    /// The biggest markets you can launch in right now and afford, so the space under the map is useful.
+    @ViewBuilder
+    private func nextMarkets(_ state: GameState) -> some View {
+        let options = CountryData.all
+            .filter { state.mapStatus($0.code) == .available && state.finances.cash >= state.launchPrice($0) }
+            .sorted { $0.subscriberCeiling > $1.subscriberCeiling }
+            .prefix(5)
+        if !options.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                SectionTitle(text: "Ready to launch", icon: "paperplane.fill", tint: Theme.teal)
+                ForEach(Array(options)) { country in
+                    Button { sheet = CountryRef(id: country.code) } label: { row(country, state) }.buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
         }
     }
 
