@@ -9,6 +9,7 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+## Build 25 (TestFlight, 2026-11-16) - c32fc1c
 ### Appeal curve, rivals and exploit fixes (save version 34)
 - **Content appeal:** 25 titles is no longer almost full appeal. A core of about 25 good titles still gets you most of the way (about 70%), but the last stretch needs hundreds: roughly 90% at 300 titles and 98% at 1,000. Big libraries finally matter.
 - **Free and very cheap plans:** the sign-up bonus for low prices is capped, and a free ad tier no longer swallows nearly every new subscriber.
