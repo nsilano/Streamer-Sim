@@ -9,6 +9,7 @@ Builds 16 and 17 were the same code.
 
 ## Unreleased (feature branch `claude/stream-empire-ios-setup-7nzt9v`)
 
+## Build 26 (TestFlight, 2026-11-16) - 7c1ce3f
 ### Map declutter
 - The map no longer piles markers and names on top of each other. Markers appear only for countries big enough to hold one at the current zoom (plus anything live, launching or selected), names show only where they fit, and you can zoom in twice as far (16x) to separate tiny neighbours like the Balkans or the Caribbean. Tapping now picks the country outline you touched, falling back to the nearest marker only for very small countries.
 
