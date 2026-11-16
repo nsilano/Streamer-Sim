@@ -6,6 +6,7 @@ struct MapShape {
     let name: String
     let path: Path
     let center: CGPoint
+    let bounds: CGRect         // of the main outline, to decide when a marker or label fits
 }
 
 /// Loads the bundled world map (Natural Earth outlines, public domain) once.
@@ -36,7 +37,7 @@ final class WorldMapStore {
                     path.closeSubpath()
                 }
                 loaded.append(MapShape(code: country.code, name: country.name, path: path,
-                                       center: CGPoint(x: country.cx, y: country.cy)))
+                                       center: CGPoint(x: country.cx, y: country.cy), bounds: path.boundingRect))
             }
         }
         width = w
@@ -87,7 +88,7 @@ struct WorldMapView: View {
 
     private let map = WorldMapStore.shared
 
-    private func clampedZoom(_ value: CGFloat) -> CGFloat { min(8, max(1, value)) }
+    private func clampedZoom(_ value: CGFloat) -> CGFloat { min(16, max(1, value)) }
 
     private func transform(size: CGSize, zoom: CGFloat, pan: CGSize) -> CGAffineTransform {
         let total = (size.width / map.width) * zoom
@@ -97,16 +98,20 @@ struct WorldMapView: View {
     }
 
     private func hit(_ point: CGPoint, transform t: CGAffineTransform) -> String? {
+        // The outline you touched wins; tiny countries fall back to the nearest marker.
+        let mapPoint = point.applying(t.inverted())
+        var inside: [(code: String, area: CGFloat)] = []
+        for shape in map.shapes where !shape.code.isEmpty && shape.bounds.contains(mapPoint) && shape.path.contains(mapPoint) {
+            inside.append((shape.code, shape.bounds.width * shape.bounds.height))
+        }
+        if let smallest = inside.min(by: { $0.area < $1.area }) { return smallest.code }
         var best: (String, CGFloat)?
         for shape in map.shapes where !shape.code.isEmpty {
             let p = shape.center.applying(t)
             let distance = hypot(p.x - point.x, p.y - point.y)
-            if distance < 20, distance < (best?.1 ?? .infinity) { best = (shape.code, distance) }
+            if distance < 14, distance < (best?.1 ?? .infinity) { best = (shape.code, distance) }
         }
-        if let best { return best.0 }
-        let mapPoint = point.applying(t.inverted())
-        for shape in map.shapes where !shape.code.isEmpty && shape.path.contains(mapPoint) { return shape.code }
-        return nil
+        return best?.0
     }
 
     var body: some View {
@@ -173,18 +178,26 @@ struct WorldMapView: View {
         }
         for shape in map.shapes where !shape.code.isEmpty {
             guard let status = statuses[shape.code] else { continue }
+            let isSelected = shape.code == selected
+            // Marker: only if the country is big enough on screen (or it matters: live, launching, selected), so small
+            // neighbours don't pile up. Zooming in reveals them.
+            let screenWidth = shape.bounds.width * t.a
+            let important = status == .live || status == .launching || isSelected
+            guard important || screenWidth >= 16 else { continue }
             let center = shape.center.applying(t)
-            let radius: CGFloat = 3.2 + min(zoom, 3) * 0.9
+            let radius: CGFloat = 2.6 + min(zoom, 4) * 0.7
             let dot = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
             context.fill(Path(ellipseIn: dot), with: .color(MapPalette.color(status)))
             context.stroke(Path(ellipseIn: dot), with: .color(Color.white.opacity(0.85)), lineWidth: 1)
-            if shape.code == selected {
+            if isSelected {
                 let ring = dot.insetBy(dx: -4, dy: -4)
                 context.stroke(Path(ellipseIn: ring), with: .color(Color.white), lineWidth: 1.5)
             }
-            if zoom >= 2.4 || shape.code == selected {
-                let label = Text(CountryData.country(shape.code)?.name ?? shape.name)
-                    .font(.system(size: 9, weight: .bold)).foregroundStyle(Color.white)
+            // Label: the selected one always; others only when the country is wide enough to hold its name.
+            let name = CountryData.country(shape.code)?.name ?? shape.name
+            let needed = CGFloat(name.count) * 5.2 + 8
+            if isSelected || (zoom >= 2.4 && screenWidth >= needed) {
+                let label = Text(name).font(.system(size: 9, weight: .bold)).foregroundStyle(Color.white)
                 context.draw(label, at: CGPoint(x: center.x, y: center.y - radius - 8))
             }
         }
